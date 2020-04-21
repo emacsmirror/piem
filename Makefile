@@ -1,7 +1,12 @@
 
-BATCH = emacs -Q --batch
+-include config.mk
 
-all: piem.elc piem.info
+TRANSIENT_DIR ?= /dev/null
+
+LOAD_PATH = -L . -L $(TRANSIENT_DIR)
+BATCH = emacs -Q --batch $(LOAD_PATH)
+
+all: piem.elc piem-b4.elc piem.info
 
 .PHONY: clean
 clean:

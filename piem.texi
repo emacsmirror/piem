@@ -45,6 +45,7 @@ This manual is for piem version @value{VERSION}.
 
 @menu
 * Overview::
+* b4 interface::
 * Related tools::
 * Contributing::
 
@@ -63,6 +64,9 @@ Indices
 
 @node public-inbox
 @section public-inbox
+
+@node b4 interface
+@chapter b4 interface
 
 @node Related tools
 @chapter Related tools
