@@ -4,7 +4,7 @@
 # Rely on EMACSLOADPATH for everything but the current directory.
 BATCH = emacs -Q --batch -L .
 
-all: loadpath piem.elc piem-b4.elc piem.info
+all: loadpath piem.elc piem-b4.elc piem-notmuch.elc piem.info
 
 .PHONY: clean
 clean:

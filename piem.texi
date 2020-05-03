@@ -46,6 +46,7 @@ This manual is for piem version @value{VERSION}.
 @menu
 * Overview::
 * b4 interface::
+* Notmuch integration::
 * Related tools::
 * Contributing::
 
@@ -67,6 +68,9 @@ Indices
 
 @node b4 interface
 @chapter b4 interface
+
+@node Notmuch integration
+@chapter Notmuch integration
 
 @node Related tools
 @chapter Related tools
