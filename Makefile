@@ -1,16 +1,18 @@
 
 -include config.mk
 
-TRANSIENT_DIR ?= /dev/null
+# Rely on EMACSLOADPATH for everything but the current directory.
+BATCH = emacs -Q --batch -L .
 
-LOAD_PATH = -L . -L $(TRANSIENT_DIR)
-BATCH = emacs -Q --batch $(LOAD_PATH)
-
-all: piem.elc piem-b4.elc piem.info
+all: loadpath piem.elc piem-b4.elc piem.info
 
 .PHONY: clean
 clean:
 	$(RM) *.elc *-autoloads.el *.info
+
+.PHONY: loadpath
+loadpath:
+	@echo ";;; EMACSLOADPATH=$(EMACSLOADPATH)"
 
 %.info: %.texi
 	makeinfo $<
