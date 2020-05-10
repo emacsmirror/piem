@@ -48,6 +48,7 @@ This manual is for piem version @value{VERSION}.
 * b4 interface::
 * Notmuch integration::
 * Gnus integration::
+* Elfeed integration::
 * Related tools::
 * Contributing::
 
@@ -75,6 +76,9 @@ Indices
 
 @node Gnus integration
 @chapter Gnus integration
+
+@node Elfeed integration
+@chapter Elfeed integration
 
 @node Related tools
 @chapter Related tools
