@@ -52,7 +52,7 @@
   (pcase-let ((`(,listid ,to ,cc)
                (when (derived-mode-p 'notmuch-show-mode)
                  (piem-notmuch--with-current-message
-                  (message-narrow-to-headers-or-head)
+                  (message-narrow-to-headers)
                   (list (message-fetch-field "list-id")
                         (message-fetch-field "to")
                         (message-fetch-field "cc"))))))
