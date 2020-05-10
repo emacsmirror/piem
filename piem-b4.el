@@ -83,11 +83,10 @@
 ;; default to using that, but it should still be an option to use b4
 ;; so that we honor its customization/URL resolution.
 (defun piem-b4--get-mbox-file (mid coderepo args)
-  (let* ((mbox-name (format "%s.mbx" mid))
-         (outdir (file-name-as-directory
+  (let* ((outdir (file-name-as-directory
                   (make-temp-file "piem-b4-" t)))
-         (mbox-am (concat outdir mbox-name))
-         (mbox-thread (concat mbox-am "-thread"))
+         (root (concat outdir "m"))
+         (mbox-thread (concat root "-piem"))
          (custom-p nil))
     (when-let ((fn (run-hook-with-args-until-success
                     'piem-mid-to-thread-functions mid)))
@@ -102,11 +101,12 @@
              (and custom-p
                   (concat "--use-local-mbox=" mbox-thread))
              (concat "--outdir=" outdir)
-             (concat "--mbox-name=" mbox-name)
+             (concat "--mbox-name=m")
              (append args (list mid))))
-    (unless (file-exists-p mbox-am)
-      (error "Expected mbox file does not exist: %s" mbox-am))
-    mbox-am))
+    (let ((mbox-am (concat root ".mbx")))
+      (if (file-exists-p mbox-am)
+          mbox-am
+        (error "Expected mbox file does not exist: %s" mbox-am)))))
 
 
 ;;; Commands
