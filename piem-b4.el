@@ -27,6 +27,8 @@
 ;;; Code:
 
 (require 'cl-lib)
+(require 'mail-extr)
+(require 'message)
 (require 'piem)
 (require 'subr-x)
 (require 'transient)
@@ -51,6 +53,22 @@
 
 (defcustom piem-b4-use-magit (featurep 'magit)
   "Whether to use Magit where possible."
+  :type 'boolean)
+
+(defcustom piem-b4-default-branch-function
+  #'piem-b4-name-branch-who-what-v
+  "Function that generates the default branch on completion.
+
+The function is called with one argument, a plist that contains
+the following information about the patch series:
+
+  :date
+  :from
+  :subject
+      The date, sender, and subject of the cover letter, if any, or of
+      the first patch otherwise.
+  :base-commit
+      The reported base commit of the patch, if any."
   :type 'boolean)
 
 
@@ -78,11 +96,92 @@
 (defun piem-b4--call-git (infile &rest args)
   (apply #'piem-b4--call piem-b4-git-executable infile args))
 
+(defun piem-b4--series-info (cover patches)
+  "Collect information for a patch series.
+COVER is an mbox with the cover letter, and PATCHES is an
+am-ready mbox.  If the series does not have a cover letter (e.g.,
+a one-patch series), COVER may be nil."
+  (with-temp-buffer
+    (insert-file-contents (or cover patches))
+    (let ((info (save-restriction
+                  (message-narrow-to-headers)
+                  (list :date (message-fetch-field "date")
+                        :from (message-fetch-field "from")
+                        :subject (message-fetch-field "subject")))))
+      (when (re-search-forward (rx line-start "base-commit: "
+                                   (group (>= 40 hex-digit))
+                                   line-end)
+                               nil t)
+        (plist-put info :base-commit (match-string 1)))
+      info)))
+
+(defun piem-b4--shorten-subject (subject)
+  (let ((words
+         (mapcar #'downcase
+                 (split-string
+                  (thread-last subject
+                    (replace-regexp-in-string
+                     (rx (any "'\""))
+                     "")
+                    (replace-regexp-in-string
+                     (rx string-start (zero-or-more space) "["
+                         (zero-or-more (not (any "]" "\n")))
+                         "PATCH"
+                         (zero-or-more (not (any "]" "\n")))
+                         "]" (one-or-more space))
+                     ""))
+                  "\\W+" t)))
+        (ignore-these (list "a" "an" "the"))
+        (num-words 0)
+        (num-chars 0)
+        kept)
+    (catch 'stop
+      (dolist (word words)
+        (when (not (member word ignore-these))
+          (cl-incf num-words)
+          (cl-incf num-chars (length word))
+          (push word kept)
+          (when (or (> num-words 5)
+                    (> num-chars 20))
+            (throw 'stop nil)))))
+    (mapconcat #'identity (reverse kept) "-")))
+
+(defun piem-b4-name-branch-who-what-v (info)
+  "Construct a branch name like \"km/b4-short-subj__v3\".
+
+In the above example, \"k\" and \"m\" are the first letters of
+the first and second \"words\" in the \"From:\" field.
+\"b4-short-subj\" is a stripped down, truncated variant of
+\"Subject:\".  And \"v3\" is the version of the patch series, as
+indicated in the subject.
+
+INFO is a plist with properties documented
+in `piem-b4-default-branch-function'."
+  (when-let ((sender (car (mail-extract-address-components
+                           (plist-get info :from))))
+             (subject (plist-get info :subject)))
+    (let* ((subnames (split-string sender))
+           (initials (mapconcat
+                      (lambda (subname)
+                        (and subname
+                             (downcase (substring subname nil 1))))
+                      (list (car subnames) (cadr subnames))
+                      ""))
+           (version (and (string-match
+                          (rx "[" (zero-or-more (not (any "[" "\n")))
+                              "PATCH "
+                              (zero-or-one (group "v" (one-or-more digit))))
+                          subject)
+                         (match-string 1 subject))))
+      (concat initials "/"
+              (piem-b4--shorten-subject subject)
+              (and version (concat "__" version))))))
+
 ;; In many cases, we don't really need b4 to download the mbox for us,
 ;; as we already have our own mbox to URL mapping.  Perhaps we should
 ;; default to using that, but it should still be an option to use b4
 ;; so that we honor its customization/URL resolution.
-(defun piem-b4--get-mbox-file (mid coderepo args)
+(defun piem-b4--get-am-files (mid coderepo args)
   (let* ((outdir (file-name-as-directory
                   (make-temp-file "piem-b4-" t)))
          (root (concat outdir "m"))
@@ -103,10 +202,13 @@
              (concat "--outdir=" outdir)
              (concat "--mbox-name=m")
              (append args (list mid))))
-    (let ((mbox-am (concat root ".mbx")))
-      (if (file-exists-p mbox-am)
-          mbox-am
-        (error "Expected mbox file does not exist: %s" mbox-am)))))
+    (let ((mbox-cover (concat root ".cover"))
+          (mbox-am (concat root ".mbx")))
+      (list (and (file-exists-p mbox-cover)
+                 mbox-cover)
+            (if (file-exists-p mbox-am)
+                mbox-am
+              (error "Expected mbox file does not exist: %s" mbox-am))))))
 
 
 ;;; Commands
@@ -140,25 +242,35 @@
                              (match-string 1 arg)))
                       args)))
     (user-error "%s is incompatible with this command" badopt))
-  (let* ((coderepo (or (piem-inbox-coderepo)
-                       (and (fboundp 'projectile-relevant-known-projects)
-                            (completing-read
-                             "Project: "
-                             (projectile-relevant-known-projects)))
-                       (and piem-b4-use-magit
-                            (fboundp 'magit-read-repository)
-                            (magit-read-repository))
-                       (read-directory-name "Git repository: ")))
-         (mbox-file (piem-b4--get-mbox-file mid coderepo args))
-         (default-directory coderepo))
-    ;; TODO: From the mbox file (1) search for base commit and (2)
-    ;; gather information to suggest default branch name.
-
-    ;; TODO: Add branch call.  Without base, will need to ask branch
-    ;; name and starting point.  Detached head could be signaled with
-    ;; empty string.
-
+  (pcase-let* ((coderepo (or (piem-inbox-coderepo)
+                             (and (fboundp 'projectile-relevant-known-projects)
+                                  (completing-read
+                                   "Project: "
+                                   (projectile-relevant-known-projects)))
+                             (and piem-b4-use-magit
+                                  (fboundp 'magit-read-repository)
+                                  (magit-read-repository))
+                             (read-directory-name "Git repository: ")))
+               (`(,cover ,mbox-file)
+                (piem-b4--get-am-files mid coderepo args))
+               (info (piem-b4--series-info cover mbox-file))
+               (default-directory coderepo))
     ;; TODO: Optionally do more through Magit.
+    (let ((new-branch (read-string
+                       "New branch (empty for detached): "
+                       (funcall piem-b4-default-branch-function info)))
+          (base (completing-read
+                 "Base commit: "
+                 (let ((cands (and piem-b4-use-magit
+                                   (fboundp 'magit-list-local-branch-names)
+                                   (magit-list-local-branch-names)))
+                       (base (plist-get info :base-commit)))
+                   (if base (cons base cands) cands)))))
+      (apply #'piem-b4--call-git nil "checkout"
+             (append (if (string-empty-p new-branch)
+                         (list "--detach")
+                       (list "-b" new-branch))
+                     (list base))))
     (piem-b4--call-git mbox-file "am" "--scissors")
     (if (and piem-b4-use-magit
              (fboundp 'magit-status-setup-buffer))
