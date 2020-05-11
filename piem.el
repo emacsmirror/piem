@@ -26,6 +26,7 @@
 
 ;;; Code:
 
+(require 'message)
 (require 'subr-x)
 
 (defgroup piem ()
@@ -89,6 +90,32 @@ function knows how to create an mbox for the message ID, it
 should return a function that takes no arguments and inserts the
 mbox's contents in the current buffer."
   :type 'hook)
+
+(defun piem-inbox-by-header-match ()
+  "Return inbox based on matching message headers.
+This should be called from a buffer containing a message and is
+intended to be used by libraries implementing a function for
+`piem-get-mid-functions'."
+  (pcase-let ((`(,listid ,to ,cc)
+               (save-restriction
+                 (message-narrow-to-headers)
+                 (list (message-fetch-field "list-id")
+                       (message-fetch-field "to")
+                       (message-fetch-field "cc")))))
+    (catch 'hit
+      (dolist (inbox piem-inboxes)
+        (let* ((info (cdr inbox))
+               (p-listid (plist-get info :listid)))
+          (when (and listid
+                     p-listid
+                     (string-match-p (concat "<" (regexp-quote p-listid) ">")
+                                     listid))
+            (throw 'hit (car inbox)))
+          (when-let ((addr (plist-get info :address))
+                     (to (mapconcat #'identity (list to cc)
+                                    " ")))
+            (when (string-match-p (regexp-quote addr) to)
+              (throw 'hit (car inbox)))))))))
 
 ;;;###autoload
 (defun piem-inbox ()

@@ -26,7 +26,6 @@
 
 ;;; Code:
 
-(require 'message)
 (require 'notmuch)
 (require 'piem)
 (require 'subr-x)
@@ -49,27 +48,9 @@
 
 (defun piem-notmuch-get-inbox ()
   "Return inbox name from a `notmuch-show-mode' buffer."
-  (pcase-let ((`(,listid ,to ,cc)
-               (when (derived-mode-p 'notmuch-show-mode)
-                 (piem-notmuch--with-current-message
-                  (message-narrow-to-headers)
-                  (list (message-fetch-field "list-id")
-                        (message-fetch-field "to")
-                        (message-fetch-field "cc"))))))
-    (catch 'hit
-      (dolist (inbox piem-inboxes)
-        (let* ((info (cdr inbox))
-               (p-listid (plist-get info :listid)))
-          (when (and listid
-                     p-listid
-                     (string-match-p (concat "<" (regexp-quote p-listid) ">")
-                                     listid))
-            (throw 'hit (car inbox)))
-          (when-let ((addr (plist-get info :address))
-                     (to (mapconcat #'identity (list to cc)
-                                    " ")))
-            (when (string-match-p (regexp-quote addr) to)
-              (throw 'hit (car inbox)))))))))
+  (when (derived-mode-p 'notmuch-show-mode)
+    (piem-notmuch--with-current-message
+     (piem-inbox-by-header-match))))
 
 (defun piem-notmuch-get-mid ()
   "Return the message ID of a `notmuch-show-mode' buffer."
