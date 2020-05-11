@@ -56,22 +56,27 @@
 
 ;;; Internals
 
-(define-error 'piem-b4-error "b4 error")
+(define-error 'piem-b4-error "piem-b4 error")
 
 (defconst piem-b4-output-buffer "*piem-b4-output*")
 
 ;; TODO: Use an asynchronous process.
-(defun piem-b4--call-b4 (&rest args)
-  (unless piem-b4-b4-executable
-    (user-error "piem-b4-b4-executable must be non-nil"))
+(defun piem-b4--call (program infile &rest args)
   (let ((temp-buffer-show-function (lambda (_))))
     (with-output-to-temp-buffer piem-b4-output-buffer
-      (unless (= 0 (apply #'call-process piem-b4-b4-executable
-                          nil standard-output nil
+      (unless (= 0 (apply #'call-process program
+                          infile standard-output nil
                           (remq nil args)))
         (display-buffer piem-b4-output-buffer)
         (signal 'piem-b4-error
-                (list (format "b4 call in %s failed" default-directory)))))))
+                (list (format "%s call in %s failed"
+                              program default-directory)))))))
+
+(defun piem-b4--call-b4 (infile &rest args)
+  (apply #'piem-b4--call piem-b4-b4-executable infile args))
+
+(defun piem-b4--call-git (infile &rest args)
+  (apply #'piem-b4--call piem-b4-git-executable infile args))
 
 ;; In many cases, we don't really need b4 to download the mbox for us,
 ;; as we already have our own mbox to URL mapping.  Perhaps we should
@@ -93,7 +98,7 @@
     ;; Move to the coderepo so that we pick up any b4 configuration
     ;; from there.
     (let ((default-directory coderepo))
-      (apply #'piem-b4--call-b4 "am"
+      (apply #'piem-b4--call-b4 nil "am"
              (and custom-p
                   (concat "--use-local-mbox=" mbox-thread))
              (concat "--outdir=" outdir)
@@ -110,7 +115,7 @@
 (defun piem-b4-am-ready-from-mbox (mbox &optional args)
   (interactive (list (read-file-name "mbox: ")
                      (transient-args 'piem-b4-am)))
-  (apply #'piem-b4--call-b4 "am"
+  (apply #'piem-b4--call-b4 nil "am"
          (cons (concat "--use-local-mbox=" mbox) args))
   (display-buffer piem-b4-output-buffer))
 
@@ -118,7 +123,7 @@
 (defun piem-b4-am-ready-from-mid (mid &optional args)
   (interactive (list (read-string "Message ID: " nil nil (piem-mid))
                      (transient-args 'piem-b4-am)))
-  (apply #'piem-b4--call-b4 "am" (append args (list mid)))
+  (apply #'piem-b4--call-b4 nil "am" (append args (list mid)))
   (display-buffer piem-b4-output-buffer))
 
 ;;;###autoload
@@ -154,8 +159,7 @@
     ;; empty string.
 
     ;; TODO: Optionally do more through Magit.
-    (call-process piem-b4-git-executable
-                  mbox-file nil nil "am" "--scissors")
+    (piem-b4--call-git mbox-file "am" "--scissors")
     (if (and piem-b4-use-magit
              (fboundp 'magit-status-setup-buffer))
         (magit-status-setup-buffer)
