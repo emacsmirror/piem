@@ -49,6 +49,7 @@ This manual is for piem version @value{VERSION}.
 * Notmuch integration::
 * Gnus integration::
 * Elfeed integration::
+* EWW integration::
 * Related tools::
 * Contributing::
 
@@ -79,6 +80,9 @@ Indices
 
 @node Elfeed integration
 @chapter Elfeed integration
+
+@node EWW integration
+@chapter EWW integration
 
 @node Related tools
 @chapter Related tools

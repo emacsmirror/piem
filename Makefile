@@ -5,7 +5,8 @@
 BATCH = emacs -Q --batch -L .
 
 all: loadpath piem.info piem.elc \
-	piem-b4.elc piem-elfeed.elc piem-gnus.elc piem-notmuch.elc
+	piem-b4.elc piem-elfeed.elc piem-eww.elc \
+	piem-gnus.elc piem-notmuch.elc
 
 .PHONY: clean
 clean:
