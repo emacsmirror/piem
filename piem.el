@@ -122,8 +122,7 @@ intended to be used by libraries implementing a function for
 (defun piem-inbox-coderepo ()
   "Return the code repository of current buffer's inbox."
   (when-let ((p (piem-inbox))
-             (repo (plist-get
-                    (alist-get p piem-inboxes) :coderepo)))
+             (repo (plist-get (cdr (assoc p piem-inboxes)) :coderepo)))
     (expand-file-name repo)))
 
 ;;;###autoload
