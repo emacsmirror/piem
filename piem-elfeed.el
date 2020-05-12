@@ -27,6 +27,7 @@
 ;;; Code:
 
 (require 'elfeed)
+(require 'elfeed-show)
 (require 'piem)
 
 (defgroup piem-elfeed nil
