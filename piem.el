@@ -58,15 +58,11 @@ list that supports the following properties:
 
 Here's an example for the public-inbox project itself:
 
-    (\"public-inbox\" .
-     (:coderepo
-      \"~/src/public-inbox/\"
-      :address
-      \"meta@public-inbox.org\"
-      :listid
-      \"meta.public-inbox.org\"
-      :url
-      \"https://public-inbox.org/meta/\"))"
+    (\"public-inbox\"
+     :coderepo \"~/src/public-inbox/\"
+     :address \"meta@public-inbox.org\"
+     :listid \"meta.public-inbox.org\"
+     :url \"https://public-inbox.org/meta/\")"
   :type '(alist :key-type string
                 :value-type
                 (plist :value-type string)))
