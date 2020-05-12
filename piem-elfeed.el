@@ -35,23 +35,18 @@
   :link '(info-link "(piem)Elfeed integration")
   :group 'piem)
 
-(defvar piem-elfeed--link-re
-  (rx "/" (group (one-or-more (not (any "/" "\n"))))
-      "/" (group (one-or-more (not (any "/" "\n"))))
-      "/" string-end))
-
 (defun piem-elfeed-get-inbox ()
   "Return inbox name from an `elfeed-show-mode' buffer."
   (when (derived-mode-p 'elfeed-show-mode)
     (when-let ((link (elfeed-entry-link elfeed-show-entry)))
-      (and (string-match piem-elfeed--link-re link)
+      (and (string-match piem-link-re link)
            (match-string 1 link)))))
 
 (defun piem-elfeed-get-mid ()
   "Return the message ID of an `elfeed-show-mode' buffer."
   (when (derived-mode-p 'elfeed-show-mode)
     (when-let ((link (elfeed-entry-link elfeed-show-entry)))
-      (and (string-match piem-elfeed--link-re link)
+      (and (string-match piem-link-re link)
            (match-string 2 link)))))
 
 (define-minor-mode piem-elfeed-mode
