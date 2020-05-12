@@ -54,10 +54,6 @@
       (and (string-match piem-elfeed--link-re link)
            (match-string 2 link)))))
 
-;; No function is defined for `piem-mid-to-thread-functions'.  All
-;; callers should fall back to getting the thread from a public-inbox
-;; instance.
-
 (define-minor-mode piem-elfeed-mode
   "Toggle Elfeed support for piem.
 With a prefix argument ARG, enable piem-elfeed mode if ARG is

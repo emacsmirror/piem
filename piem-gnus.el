@@ -53,10 +53,8 @@
             (match-string 1 mid)
           mid)))))
 
-;; No function is defined for `piem-mid-to-thread-functions', at least
-;; until someone points out an easy way to generate an mbox for a
-;; thread in Gnus.  All callers should fall back to getting the thread
-;; from a public-inbox instance.
+;; If there is an easy way to generate an mbox for a thread in Gnus, a
+;; function for `piem-mid-to-thread-functions' should be defined.
 
 (define-minor-mode piem-gnus-mode
   "Toggle Gnus support for piem.
