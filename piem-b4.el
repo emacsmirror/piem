@@ -298,6 +298,13 @@ in `piem-b4-default-branch-function'."
   :argument "--use-version="
   :reader #'transient-read-number-N+)
 
+(define-infix-argument piem-b4-am:--cherry-pick ()
+  :description "Select a subset of patches by number"
+  :class 'transient-option
+  :shortarg "-P"
+  :argument "--cherry-pick="
+  :reader #'read-string)
+
 ;;;###autoload (autoload 'piem-b4-am "b4" nil t)
 (define-transient-command piem-b4-am ()
   "Filter mbox to patches and feed to git-am"
@@ -308,7 +315,8 @@ in `piem-b4-default-branch-function'."
    ("-S" "Apply trailers without checking email addresses" "--sloppy-trailers")
    ("-t" "Apply cover letter trailers" "--apply-cover-trailers")
    ("-T" "Do not add trailers" "--no-add-trailers")
-   (piem-b4-am:--use-version)]
+   (piem-b4-am:--use-version)
+   (piem-b4-am:--cherry-pick)]
   ["Options for creating am-ready mboxes"
    (piem-b4-am:--outdir)
    (piem-b4-am:--mbox-name)]
