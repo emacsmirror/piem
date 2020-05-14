@@ -305,7 +305,7 @@ in `piem-b4-default-branch-function'."
   :argument "--cherry-pick="
   :reader #'read-string)
 
-;;;###autoload (autoload 'piem-b4-am "b4" nil t)
+;;;###autoload (autoload 'piem-b4-am "piem-b4" nil t)
 (define-transient-command piem-b4-am ()
   "Filter mbox to patches and feed to git-am"
   ["General options"
