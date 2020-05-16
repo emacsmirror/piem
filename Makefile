@@ -1,24 +1,23 @@
+.POSIX:
 
--include config.mk
-
+EMACS   = emacs
 # Rely on EMACSLOADPATH for everything but the current directory.
-BATCH = emacs -Q --batch -L .
+BATCH   = $(EMACS) --batch -Q -L .
 
-all: loadpath piem.info piem.elc \
-	piem-b4.elc piem-elfeed.elc piem-eww.elc \
-	piem-gnus.elc piem-notmuch.elc
+EL = piem.el piem-b4.el piem-elfeed.el piem-eww.el piem-gnus.el \
+     piem-notmuch.el
+ELC = $(EL:.el=.elc)
+
+all: compile piem.info piem-autoloads.el
+
+compile: $(ELC)
 
 piem-autoloads.el:
 	$(BATCH) -l package --eval \
 	  '(package-generate-autoloads "piem" default-directory)'
 
-.PHONY: clean
 clean:
-	$(RM) *.elc *-autoloads.el *.info
-
-.PHONY: loadpath
-loadpath:
-	@echo ";;; EMACSLOADPATH=$(EMACSLOADPATH)"
+	rm -f piem.info piem-autoloads.el $(ELC)
 
 piem-b4.elc: piem-b4.el piem.elc
 piem-elfeed.elc: piem-elfeed.el piem.elc
@@ -27,8 +26,10 @@ piem-gnus.elc: piem-gnus.el piem.elc
 piem-notmuch.elc: piem-notmuch.el piem.elc
 piem.elc: piem.el
 
-%.info: %.texi
-	makeinfo $<
+.SUFFIXES: .el .elc .texi .info
 
-%.elc: %.el
+.el.elc:
 	$(BATCH) -f batch-byte-compile $<
+
+.texi.info:
+	makeinfo $<

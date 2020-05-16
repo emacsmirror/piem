@@ -1,4 +1,3 @@
 *-autoloads.el
 *.elc
 *.info
-config.mk
