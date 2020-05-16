@@ -8,6 +8,10 @@ all: loadpath piem.info piem.elc \
 	piem-b4.elc piem-elfeed.elc piem-eww.elc \
 	piem-gnus.elc piem-notmuch.elc
 
+piem-autoloads.el:
+	$(BATCH) -l package --eval \
+	  '(package-generate-autoloads "piem" default-directory)'
+
 .PHONY: clean
 clean:
 	$(RM) *.elc *-autoloads.el *.info
@@ -21,8 +25,3 @@ loadpath:
 
 %.elc: %.el
 	$(BATCH) -f batch-byte-compile $<
-
-%-autoloads.el: %.el
-	$(BATCH) --eval \
-	"(let ((make-backup-files nil)) \
-	  (update-file-autoloads \"$(CURDIR)/$<\" t \"$(CURDIR)/$@\"))"
