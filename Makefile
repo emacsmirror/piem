@@ -12,7 +12,7 @@ all: compile piem.info piem-autoloads.el
 
 compile: $(ELC)
 
-piem-autoloads.el:
+piem-autoloads.el: $(EL)
 	$(BATCH) -l package --eval \
 	  '(package-generate-autoloads "piem" default-directory)'
 
