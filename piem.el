@@ -126,19 +126,16 @@ intended to be used by libraries implementing a function for
             (when (string-match-p (regexp-quote addr) to)
               (throw 'hit (car inbox)))))))))
 
-;;;###autoload
 (defun piem-inbox ()
   "Return the current buffer's inbox."
   (run-hook-with-args-until-success 'piem-get-inbox-functions))
 
-;;;###autoload
 (defun piem-inbox-coderepo ()
   "Return the code repository of current buffer's inbox."
   (when-let ((p (piem-inbox))
              (repo (plist-get (cdr (assoc p piem-inboxes)) :coderepo)))
     (expand-file-name repo)))
 
-;;;###autoload
 (defun piem-mid ()
   "Return the current buffer's message ID."
   (run-hook-with-args-until-success 'piem-get-mid-functions))
