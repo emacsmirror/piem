@@ -56,6 +56,7 @@
 ;; If there is an easy way to generate an mbox for a thread in Gnus, a
 ;; function for `piem-mid-to-thread-functions' should be defined.
 
+;;;###autoload
 (define-minor-mode piem-gnus-mode
   "Toggle Gnus support for piem.
 With a prefix argument ARG, enable piem-gnus mode if ARG is

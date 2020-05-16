@@ -72,6 +72,7 @@
                       "show" "--format=mbox" "--entire-thread=true"
                       query)))))
 
+;;;###autoload
 (define-minor-mode piem-notmuch-mode
   "Toggle Notmuch support for piem.
 With a prefix argument ARG, enable piem-notmuch mode if ARG is

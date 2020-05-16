@@ -48,6 +48,7 @@
       (and (string-match piem-link-re link)
            (match-string 2 link)))))
 
+;;;###autoload
 (define-minor-mode piem-eww-mode
   "Toggle EWW support for piem.
 With a prefix argument ARG, enable piem-eww mode if ARG is
