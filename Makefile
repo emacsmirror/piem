@@ -20,6 +20,13 @@ clean:
 loadpath:
 	@echo ";;; EMACSLOADPATH=$(EMACSLOADPATH)"
 
+piem-b4.elc: piem-b4.el piem.elc
+piem-elfeed.elc: piem-elfeed.el piem.elc
+piem-eww.elc: piem-eww.el piem.elc
+piem-gnus.elc: piem-gnus.el piem.elc
+piem-notmuch.elc: piem-notmuch.el piem.elc
+piem.elc: piem.el
+
 %.info: %.texi
 	makeinfo $<
 
