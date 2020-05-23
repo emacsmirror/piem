@@ -34,7 +34,7 @@
 (require 'transient)
 
 
-;;; Options
+;;;; Options
 
 (defgroup piem-b4 nil
   "Control the b4 tool from Emacs."
@@ -72,7 +72,7 @@ the following information about the patch series:
   :type 'boolean)
 
 
-;;; Internals
+;;;; Internals
 
 (define-error 'piem-b4-error "piem-b4 error")
 
@@ -211,7 +211,7 @@ in `piem-b4-default-branch-function'."
               (error "Expected mbox file does not exist: %s" mbox-am))))))
 
 
-;;; Commands
+;;;; Commands
 
 ;;;###autoload
 (defun piem-b4-am-ready-from-mbox (mbox &optional args)
