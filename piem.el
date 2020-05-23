@@ -29,6 +29,9 @@
 (require 'message)
 (require 'subr-x)
 
+
+;;;; Options
+
 (defgroup piem ()
   "Emacs tools for working with public-inbox archives."
   :link '(info-link "(piem)Top")
@@ -125,6 +128,9 @@ intended to be used by libraries implementing a function for
                                     " ")))
             (when (string-match-p (regexp-quote addr) to)
               (throw 'hit (car inbox)))))))))
+
+
+;;;; Extractors
 
 (defun piem-inbox ()
   "Return the current buffer's inbox."
