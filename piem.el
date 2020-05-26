@@ -130,6 +130,75 @@ intended to be used by libraries implementing a function for
               (throw 'hit (car inbox)))))))))
 
 
+;;;; Subprocess handling
+
+(defvar piem-process-mode-font-lock-keywords
+  `((,(rx line-start
+          ";;; " (or "process" "directory") ":" (one-or-more not-newline)
+          line-end)
+      (0 font-lock-comment-face t))
+    (,(rx line-start
+          "Process " (one-or-more not-newline) " finished"
+          line-end)
+     (0 font-lock-comment-face))))
+
+(define-derived-mode piem-process-mode nil "piem-process"
+  "Major mode for displaying processes created by piem."
+  :group 'piem
+  (setq buffer-read-only t)
+  (setq-local window-point-insertion-type t)
+  (setq-local font-lock-defaults
+              '(piem-process-mode-font-lock-keywords)))
+
+(define-error 'piem-process-error "piem process error")
+
+(defvar-local piem--buffer-process nil)
+
+(defun piem--process-go (buffer dir program program-args fn)
+  (setq dir (or dir default-directory))
+  (setq buffer (get-buffer-create buffer))
+  (with-current-buffer buffer
+    (when (and piem--buffer-process
+               (process-live-p piem--buffer-process))
+      (user-error "Buffer %s already has an active process: %s"
+                  (current-buffer) piem--buffer-process))
+    (unless (derived-mode-p 'piem-process-mode)
+      (piem-process-mode))
+    (setq default-directory (file-name-as-directory dir))
+    (display-buffer buffer)
+    (let ((inhibit-read-only t))
+      (insert (format "
+%s
+;;; process: %S
+;;; directory:  %s
+"
+                      (char-to-string 12) ; form feed
+                      (cons program program-args)
+                      default-directory))
+      (funcall fn))))
+
+(defun piem-process-start (buffer dir program &rest program-args)
+  (setq program-args (remq nil program-args))
+  (piem--process-go
+   buffer dir program program-args
+   (lambda ()
+     (setq piem--buffer-process
+          (apply #'start-process
+                 (file-name-nondirectory program)
+                 (current-buffer)
+                 program program-args)))))
+
+(defun piem-process-call (buffer dir program &rest program-args)
+  (setq program-args (remq nil program-args))
+  (piem--process-go
+   buffer dir program program-args
+   (lambda ()
+     (unless (= 0 (apply #'call-process program nil t nil program-args))
+       (signal 'piem-error
+               (list (format "%s call in %s failed"
+                             program default-directory)))))))
+
+
 ;;;; Extractors
 
 (defun piem-inbox ()

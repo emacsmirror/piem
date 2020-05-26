@@ -74,27 +74,7 @@ the following information about the patch series:
 
 ;;;; Internals
 
-(define-error 'piem-b4-error "piem-b4 error")
-
 (defconst piem-b4-output-buffer "*piem-b4-output*")
-
-;; TODO: Use an asynchronous process.
-(defun piem-b4--call (program infile &rest args)
-  (let ((temp-buffer-show-function (lambda (_))))
-    (with-output-to-temp-buffer piem-b4-output-buffer
-      (unless (= 0 (apply #'call-process program
-                          infile standard-output nil
-                          (remq nil args)))
-        (display-buffer piem-b4-output-buffer)
-        (signal 'piem-b4-error
-                (list (format "%s call in %s failed"
-                              program default-directory)))))))
-
-(defun piem-b4--call-b4 (infile &rest args)
-  (apply #'piem-b4--call piem-b4-b4-executable infile args))
-
-(defun piem-b4--call-git (infile &rest args)
-  (apply #'piem-b4--call piem-b4-git-executable infile args))
 
 (defun piem-b4--series-info (cover patches)
   "Collect information for a patch series.
@@ -195,13 +175,13 @@ in `piem-b4-default-branch-function'."
           (setq custom-p t))))
     ;; Move to the coderepo so that we pick up any b4 configuration
     ;; from there.
-    (let ((default-directory coderepo))
-      (apply #'piem-b4--call-b4 nil "am"
-             (and custom-p
-                  (concat "--use-local-mbox=" mbox-thread))
-             (concat "--outdir=" outdir)
-             (concat "--mbox-name=m")
-             (append args (list mid))))
+    (apply #'piem-process-call piem-b4-output-buffer coderepo
+           piem-b4-b4-executable "am"
+           (and custom-p
+                (concat "--use-local-mbox=" mbox-thread))
+           (concat "--outdir=" outdir)
+           (concat "--mbox-name=m")
+           (append args (list mid)))
     (let ((mbox-cover (concat root ".cover"))
           (mbox-am (concat root ".mbx")))
       (list (and (file-exists-p mbox-cover)
@@ -217,16 +197,16 @@ in `piem-b4-default-branch-function'."
 (defun piem-b4-am-ready-from-mbox (mbox &optional args)
   (interactive (list (read-file-name "mbox: ")
                      (transient-args 'piem-b4-am)))
-  (apply #'piem-b4--call-b4 nil "am"
-         (cons (concat "--use-local-mbox=" mbox) args))
-  (display-buffer piem-b4-output-buffer))
+  (apply #'piem-process-start piem-b4-output-buffer nil
+         piem-b4-b4-executable "am"
+         (cons (concat "--use-local-mbox=" mbox) args)))
 
 ;;;###autoload
 (defun piem-b4-am-ready-from-mid (mid &optional args)
   (interactive (list (read-string "Message ID: " nil nil (piem-mid))
                      (transient-args 'piem-b4-am)))
-  (apply #'piem-b4--call-b4 nil "am" (append args (list mid)))
-  (display-buffer piem-b4-output-buffer))
+  (apply #'piem-process-start piem-b4-output-buffer nil
+         piem-b4-b4-executable "am" (append args (list mid))))
 
 ;;;###autoload
 (defun piem-b4-am-from-mid (mid &optional args)
@@ -266,12 +246,15 @@ in `piem-b4-default-branch-function'."
                                    (magit-list-local-branch-names)))
                        (base (plist-get info :base-commit)))
                    (if base (cons base cands) cands)))))
-      (apply #'piem-b4--call-git nil "checkout"
+      (apply #'piem-process-call piem-b4-output-buffer nil
+             piem-b4-git-executable "checkout"
              (append (if (string-empty-p new-branch)
                          (list "--detach")
                        (list "-b" new-branch))
                      (list base))))
-    (piem-b4--call-git mbox-file "am" "--scissors")
+    (piem-process-call piem-b4-output-buffer nil
+                       piem-b4-git-executable "am" "--scissors"
+                       mbox-file)
     (if (and piem-b4-use-magit
              (fboundp 'magit-status-setup-buffer))
         (magit-status-setup-buffer)
