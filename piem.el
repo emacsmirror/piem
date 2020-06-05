@@ -129,6 +129,16 @@ intended to be used by libraries implementing a function for
             (when (string-match-p (regexp-quote addr) to)
               (throw 'hit (car inbox)))))))))
 
+(defcustom piem-git-executable
+  (or (and (boundp 'magit-git-executable) magit-git-executable)
+      "git")
+  "Which git executable to use."
+  :type 'string)
+
+(defcustom piem-use-magit (featurep 'magit)
+  "Whether to use Magit where possible."
+  :type 'boolean)
+
 
 ;;;; Subprocess handling
 

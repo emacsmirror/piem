@@ -45,15 +45,7 @@
   "Which b4 executable to use."
   :type 'string)
 
-(defcustom piem-b4-git-executable
-  (or (and (boundp 'magit-git-executable) magit-git-executable)
-      "git")
-  "Which git executable to use."
-  :type 'string)
 
-(defcustom piem-b4-use-magit (featurep 'magit)
-  "Whether to use Magit where possible."
-  :type 'boolean)
 
 (defcustom piem-b4-default-branch-function
   #'piem-b4-name-branch-who-what-v
@@ -227,7 +219,7 @@ in `piem-b4-default-branch-function'."
                                   (completing-read
                                    "Project: "
                                    (projectile-relevant-known-projects)))
-                             (and piem-b4-use-magit
+                             (and piem-use-magit
                                   (fboundp 'magit-read-repository)
                                   (magit-read-repository))
                              (read-directory-name "Git repository: ")))
@@ -241,21 +233,21 @@ in `piem-b4-default-branch-function'."
                        (funcall piem-b4-default-branch-function info)))
           (base (completing-read
                  "Base commit: "
-                 (let ((cands (and piem-b4-use-magit
+                 (let ((cands (and piem-use-magit
                                    (fboundp 'magit-list-local-branch-names)
                                    (magit-list-local-branch-names)))
                        (base (plist-get info :base-commit)))
                    (if base (cons base cands) cands)))))
       (apply #'piem-process-call piem-b4-output-buffer nil
-             piem-b4-git-executable "checkout"
+             piem-git-executable "checkout"
              (append (if (string-empty-p new-branch)
                          (list "--detach")
                        (list "-b" new-branch))
                      (list base))))
     (piem-process-call piem-b4-output-buffer nil
-                       piem-b4-git-executable "am" "--scissors"
+                       piem-git-executable "am" "--scissors"
                        mbox-file)
-    (if (and piem-b4-use-magit
+    (if (and piem-use-magit
              (fboundp 'magit-status-setup-buffer))
         (magit-status-setup-buffer)
       (dired "."))))
