@@ -139,6 +139,22 @@ intended to be used by libraries implementing a function for
   "Whether to use Magit where possible."
   :type 'boolean)
 
+(defcustom piem-default-branch-function
+  #'piem-name-branch-who-what-v
+  "Function that generates the default branch on completion.
+
+The function is called with one argument, a plist that contains
+the following information about the patch series:
+
+  :date
+  :from
+  :subject
+      The date, sender, and subject of the cover letter, if any, or of
+      the first patch otherwise.
+  :base-commit
+      The reported base commit of the patch, if any."
+  :type 'boolean)
+
 
 ;;;; Subprocess handling
 
@@ -222,6 +238,116 @@ intended to be used by libraries implementing a function for
 (defun piem-mid ()
   "Return the current buffer's message ID."
   (run-hook-with-args-until-success 'piem-get-mid-functions))
+
+
+;;;; Patch handling
+
+(defun piem-series-info (cover patches)
+  "Collect information for a patch series.
+COVER is an mbox with the cover letter, and PATCHES is an
+am-ready mbox.  If the series does not have a cover letter (e.g.,
+a one-patch series), COVER may be nil."
+  (with-temp-buffer
+    (insert-file-contents (or cover patches))
+    (let ((info (save-restriction
+                  (message-narrow-to-headers)
+                  (list :date (message-fetch-field "date")
+                        :from (message-fetch-field "from")
+                        :subject (message-fetch-field "subject")))))
+      (when (re-search-forward (rx line-start "base-commit: "
+                                   (group (>= 40 hex-digit))
+                                   line-end)
+                               nil t)
+        (plist-put info :base-commit (match-string 1)))
+      info)))
+
+(defun piem--shorten-subject (subject)
+  (let ((words
+         (mapcar #'downcase
+                 (split-string
+                  (thread-last subject
+                    (replace-regexp-in-string
+                     (rx (any "'\""))
+                     "")
+                    (replace-regexp-in-string
+                     (rx string-start (zero-or-more space) "["
+                         (zero-or-more (not (any "]" "\n")))
+                         "PATCH"
+                         (zero-or-more (not (any "]" "\n")))
+                         "]" (one-or-more space))
+                     ""))
+                  "\\W+" t)))
+        (ignore-these (list "a" "an" "the"))
+        (num-words 0)
+        (num-chars 0)
+        kept)
+    (catch 'stop
+      (dolist (word words)
+        (when (not (member word ignore-these))
+          (cl-incf num-words)
+          (cl-incf num-chars (length word))
+          (push word kept)
+          (when (or (> num-words 5)
+                    (> num-chars 20))
+            (throw 'stop nil)))))
+    (mapconcat #'identity (reverse kept) "-")))
+
+(defun piem-name-branch-who-what-v (info)
+  "Construct a branch name like \"km/b4-short-subj__v3\".
+
+In the above example, \"k\" and \"m\" are the first letters of
+the first and second \"words\" in the \"From:\" field.
+\"b4-short-subj\" is a stripped down, truncated variant of
+\"Subject:\".  And \"v3\" is the version of the patch series, as
+indicated in the subject.
+
+INFO is a plist with properties documented
+in `piem-default-branch-function'."
+  (when-let ((sender (car (mail-extract-address-components
+                           (plist-get info :from))))
+             (subject (plist-get info :subject)))
+    (let* ((subnames (split-string sender))
+           (initials (mapconcat
+                      (lambda (subname)
+                        (and subname
+                             (downcase (substring subname nil 1))))
+                      (list (car subnames) (cadr subnames))
+                      ""))
+           (version (and (string-match
+                          (rx "[" (zero-or-more (not (any "[" "\n")))
+                              "PATCH "
+                              (zero-or-one (group "v" (one-or-more digit))))
+                          subject)
+                         (match-string 1 subject))))
+      (concat initials "/"
+              (piem--shorten-subject subject)
+              (and version (concat "__" version))))))
+
+(defun piem-am (mbox &optional info coderepo)
+  (let* ((default-directory (or coderepo default-directory)))
+    ;; TODO: Optionally do more through Magit.
+    (let ((new-branch (read-string
+                       "New branch (empty for detached): "
+                       (funcall piem-default-branch-function info)))
+          (base (completing-read
+                 "Base commit: "
+                 (let ((cands (and piem-use-magit
+                                   (fboundp 'magit-list-local-branch-names)
+                                   (magit-list-local-branch-names)))
+                       (base (plist-get info :base-commit)))
+                   (if base (cons base cands) cands)))))
+      (apply #'piem-process-call nil piem-git-executable "checkout"
+             (append (if (string-empty-p new-branch)
+                         (list "--detach")
+                       (list "-b" new-branch))
+                     (list base))))
+    (piem-process-call nil piem-git-executable "am" "--scissors" mbox)
+    (if (and piem-use-magit
+             (fboundp 'magit-status-setup-buffer))
+        (magit-status-setup-buffer)
+      (dired "."))))
+
+
 
 (defun piem-please ()
   "How I wish I could intersect my emails, feeds, and repos")
