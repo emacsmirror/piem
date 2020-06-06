@@ -206,7 +206,7 @@ intended to be used by libraries implementing a function for
    dir program program-args
    (lambda ()
      (unless (= 0 (apply #'call-process program nil t nil program-args))
-       (signal 'piem-error
+       (signal 'piem-process-error
                (list (format "%s call in %s failed"
                              program default-directory)))))))
 
