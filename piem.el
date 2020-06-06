@@ -250,7 +250,7 @@ a one-patch series), COVER may be nil."
   (with-temp-buffer
     (insert-file-contents (or cover patches))
     (let ((info (save-restriction
-                  (message-narrow-to-headers)
+                  (message-narrow-to-head)
                   (list :date (message-fetch-field "date")
                         :from (message-fetch-field "from")
                         :subject (message-fetch-field "subject")))))
