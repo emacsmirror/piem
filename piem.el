@@ -152,6 +152,8 @@ intended to be used by libraries implementing a function for
           line-end)
      (0 font-lock-comment-face))))
 
+(defconst piem-process-output-buffer "*piem-process-output*")
+
 (define-derived-mode piem-process-mode nil "piem-process"
   "Major mode for displaying processes created by piem."
   :group 'piem
@@ -164,33 +166,33 @@ intended to be used by libraries implementing a function for
 
 (defvar-local piem--buffer-process nil)
 
-(defun piem--process-go (buffer dir program program-args fn)
+(defun piem--process-go (dir program program-args fn)
   (setq dir (or dir default-directory))
-  (setq buffer (get-buffer-create buffer))
-  (with-current-buffer buffer
-    (when (and piem--buffer-process
-               (process-live-p piem--buffer-process))
-      (user-error "Buffer %s already has an active process: %s"
-                  (current-buffer) piem--buffer-process))
-    (unless (derived-mode-p 'piem-process-mode)
-      (piem-process-mode))
-    (setq default-directory (file-name-as-directory dir))
-    (display-buffer buffer)
-    (let ((inhibit-read-only t))
-      (insert (format "
+  (let ((buffer (get-buffer-create piem-process-output-buffer)))
+    (with-current-buffer buffer
+      (when (and piem--buffer-process
+                 (process-live-p piem--buffer-process))
+        (user-error "Buffer %s already has an active process: %s"
+                    (current-buffer) piem--buffer-process))
+      (unless (derived-mode-p 'piem-process-mode)
+        (piem-process-mode))
+      (setq default-directory (file-name-as-directory dir))
+      (display-buffer buffer)
+      (let ((inhibit-read-only t))
+        (insert (format "
 %s
 ;;; process: %S
 ;;; directory:  %s
 "
-                      (char-to-string 12) ; form feed
-                      (cons program program-args)
-                      default-directory))
-      (funcall fn))))
+                        (char-to-string 12) ; form feed
+                        (cons program program-args)
+                        default-directory))
+        (funcall fn)))))
 
-(defun piem-process-start (buffer dir program &rest program-args)
+(defun piem-process-start (dir program &rest program-args)
   (setq program-args (remq nil program-args))
   (piem--process-go
-   buffer dir program program-args
+   dir program program-args
    (lambda ()
      (setq piem--buffer-process
           (apply #'start-process
@@ -198,10 +200,10 @@ intended to be used by libraries implementing a function for
                  (current-buffer)
                  program program-args)))))
 
-(defun piem-process-call (buffer dir program &rest program-args)
+(defun piem-process-call (dir program &rest program-args)
   (setq program-args (remq nil program-args))
   (piem--process-go
-   buffer dir program program-args
+   dir program program-args
    (lambda ()
      (unless (= 0 (apply #'call-process program nil t nil program-args))
        (signal 'piem-error

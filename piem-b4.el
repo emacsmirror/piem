@@ -66,8 +66,6 @@ the following information about the patch series:
 
 ;;;; Internals
 
-(defconst piem-b4-output-buffer "*piem-b4-output*")
-
 (defun piem-b4--series-info (cover patches)
   "Collect information for a patch series.
 COVER is an mbox with the cover letter, and PATCHES is an
@@ -167,8 +165,7 @@ in `piem-b4-default-branch-function'."
           (setq custom-p t))))
     ;; Move to the coderepo so that we pick up any b4 configuration
     ;; from there.
-    (apply #'piem-process-call piem-b4-output-buffer coderepo
-           piem-b4-b4-executable "am"
+    (apply #'piem-process-call coderepo piem-b4-b4-executable "am"
            (and custom-p
                 (concat "--use-local-mbox=" mbox-thread))
            (concat "--outdir=" outdir)
@@ -189,16 +186,15 @@ in `piem-b4-default-branch-function'."
 (defun piem-b4-am-ready-from-mbox (mbox &optional args)
   (interactive (list (read-file-name "mbox: ")
                      (transient-args 'piem-b4-am)))
-  (apply #'piem-process-start piem-b4-output-buffer nil
-         piem-b4-b4-executable "am"
+  (apply #'piem-process-start nil piem-b4-b4-executable "am"
          (cons (concat "--use-local-mbox=" mbox) args)))
 
 ;;;###autoload
 (defun piem-b4-am-ready-from-mid (mid &optional args)
   (interactive (list (read-string "Message ID: " nil nil (piem-mid))
                      (transient-args 'piem-b4-am)))
-  (apply #'piem-process-start piem-b4-output-buffer nil
-         piem-b4-b4-executable "am" (append args (list mid))))
+  (apply #'piem-process-start nil piem-b4-b4-executable "am"
+         (append args (list mid))))
 
 ;;;###autoload
 (defun piem-b4-am-from-mid (mid &optional args)
@@ -238,14 +234,12 @@ in `piem-b4-default-branch-function'."
                                    (magit-list-local-branch-names)))
                        (base (plist-get info :base-commit)))
                    (if base (cons base cands) cands)))))
-      (apply #'piem-process-call piem-b4-output-buffer nil
-             piem-git-executable "checkout"
+      (apply #'piem-process-call nil piem-git-executable "checkout"
              (append (if (string-empty-p new-branch)
                          (list "--detach")
                        (list "-b" new-branch))
                      (list base))))
-    (piem-process-call piem-b4-output-buffer nil
-                       piem-git-executable "am" "--scissors"
+    (piem-process-call nil piem-git-executable "am" "--scissors"
                        mbox-file)
     (if (and piem-use-magit
              (fboundp 'magit-status-setup-buffer))
