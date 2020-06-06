@@ -27,6 +27,7 @@
 ;;; Code:
 
 (require 'gnus)
+(require 'gnus-sum)
 (require 'message)
 (require 'piem)
 
@@ -56,6 +57,40 @@
 ;; If there is an easy way to generate an mbox for a thread in Gnus, a
 ;; function for `piem-mid-to-thread-functions' should be defined.
 
+(defun piem-gnus-am-ready-mbox ()
+  "Return a function that inserts an am-ready mbox.
+If the buffer has any MIME parts that look a patch, use those
+part's content (in order) as the mbox.  Otherwise, use the
+message itself if it looks like a patch."
+  (when (derived-mode-p 'gnus-article-mode)
+    (cond
+     (gnus-article-mime-handles
+      (let ((patches
+             (delq nil
+                   (mapcar (lambda (handle)
+                             (and (listp handle)
+                                  (member (caar (cdr handle))
+                                          '("text/x-diff" "text/x-patch"))
+                                  (with-temp-buffer
+                                    (mm-display-inline handle)
+                                    (buffer-substring-no-properties
+                                     (point-min) (point-max)))))
+                           gnus-article-mime-handles))))
+        (when patches
+          (lambda ()
+            (dolist (patch patches)
+              (insert patch))))))
+     (gnus-article-buffer
+      (let ((patch (with-current-buffer gnus-article-buffer
+                     (save-restriction
+                       (widen)
+                       (and (string-match-p piem-patch-subject-re
+                                            (message-field-value "subject"))
+                            (buffer-substring-no-properties
+                             (point-min) (point-max)))))))
+        (when patch
+          (lambda () (insert patch))))))))
+
 ;;;###autoload
 (define-minor-mode piem-gnus-mode
   "Toggle Gnus support for piem.
@@ -66,8 +101,10 @@ the mode if ARG is omitted or nil."
   :init-value nil
   (if piem-gnus-mode
       (progn
+        (add-hook 'piem-am-ready-mbox-functions #'piem-gnus-am-ready-mbox)
         (add-hook 'piem-get-inbox-functions #'piem-gnus-get-inbox)
         (add-hook 'piem-get-mid-functions #'piem-gnus-get-mid))
+    (remove-hook 'piem-am-ready-mbox-functions #'piem-gnus-am-ready-mbox)
     (remove-hook 'piem-get-inbox-functions #'piem-gnus-get-inbox)
     (remove-hook 'piem-get-mid-functions #'piem-gnus-get-mid)))
 
