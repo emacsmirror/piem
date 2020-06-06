@@ -27,6 +27,7 @@
 ;;; Code:
 
 (require 'message)
+(provide 'rfc2047)
 (require 'subr-x)
 
 
@@ -251,7 +252,8 @@ the first will be ignored."
                   (save-restriction
                     (message-narrow-to-head)
                     (list :date (message-fetch-field "date")
-                          :from (message-fetch-field "from")
+                          :from (rfc2047-decode-string
+                                 (message-fetch-field "from"))
                           :subject (message-fetch-field "subject"))))))
       (when (re-search-forward (rx line-start "base-commit: "
                                    (group (>= 40 hex-digit))
