@@ -30,15 +30,6 @@
 (require 'piem)
 (require 'subr-x)
 
-(defgroup piem-notmuch nil
-  "Notmuch integration for piem."
-  :link '(info-link "(piem)Notmuch integration")
-  :group 'piem)
-
-(defcustom piem-notmuch-executable "notmuch"
-  "Which notmuch executable to use."
-  :type 'string)
-
 (defmacro piem-notmuch--with-current-message (&rest body)
   (let ((rv (make-symbol "rv")))
     `(let (,rv)
@@ -63,11 +54,11 @@
                  (string-trim-right
                   (with-output-to-string
                     (with-current-buffer standard-output
-                      (call-process piem-notmuch-executable
+                      (call-process notmuch-command
                                     nil '(t nil) nil
                                     "search" "--output=messages" query)))))
       (lambda ()
-        (call-process piem-notmuch-executable
+        (call-process notmuch-command
                       nil '(t nil) nil
                       "show" "--format=mbox" "--entire-thread=true"
                       query)))))
