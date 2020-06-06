@@ -230,6 +230,22 @@ the following information about the patch series:
                (list (format "%s call in %s failed"
                              program default-directory)))))))
 
+(defun piem-process-call-with-buffer-input
+    (dir buffer program &rest program-args)
+  (setq program-args (remq nil program-args))
+  (piem--process-go
+   dir program program-args
+   (lambda ()
+     (let ((outdir default-directory)
+           (outbuf (current-buffer)))
+       (with-current-buffer buffer
+         (let ((default-directory outdir))
+           (unless (= 0 (apply #'call-process-region nil nil
+                               program nil outbuf nil program-args))
+             (signal 'piem-process-error
+                     (list (format "%s call in %s failed"
+                                   program default-directory))))))))))
+
 
 ;;;; Extractors
 
