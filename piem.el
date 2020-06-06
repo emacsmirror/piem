@@ -91,6 +91,13 @@ should return a function that takes no arguments and inserts the
 mbox's contents in the current buffer."
   :type 'hook)
 
+(defcustom piem-am-ready-mbox-functions nil
+  "Functions tried to get an mbox to be fed to `git am'.
+The functions are called with no arguments.  If a function knows
+how to create an mbox, it should return a function that takes no
+arguments and inserts the mbox's contents in the current buffer."
+  :type 'hook)
+
 (defvar piem-link-re
   (rx "/" (group (one-or-more (not (any "/" "\n"))))
       "/" (group (one-or-more (not (any "/" "\n"))))
@@ -251,6 +258,21 @@ the following information about the patch series:
 (defun piem-mid ()
   "Return the current buffer's message ID."
   (run-hook-with-args-until-success 'piem-get-mid-functions))
+
+(defun piem-am-ready-mbox ()
+  "Return buffer containing an am-ready mbox.
+Callers are responsible for killing the buffer."
+  (when-let ((fn (run-hook-with-args-until-success
+                  'piem-am-ready-mbox-functions)))
+    (let ((buffer (generate-new-buffer " *piem am-ready mbox*"))
+          has-content)
+      (with-current-buffer buffer
+        (funcall fn)
+        (setq has-content (< 1 (point-max))))
+      (if has-content
+          buffer
+        (kill-buffer buffer)
+        nil))))
 
 
 ;;;; Patch handling
