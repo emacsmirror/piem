@@ -313,7 +313,7 @@ the first will be ignored."
       info)))
 
 (defvar piem-patch-subject-re
-  (rx string-start (zero-or-more space) "["
+  (rx (zero-or-more space) "["
       (zero-or-more (not (any "]" "\n")))
       "PATCH"
       (zero-or-more (not (any "]" "\n")))
