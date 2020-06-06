@@ -353,7 +353,8 @@ in `piem-default-branch-function'."
              (append (if (string-empty-p new-branch)
                          (list "--detach")
                        (list "-b" new-branch))
-                     (list base))))
+                     (and (not (string-blank-p base))
+                          (list base)))))
     (piem-process-call nil piem-git-executable "am" "--scissors" mbox)
     (if (and piem-use-magit
              (fboundp 'magit-status-setup-buffer))
