@@ -63,6 +63,35 @@
                       "show" "--format=mbox" "--entire-thread=true"
                       query)))))
 
+(defun piem-notmuch-am-ready-mbox ()
+  "Return a function that inserts an am-ready mbox.
+If the buffer has any MIME parts that look a patch, use those
+part's content (in order) as the mbox.  Otherwise, use the
+message itself if it looks like a patch."
+  (when (derived-mode-p 'notmuch-show-mode)
+    (let ((body (car (plist-get (notmuch-show-get-message-properties)
+                                :body))))
+      (pcase (plist-get body :content-type)
+        ((and "text/plain"
+              (guard (string-match-p piem-patch-subject-re
+                                     (notmuch-show-get-subject))))
+         (let ((id (notmuch-show-get-message-id)))
+           (lambda ()
+             (call-process notmuch-command nil t nil
+                           "show" "--format=mbox" id))))
+        ("multipart/mixed"
+         (let ((patches
+                (delq nil
+                      (mapcar (lambda (part)
+                                (and (member (plist-get part :content-type)
+                                             '("text/x-diff" "text/x-patch"))
+                                     (plist-get part :content)))
+                              (plist-get body :content)))))
+           (when patches
+             (lambda ()
+               (dolist (patch patches)
+                 (insert patch))))))))))
+
 ;;;###autoload
 (define-minor-mode piem-notmuch-mode
   "Toggle Notmuch support for piem.
@@ -73,9 +102,11 @@ the mode if ARG is omitted or nil."
   :init-value nil
   (if piem-notmuch-mode
       (progn
+        (add-hook 'piem-am-ready-mbox-functions #'piem-notmuch-am-ready-mbox)
         (add-hook 'piem-get-inbox-functions #'piem-notmuch-get-inbox)
         (add-hook 'piem-get-mid-functions #'piem-notmuch-get-mid)
         (add-hook 'piem-mid-to-thread-functions #'piem-notmuch-mid-to-thread))
+    (remove-hook 'piem-am-ready-mbox-functions #'piem-notmuch-am-ready-mbox)
     (remove-hook 'piem-get-inbox-functions #'piem-notmuch-get-inbox)
     (remove-hook 'piem-get-mid-functions #'piem-notmuch-get-mid)
     (remove-hook 'piem-mid-to-thread-functions #'piem-notmuch-mid-to-thread)))
