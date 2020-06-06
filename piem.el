@@ -153,7 +153,7 @@ the following information about the patch series:
       the first patch otherwise.
   :base-commit
       The reported base commit of the patch, if any."
-  :type 'boolean)
+  :type 'function)
 
 
 ;;;; Subprocess handling
