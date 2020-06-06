@@ -236,6 +236,18 @@ the following information about the patch series:
              (repo (plist-get (cdr (assoc p piem-inboxes)) :coderepo)))
     (expand-file-name repo)))
 
+(defun piem-inbox-coderepo-maybe-read ()
+  "Like `piem-inbox-coderepo', but fall back to reading the repo."
+  (or (piem-inbox-coderepo)
+      (and (fboundp 'projectile-relevant-known-projects)
+           (completing-read
+            "Project: "
+            (projectile-relevant-known-projects)))
+      (and piem-use-magit
+           (fboundp 'magit-read-repository)
+           (magit-read-repository))
+      (read-directory-name "Git repository: ")))
+
 (defun piem-mid ()
   "Return the current buffer's message ID."
   (run-hook-with-args-until-success 'piem-get-mid-functions))

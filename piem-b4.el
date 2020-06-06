@@ -110,15 +110,7 @@
                              (match-string 1 arg)))
                       args)))
     (user-error "%s is incompatible with this command" badopt))
-  (pcase-let* ((coderepo (or (piem-inbox-coderepo)
-                             (and (fboundp 'projectile-relevant-known-projects)
-                                  (completing-read
-                                   "Project: "
-                                   (projectile-relevant-known-projects)))
-                             (and piem-use-magit
-                                  (fboundp 'magit-read-repository)
-                                  (magit-read-repository))
-                             (read-directory-name "Git repository: ")))
+  (pcase-let* ((coderepo (piem-inbox-coderepo-maybe-read))
                (`(,cover ,mbox-file)
                 (piem-b4--get-am-files mid coderepo args))
                (default-directory coderepo))
