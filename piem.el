@@ -242,18 +242,17 @@ the following information about the patch series:
 
 ;;;; Patch handling
 
-(defun piem-series-info (cover patches)
-  "Collect information for a patch series.
-COVER is an mbox with the cover letter, and PATCHES is an
-am-ready mbox.  If the series does not have a cover letter (e.g.,
-a one-patch series), COVER may be nil."
-  (with-temp-buffer
-    (insert-file-contents (or cover patches))
-    (let ((info (save-restriction
-                  (message-narrow-to-head)
-                  (list :date (message-fetch-field "date")
-                        :from (message-fetch-field "from")
-                        :subject (message-fetch-field "subject")))))
+(defun piem-extract-mbox-info (&optional buffer)
+  "Collect information from message in BUFFER.
+If BUFFER is nil, the current buffer is used.  Any message after
+the first will be ignored."
+  (with-current-buffer (or buffer (current-buffer))
+    (let ((info (save-excursion
+                  (save-restriction
+                    (message-narrow-to-head)
+                    (list :date (message-fetch-field "date")
+                          :from (message-fetch-field "from")
+                          :subject (message-fetch-field "subject"))))))
       (when (re-search-forward (rx line-start "base-commit: "
                                    (group (>= 40 hex-digit))
                                    line-end)

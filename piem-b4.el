@@ -121,9 +121,12 @@
                              (read-directory-name "Git repository: ")))
                (`(,cover ,mbox-file)
                 (piem-b4--get-am-files mid coderepo args))
-               (info (piem-series-info cover mbox-file))
                (default-directory coderepo))
-    (piem-am mbox-file info coderepo)))
+    (piem-am mbox-file
+             (with-temp-buffer
+               (insert-file-contents (or cover mbox-file))
+               (piem-extract-mbox-info))
+             coderepo)))
 
 (define-infix-argument piem-b4-am:--outdir ()
   :description "Output directory"
