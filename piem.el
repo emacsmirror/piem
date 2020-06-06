@@ -375,6 +375,13 @@ in `piem-default-branch-function'."
               (and version (concat "__" version))))))
 
 (defun piem-am (mbox &optional info coderepo)
+  (interactive
+   (let ((mbox (or (piem-am-ready-mbox)
+                   (user-error
+                    "Could not find am-ready mbox for current buffer"))))
+     (list mbox
+           (piem-extract-mbox-info mbox)
+           (piem-inbox-coderepo-maybe-read))))
   (let* ((default-directory (or coderepo default-directory)))
     ;; TODO: Optionally do more through Magit.
     (let ((new-branch (read-string
@@ -393,7 +400,10 @@ in `piem-default-branch-function'."
                        (list "-b" new-branch))
                      (and (not (string-blank-p base))
                           (list base)))))
-    (piem-process-call nil piem-git-executable "am" "--scissors" mbox)
+    (if (bufferp mbox)
+        (piem-process-call-with-buffer-input
+         nil mbox piem-git-executable "am" "--scissors")
+      (piem-process-call nil piem-git-executable "am" "--scissors" mbox))
     (if (and piem-use-magit
              (fboundp 'magit-status-setup-buffer))
         (magit-status-setup-buffer)
