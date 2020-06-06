@@ -179,11 +179,7 @@ intended to be used by libraries implementing a function for
       (setq default-directory (file-name-as-directory dir))
       (display-buffer buffer)
       (let ((inhibit-read-only t))
-        (insert (format "
-%s
-;;; process: %S
-;;; directory:  %s
-"
+        (insert (format "\n%s\n;;; process: %S\n;;; directory:  %s\n"
                         (char-to-string 12) ; form feed
                         (cons program program-args)
                         default-directory))
