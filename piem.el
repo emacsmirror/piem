@@ -312,6 +312,13 @@ the first will be ignored."
         (plist-put info :base-commit (match-string 1)))
       info)))
 
+(defvar piem-patch-subject-re
+  (rx string-start (zero-or-more space) "["
+      (zero-or-more (not (any "]" "\n")))
+      "PATCH"
+      (zero-or-more (not (any "]" "\n")))
+      "]" (one-or-more space)))
+
 (defun piem--shorten-subject (subject)
   (let ((words
          (mapcar #'downcase
@@ -321,12 +328,7 @@ the first will be ignored."
                      (rx (any "'\""))
                      "")
                     (replace-regexp-in-string
-                     (rx string-start (zero-or-more space) "["
-                         (zero-or-more (not (any "]" "\n")))
-                         "PATCH"
-                         (zero-or-more (not (any "]" "\n")))
-                         "]" (one-or-more space))
-                     ""))
+                     piem-patch-subject-re ""))
                   "\\W+" t)))
         (ignore-these (list "a" "an" "the"))
         (num-words 0)
