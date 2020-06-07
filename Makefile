@@ -5,7 +5,7 @@ EMACS   = emacs
 BATCH   = $(EMACS) --batch -Q -L .
 
 EL = piem.el piem-b4.el piem-elfeed.el piem-eww.el piem-gnus.el \
-     piem-notmuch.el
+     piem-maildir.el piem-notmuch.el
 ELC = $(EL:.el=.elc)
 
 all: compile piem.info piem-autoloads.el
@@ -23,6 +23,7 @@ piem-b4.elc: piem-b4.el piem.elc
 piem-elfeed.elc: piem-elfeed.el piem.elc
 piem-eww.elc: piem-eww.el piem.elc
 piem-gnus.elc: piem-gnus.el piem.elc
+piem-maildir.elc: piem-maildir.el
 piem-notmuch.elc: piem-notmuch.el piem.elc
 piem.elc: piem.el
 
