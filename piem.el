@@ -26,9 +26,12 @@
 
 ;;; Code:
 
+(require 'cl-lib)
 (require 'message)
+(require 'piem-maildir)
 (require 'rfc2047)
 (require 'subr-x)
+(require 'url)
 
 
 ;;;; Options
@@ -163,6 +166,17 @@ the following information about the patch series:
       The reported base commit of the patch, if any."
   :type 'function)
 
+(defcustom piem-maildir-directory nil
+  "Inject public-inbox threads into this directory.
+If non-nil, this must be an existing Maildir directory."
+  :type 'string)
+
+(defcustom piem-after-mail-injection-functions nil
+  "Functions called after writing messages to `piem-maildir-directory'.
+Functions should accept one argument, the message ID given to
+`piem-inject-thread-into-maildir'."
+  :type 'hook)
+
 
 ;;;; Subprocess handling
 
@@ -294,6 +308,90 @@ Callers are responsible for killing the buffer."
           buffer
         (kill-buffer buffer)
         nil))))
+
+
+;;;; Maildir injection
+
+(defun piem--write-mbox-to-maildir ()
+  (let ((n-messages 0))
+    (while (and (not (eobp))
+                (search-forward "From mboxrd@z" nil t))
+      (let* ((beg (line-beginning-position 2))
+             (end (or (and (search-forward "From mboxrd@z" nil t)
+                           (progn (goto-char (line-beginning-position 0))
+                                  (point-marker)))
+                      (point-max-marker)))
+             (basename (piem-maildir-make-uniq-maildir-id))
+             (tmpfile (concat piem-maildir-directory "/tmp/" basename)))
+        (goto-char beg)
+        ;; TODO: Consider supporting a caller-specified predicate that
+        ;; could be used, for example, to skip messages already in
+        ;; their local mail.
+        (let ((case-fold-search nil))
+          (while (re-search-forward
+                  (rx line-start ">" (group (zero-or-more ">") "From "))
+                  end t)
+            (replace-match "\\1" t)))
+        (write-region beg end tmpfile nil nil nil 'excl)
+        (piem-maildir-move-tmp-to-new piem-maildir-directory
+                                      basename)
+        (delete-file tmpfile)
+        (cl-incf n-messages)
+        (goto-char end)))
+    n-messages))
+
+(defun piem--inject-thread-callback (status mid message-only)
+  (let ((buffer (current-buffer)))
+    (unwind-protect
+        (let ((error-status (plist-get status :error)))
+          (if error-status
+              (signal (car error-status) (cdr error-status))
+            (search-forward "\n\n")
+            (delete-region (point-min) (point))
+            (unless message-only
+              (unless (= 0 (call-process-region nil nil "gunzip" nil t))
+                (error "Decompressing t.mbox.gz failed"))
+              (delete-region (point) (point-max)))
+            (goto-char (point-min))
+            (let ((message-count (piem--write-mbox-to-maildir)))
+              (message "%d message(s) for %s moved to %s"
+                       message-count mid piem-maildir-directory))
+            (run-hook-with-args 'piem-after-mail-injection-functions mid)))
+      (and (buffer-live-p buffer)
+           (kill-buffer buffer)))))
+
+(defvar piem--has-gunzip)
+
+;;;###autoload
+(defun piem-inject-thread-into-maildir (mid &optional message-only)
+  "Inject thread containing MID into `piem-maildir-directory'.
+
+If prefix argument MESSAGE-ONLY is non-nil, inject just the
+message for MID, not the entire thread.
+
+This function depends on :url being configured for entries in
+`piem-inboxes'."
+  (interactive
+   (list (or (piem-mid)
+             (user-error "No message ID found for the current buffer"))
+         current-prefix-arg))
+  (unless (or message-only (boundp 'piem--has-gunzip))
+    (setq piem--has-gunzip (executable-find "gunzip")))
+  (cond
+   ((not piem-maildir-directory)
+    (user-error "`piem-maildir-directory' is not configured"))
+   ((not (piem-maildir-dir-is-maildir-p piem-maildir-directory))
+    (user-error
+     "`piem-maildir-directory' does not look like a Maildir directory"))
+   ((not (or message-only piem--has-gunzip))
+    (user-error "gunzip executable not found")))
+  (url-retrieve (concat (or (piem-inbox-url)
+                            (user-error
+                             "Could not find inbox URL for current buffer"))
+                        mid
+                        (if message-only "/raw" "/t.mbox.gz"))
+                #'piem--inject-thread-callback
+                (list mid message-only)))
 
 
 ;;;; Patch handling

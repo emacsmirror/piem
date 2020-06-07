@@ -25,7 +25,7 @@ piem-eww.elc: piem-eww.el piem.elc
 piem-gnus.elc: piem-gnus.el piem.elc
 piem-maildir.elc: piem-maildir.el
 piem-notmuch.elc: piem-notmuch.el piem.elc
-piem.elc: piem.el
+piem.elc: piem.el piem-maildir.elc
 
 .SUFFIXES: .el .elc .texi .info
 
