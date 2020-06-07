@@ -259,6 +259,11 @@ the following information about the patch series:
              (repo (plist-get (cdr (assoc p piem-inboxes)) :coderepo)))
     (expand-file-name repo)))
 
+(defun piem-inbox-url ()
+  "Return the URL of current buffer's inbox."
+  (when-let ((p (piem-inbox)))
+    (plist-get (cdr (assoc p piem-inboxes)) :url)))
+
 (defun piem-inbox-coderepo-maybe-read ()
   "Like `piem-inbox-coderepo', but fall back to reading the repo."
   (or (piem-inbox-coderepo)
