@@ -27,7 +27,7 @@
 ;;; Code:
 
 (require 'message)
-(provide 'rfc2047)
+(require 'rfc2047)
 (require 'subr-x)
 
 
