@@ -59,8 +59,8 @@
 
 (defun piem-gnus-am-ready-mbox ()
   "Return a function that inserts an am-ready mbox.
-If the buffer has any MIME parts that look a patch, use those
-part's content (in order) as the mbox.  Otherwise, use the
+If the buffer has any MIME parts that look like a patch, use
+those parts' contents (in order) as the mbox.  Otherwise, use the
 message itself if it looks like a patch."
   (when (derived-mode-p 'gnus-article-mode)
     (cond
