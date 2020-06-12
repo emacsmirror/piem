@@ -244,7 +244,7 @@ intended to be used by libraries implementing a function for
 `piem-get-mid-functions'."
   (pcase-let ((`(,listid ,to ,cc)
                (save-restriction
-                 (message-narrow-to-headers)
+                 (message-narrow-to-head)
                  (list (message-fetch-field "list-id")
                        (message-fetch-field "to")
                        (message-fetch-field "cc")))))
