@@ -101,6 +101,14 @@ how to create an mbox, it should return a function that takes no
 arguments and inserts the mbox's contents in the current buffer."
   :type 'hook)
 
+(defcustom piem-add-message-id-header nil
+  "Whether to add Message-Id header to non-mail patches.
+If this value is non-nil and a patch returned by a function in
+`piem-am-ready-mbox-functions' looks like a patch that was
+attached rather than sent inline, add a Message-Id header with
+the return value of `piem-mid'."
+  :type 'boolean)
+
 (defcustom piem-git-executable
   (or (and (boundp 'magit-git-executable) magit-git-executable)
       "git")
@@ -294,16 +302,49 @@ intended to be used by libraries implementing a function for
   "Return the current buffer's message ID."
   (run-hook-with-args-until-success 'piem-get-mid-functions))
 
+(defun piem--insert-message-id-header (mid)
+  ;; Be strict about case because this is coming from
+  ;; git-format-patch.
+  (let ((case-fold-search nil))
+    (while (re-search-forward
+            (rx line-start
+                "From " (>= 40 hex-digit) " Mon Sep 17 00:00:00 2001"
+                line-end)
+            nil t)
+      (catch 'has-message-id
+        (let ((header-count 0))
+          (while (and (= (forward-line) 0)
+                      (not (looking-at-p
+                            (rx line-start (zero-or-one space) line-end))))
+            (cond
+             ((looking-at-p
+               (rx line-start
+                   "Message-Id: <" (one-or-more not-newline) ">"
+                   line-end))
+              (throw 'has-message-id nil))
+             ((looking-at-p
+               (rx line-start (or "From" "Date" "Subject") ": "
+                   not-newline))
+              (cl-incf header-count))))
+          (when (= header-count 3)
+            ;; Found all the expected headers before hitting a
+            ;; blank line.  Assume we're in a header.
+            (insert (format "Message-Id: <%s>\n" mid))))))))
+
 (defun piem-am-ready-mbox ()
   "Return buffer containing an am-ready mbox.
 Callers are responsible for killing the buffer."
   (when-let ((fn (run-hook-with-args-until-success
                   'piem-am-ready-mbox-functions)))
     (let ((buffer (generate-new-buffer " *piem am-ready mbox*"))
+          (mid (and piem-add-message-id-header (piem-mid)))
           has-content)
       (with-current-buffer buffer
         (funcall fn)
-        (setq has-content (< 1 (point-max))))
+        (setq has-content (< 1 (point-max)))
+        (when (and has-content mid)
+          (goto-char (point-min))
+          (piem--insert-message-id-header mid)))
       (if has-content
           buffer
         (kill-buffer buffer)
