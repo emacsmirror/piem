@@ -84,6 +84,9 @@
 
 ;;;###autoload
 (defun piem-b4-am-ready-from-mbox (mbox &optional args)
+  "Extract an am-ready mbox from a thread of messages.
+MBOX is the file name of an mbox that contains a patch series.
+ARGS is a list of arguments to pass to `b4 am'."
   (interactive (list (read-file-name "mbox: ")
                      (transient-args 'piem-b4-am)))
   (apply #'piem-process-start nil piem-b4-b4-executable "am"
@@ -91,6 +94,9 @@
 
 ;;;###autoload
 (defun piem-b4-am-ready-from-mid (mid &optional args)
+  "Download the thread for MID and and extract an am-ready mbox.
+MID is a Message-Id to pass directly to `b4 am', along with the
+list of arguments specified via ARGS."
   (interactive (list (read-string "Message ID: " nil nil (piem-mid))
                      (transient-args 'piem-b4-am)))
   (apply #'piem-process-start nil piem-b4-b4-executable "am"
@@ -98,6 +104,11 @@
 
 ;;;###autoload
 (defun piem-b4-am-from-mid (mid &optional args)
+  "Get the thread for MID, extract an am-ready mbox, and apply it.
+Try to get a thread for the Message-Id MID with
+`piem-mid-to-thread-functions', falling back to letting b4
+download it.  After calling `b4 am' with ARGS to prepare an
+am-ready mbox, feed the result to `git am'."
   (interactive (list (or (piem-mid)
                          (read-string "Message ID: "))
                      (transient-args 'piem-b4-am)))

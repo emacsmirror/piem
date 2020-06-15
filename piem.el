@@ -522,6 +522,16 @@ in `piem-default-branch-function'."
 
 ;;;###autoload
 (defun piem-am (mbox &optional info coderepo)
+  "Feed an am-ready mbox to `git am'.
+
+MBOX is a buffer whose contents are an am-ready mbox (obtained
+via `piem-am-ready-mbox' when called interactively).  INFO is a
+plist that with information to help choose a default branch name
+or starting point (see `piem-default-branch-function' for a list
+of possible properties).
+
+If CODEREPO is given, switch to this directory before calling
+`git am'."
   (interactive
    (let ((mbox (or (piem-am-ready-mbox)
                    (user-error
