@@ -520,6 +520,7 @@ in `piem-default-branch-function'."
               (piem--shorten-subject subject)
               (and version (concat "__" version))))))
 
+;;;###autoload
 (defun piem-am (mbox &optional info coderepo)
   (interactive
    (let ((mbox (or (piem-am-ready-mbox)
