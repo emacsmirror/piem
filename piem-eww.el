@@ -38,6 +38,10 @@
   "Return inbox name from an EWW buffer."
   (when (derived-mode-p 'eww-mode)
     (when-let ((link (plist-get eww-data :url)))
+      ;; NEEDSWORK: This relies on the inbox name in the URL matching
+      ;; the inbox name in `piem-inboxes', which might not be the
+      ;; case.  If there's a :url in `piem-inboxes', that could be
+      ;; matched instead.
       (and (string-match piem-link-re link)
            (match-string 1 link)))))
 
