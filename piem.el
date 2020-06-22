@@ -184,6 +184,7 @@ Functions should accept one argument, the message ID given to
       (unless (derived-mode-p 'piem-process-mode)
         (piem-process-mode))
       (setq default-directory (file-name-as-directory dir))
+      (goto-char (point-max))
       (display-buffer buffer)
       (let ((inhibit-read-only t))
         (insert (format "\n%s\n;;; process: %S\n;;; directory:  %s\n"
