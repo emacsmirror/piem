@@ -521,7 +521,7 @@ in `piem-default-branch-function'."
               (piem--shorten-subject subject)
               (and version (concat "__" version))))))
 
-(defvar piem-am-args (list "--scissors"))
+(defvar piem-am-args (list "--scissors" "--3way"))
 
 ;;;###autoload
 (defun piem-am (mbox &optional info coderepo)
