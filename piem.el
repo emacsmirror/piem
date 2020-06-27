@@ -541,7 +541,6 @@ If CODEREPO is given, switch to this directory before calling
            (piem-extract-mbox-info mbox)
            (piem-inbox-coderepo-maybe-read))))
   (let* ((default-directory (or coderepo default-directory)))
-    ;; TODO: Optionally do more through Magit.
     (let ((new-branch (read-string
                        "New branch (empty for detached): "
                        (funcall piem-default-branch-function info)))
