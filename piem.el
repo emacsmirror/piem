@@ -521,6 +521,8 @@ in `piem-default-branch-function'."
               (piem--shorten-subject subject)
               (and version (concat "__" version))))))
 
+(defvar piem-am-args (list "--scissors"))
+
 ;;;###autoload
 (defun piem-am (mbox &optional info coderepo)
   "Feed an am-ready mbox to `git am'.
@@ -558,9 +560,10 @@ If CODEREPO is given, switch to this directory before calling
                      (and (not (string-blank-p base))
                           (list base)))))
     (if (bufferp mbox)
-        (piem-process-call-with-buffer-input
-         nil mbox piem-git-executable "am" "--scissors")
-      (piem-process-call nil piem-git-executable "am" "--scissors" mbox))
+        (apply #'piem-process-call-with-buffer-input
+               nil mbox piem-git-executable "am" piem-am-args)
+      (apply #'piem-process-call nil piem-git-executable "am"
+             (append piem-am-args (list mbox))))
     (if (and piem-use-magit
              (fboundp 'magit-status-setup-buffer))
         (magit-status-setup-buffer)
