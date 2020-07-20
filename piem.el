@@ -447,8 +447,8 @@ the first will be ignored."
                   (save-restriction
                     (message-narrow-to-head)
                     (list :date (message-fetch-field "date")
-                          :from (rfc2047-decode-string
-                                 (message-fetch-field "from"))
+                          :from (when-let ((from (message-fetch-field "from")))
+                                  (rfc2047-decode-string from))
                           :subject (message-fetch-field "subject"))))))
       (when (re-search-forward (rx line-start "base-commit: "
                                    (group (>= 40 hex-digit))
@@ -501,8 +501,8 @@ indicated in the subject.
 
 INFO is a plist with properties documented
 in `piem-default-branch-function'."
-  (when-let ((sender (car (mail-extract-address-components
-                           (plist-get info :from))))
+  (when-let ((from (plist-get info :from))
+             (sender (car (mail-extract-address-components from)))
              (subject (plist-get info :subject)))
     (let* ((subnames (split-string sender))
            (initials (mapconcat
