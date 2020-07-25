@@ -38,13 +38,13 @@
 
 (defun piem-gnus-get-inbox ()
   "Return inbox name from a Gnus article"
-  (when (derived-mode-p 'gnus-article-mode)
+  (when (derived-mode-p 'gnus-article-mode 'gnus-summary-mode)
     (with-current-buffer gnus-original-article-buffer
       (piem-inbox-by-header-match))))
 
 (defun piem-gnus-get-mid ()
   "Return the message ID of a Gnus article."
-  (when (derived-mode-p 'gnus-article-mode)
+  (when (derived-mode-p 'gnus-article-mode 'gnus-summary-mode)
     (with-current-buffer gnus-original-article-buffer
       (when-let ((mid (message-field-value "Message-ID")))
         (if (string-match (rx string-start (zero-or-more space) "<"
@@ -62,7 +62,7 @@
 If the buffer has any MIME parts that look like a patch, use
 those parts' contents (in order) as the mbox.  Otherwise, use the
 message itself if it looks like a patch."
-  (when (derived-mode-p 'gnus-article-mode)
+  (when (derived-mode-p 'gnus-article-mode 'gnus-summary-mode)
     (cond
      (gnus-article-mime-handles
       (let ((patches
