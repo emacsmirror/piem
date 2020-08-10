@@ -126,6 +126,7 @@ am-ready mbox, feed the result to `git am'."
                 (piem-b4--get-am-files mid coderepo args))
                (default-directory coderepo))
     (piem-am mbox-file
+             nil
              (with-temp-buffer
                (insert-file-contents (or cover mbox-file))
                (piem-extract-mbox-info))

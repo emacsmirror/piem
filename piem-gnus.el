@@ -77,9 +77,10 @@ message itself if it looks like a patch."
                                      (point-min) (point-max)))))
                            gnus-article-mime-handles))))
         (when patches
-          (lambda ()
-            (dolist (patch patches)
-              (insert patch))))))
+          (list (lambda ()
+                  (dolist (patch patches)
+                    (insert patch)))
+                "mbox"))))
      (gnus-article-buffer
       (let ((patch (with-current-buffer gnus-article-buffer
                      (save-restriction
@@ -89,7 +90,8 @@ message itself if it looks like a patch."
                             (buffer-substring-no-properties
                              (point-min) (point-max)))))))
         (when patch
-          (lambda () (insert patch))))))))
+          (list (lambda () (insert patch))
+                "mbox")))))))
 
 ;;;###autoload
 (define-minor-mode piem-gnus-mode

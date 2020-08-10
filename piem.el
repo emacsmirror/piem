@@ -91,14 +91,17 @@ message ID associated with the current buffer or nil."
 Each function should accept one argument, the message ID.  If the
 function knows how to create an mbox for the message ID, it
 should return a function that takes no arguments and inserts the
-mbox's contents in the current buffer."
+mbox's contents (in mboxrd format) in the current buffer."
   :type 'hook)
 
 (defcustom piem-am-ready-mbox-functions nil
   "Functions tried to get an mbox to be fed to `git am'.
 The functions are called with no arguments.  If a function knows
 how to create an mbox, it should return a function that takes no
-arguments and inserts the mbox's contents in the current buffer."
+arguments and inserts the mbox's contents in the current buffer.
+The return value can also be (FUNCTION FORMAT), where FORMAT is
+either \"mbox\" or \"mboxrd\" and maps to the --patch-format
+value passed to `git am'.  If unspecified, \"mboxrd\" is used."
   :type 'hook)
 
 (defcustom piem-add-message-id-header nil
@@ -333,13 +336,16 @@ intended to be used by libraries implementing a function for
             (insert (format "Message-Id: <%s>\n" mid))))))))
 
 (defun piem-am-ready-mbox ()
-  "Return buffer containing an am-ready mbox.
-Callers are responsible for killing the buffer."
-  (when-let ((fn (run-hook-with-args-until-success
-                  'piem-am-ready-mbox-functions)))
-    (let ((buffer (generate-new-buffer " *piem am-ready mbox*"))
-          (mid (and piem-add-message-id-header (piem-mid)))
-          has-content)
+  "Generate a buffer containing an am-ready mbox.
+The return value is (BUFFER FORMAT), where FORMAT is either
+\"mbox\" or \"mboxrd\".  Callers are responsible for killing the
+buffer."
+  (when-let ((res (run-hook-with-args-until-success
+                   'piem-am-ready-mbox-functions)))
+    (pcase-let ((buffer (generate-new-buffer " *piem am-ready mbox*"))
+                (`(,fn ,format) (if (listp res) res (list res "mboxrd")))
+                (mid (and piem-add-message-id-header (piem-mid)))
+                (has-content nil))
       (with-current-buffer buffer
         (funcall fn)
         (setq has-content (< 1 (point-max)))
@@ -347,7 +353,7 @@ Callers are responsible for killing the buffer."
           (goto-char (point-min))
           (piem--insert-message-id-header mid)))
       (if has-content
-          buffer
+          (list buffer format)
         (kill-buffer buffer)
         nil))))
 
@@ -524,24 +530,31 @@ in `piem-default-branch-function'."
 (defvar piem-am-args (list "--scissors" "--3way"))
 
 ;;;###autoload
-(defun piem-am (mbox &optional info coderepo)
+(defun piem-am (mbox &optional format info coderepo)
   "Feed an am-ready mbox to `git am'.
 
 MBOX is a buffer whose contents are an am-ready mbox (obtained
-via `piem-am-ready-mbox' when called interactively).  INFO is a
-plist that with information to help choose a default branch name
-or starting point (see `piem-default-branch-function' for a list
-of possible properties).
+via `piem-am-ready-mbox' when called interactively).  FORMAT
+controls the value passed as the --patch-format option of `git
+am'.  \"mbox\" and \"mboxrd\" are valid values, and \"mboxrd\" is
+the default.
+
+INFO is a plist that with information to help choose a default
+branch name or starting point (see `piem-default-branch-function'
+for a list of possible properties).
 
 If CODEREPO is given, switch to this directory before calling
 `git am'."
   (interactive
-   (let ((mbox (or (piem-am-ready-mbox)
-                   (user-error
-                    "Could not find am-ready mbox for current buffer"))))
+   (pcase-let ((`(,mbox ,format)
+                (or (piem-am-ready-mbox)
+                    (user-error
+                     "Could not find am-ready mbox for current buffer"))))
      (list mbox
+           format
            (piem-extract-mbox-info mbox)
            (piem-inbox-coderepo-maybe-read))))
+  (setq format (or format "mboxrd"))
   (let ((default-directory (or coderepo default-directory)))
     (let ((new-branch (read-string
                        "New branch (empty for detached): "
@@ -559,11 +572,13 @@ If CODEREPO is given, switch to this directory before calling
                        (list "-b" new-branch))
                      (and (not (string-blank-p base))
                           (list base)))))
-    (if (bufferp mbox)
-        (apply #'piem-process-call-with-buffer-input
-               nil mbox piem-git-executable "am" piem-am-args)
-      (apply #'piem-process-call nil piem-git-executable "am"
-             (append piem-am-args (list mbox))))
+    (let ((args (cons (concat "--patch-format=" format)
+                      piem-am-args)))
+      (if (bufferp mbox)
+          (apply #'piem-process-call-with-buffer-input
+                 nil mbox piem-git-executable "am" args)
+        (apply #'piem-process-call nil piem-git-executable "am"
+               (append args (list mbox)))))
     (if (and piem-use-magit
              (fboundp 'magit-status-setup-buffer))
         (magit-status-setup-buffer)

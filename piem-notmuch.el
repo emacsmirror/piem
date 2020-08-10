@@ -88,9 +88,10 @@ message itself if it looks like a patch."
                                      (plist-get part :content)))
                               (plist-get body :content)))))
            (when patches
-             (lambda ()
-               (dolist (patch patches)
-                 (insert patch))))))))))
+             (list (lambda ()
+                     (dolist (patch patches)
+                       (insert patch)))
+                   "mbox"))))))))
 
 ;;;###autoload
 (define-minor-mode piem-notmuch-mode
