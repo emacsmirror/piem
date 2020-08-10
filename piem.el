@@ -542,7 +542,7 @@ If CODEREPO is given, switch to this directory before calling
      (list mbox
            (piem-extract-mbox-info mbox)
            (piem-inbox-coderepo-maybe-read))))
-  (let* ((default-directory (or coderepo default-directory)))
+  (let ((default-directory (or coderepo default-directory)))
     (let ((new-branch (read-string
                        "New branch (empty for detached): "
                        (funcall piem-default-branch-function info)))
