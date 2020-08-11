@@ -77,7 +77,7 @@ message itself if it looks like a patch."
                                      (point-min) (point-max)))))
                            gnus-article-mime-handles))))
         (when patches
-          (list (lambda ()
+          (cons (lambda ()
                   (dolist (patch patches)
                     (insert patch)))
                 "mbox"))))
@@ -90,7 +90,7 @@ message itself if it looks like a patch."
                             (buffer-substring-no-properties
                              (point-min) (point-max)))))))
         (when patch
-          (list (lambda () (insert patch))
+          (cons (lambda () (insert patch))
                 "mbox")))))))
 
 ;;;###autoload

@@ -88,7 +88,7 @@ message itself if it looks like a patch."
                                      (plist-get part :content)))
                               (plist-get body :content)))))
            (when patches
-             (list (lambda ()
+             (cons (lambda ()
                      (dolist (patch patches)
                        (insert patch)))
                    "mbox"))))))))

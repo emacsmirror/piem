@@ -99,7 +99,7 @@ mbox's contents (in mboxrd format) in the current buffer."
 The functions are called with no arguments.  If a function knows
 how to create an mbox, it should return a function that takes no
 arguments and inserts the mbox's contents in the current buffer.
-The return value can also be (FUNCTION FORMAT), where FORMAT is
+The return value can also be (FUNCTION . FORMAT), where FORMAT is
 either \"mbox\" or \"mboxrd\" and maps to the --patch-format
 value passed to `git am'.  If unspecified, \"mboxrd\" is used."
   :type 'hook)
@@ -337,13 +337,16 @@ intended to be used by libraries implementing a function for
 
 (defun piem-am-ready-mbox ()
   "Generate a buffer containing an am-ready mbox.
-The return value is (BUFFER FORMAT), where FORMAT is either
+The return value is (BUFFER . FORMAT), where FORMAT is either
 \"mbox\" or \"mboxrd\".  Callers are responsible for killing the
 buffer."
   (when-let ((res (run-hook-with-args-until-success
                    'piem-am-ready-mbox-functions)))
     (pcase-let ((buffer (generate-new-buffer " *piem am-ready mbox*"))
-                (`(,fn ,format) (if (listp res) res (list res "mboxrd")))
+                (`(,fn . ,format)
+                 (if (member (cdr-safe res) '("mbox" "mboxrd"))
+                     res
+                   (cons res "mboxrd")))
                 (mid (and piem-add-message-id-header (piem-mid)))
                 (has-content nil))
       (with-current-buffer buffer
@@ -353,7 +356,7 @@ buffer."
           (goto-char (point-min))
           (piem--insert-message-id-header mid)))
       (if has-content
-          (list buffer format)
+          (cons buffer format)
         (kill-buffer buffer)
         nil))))
 
@@ -546,7 +549,7 @@ for a list of possible properties).
 If CODEREPO is given, switch to this directory before calling
 `git am'."
   (interactive
-   (pcase-let ((`(,mbox ,format)
+   (pcase-let ((`(,mbox . ,format)
                 (or (piem-am-ready-mbox)
                     (user-error
                      "Could not find am-ready mbox for current buffer"))))
