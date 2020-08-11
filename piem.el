@@ -553,12 +553,18 @@ If CODEREPO is given, switch to this directory before calling
                 (or (piem-am-ready-mbox)
                     (user-error
                      "Could not find am-ready mbox for current buffer"))))
-     (list mbox
+     ;; We're responsible for cleaning up the buffer created by
+     ;; `piem-am-ready-mbox'; sneak in an indication to let the
+     ;; downstream code know.
+     (list (cons :interactive mbox)
            format
            (piem-extract-mbox-info mbox)
            (piem-inbox-coderepo-maybe-read))))
   (setq format (or format "mboxrd"))
-  (let ((default-directory (or coderepo default-directory)))
+  (let ((default-directory (or coderepo default-directory))
+        (interactivep (eq (car-safe mbox) :interactive)))
+    (when interactivep
+      (setq mbox (cdr mbox)))
     (let ((new-branch (read-string
                        "New branch (empty for detached): "
                        (funcall piem-default-branch-function info)))
@@ -578,8 +584,11 @@ If CODEREPO is given, switch to this directory before calling
     (let ((args (cons (concat "--patch-format=" format)
                       piem-am-args)))
       (if (bufferp mbox)
-          (apply #'piem-process-call-with-buffer-input
-                 nil mbox piem-git-executable "am" args)
+          (unwind-protect
+              (apply #'piem-process-call-with-buffer-input
+                     nil mbox piem-git-executable "am" args)
+            (when interactivep
+              (kill-buffer mbox)))
         (apply #'piem-process-call nil piem-git-executable "am"
                (append args (list mbox)))))
     (if (and piem-use-magit
