@@ -297,7 +297,8 @@ intended to be used by libraries implementing a function for
              (and (fboundp 'projectile-relevant-known-projects)
                   (completing-read
                    "Project: "
-                   (projectile-relevant-known-projects)))
+                   (projectile-relevant-known-projects)
+                   nil t))
              (and piem-use-magit
                   (fboundp 'magit-read-repository)
                   (magit-read-repository))
