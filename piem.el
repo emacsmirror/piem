@@ -295,13 +295,13 @@ intended to be used by libraries implementing a function for
   (let ((inbox
          (or (piem-inbox-coderepo)
              (and (bound-and-true-p projectile-known-projects)
-                  (completing-read
-                   "Project: "
-                   projectile-known-projects nil t nil nil
-                   (when-let ((current (and (fboundp 'projectile-project-root)
-                                            (projectile-project-root))))
-                     (abbreviate-file-name current))))
-
+                  (expand-file-name
+                   (completing-read
+                    "Project: "
+                    projectile-known-projects nil t nil nil
+                    (when-let ((current (and (fboundp 'projectile-project-root)
+                                             (projectile-project-root))))
+                      (abbreviate-file-name current)))))
              (and piem-use-magit
                   (fboundp 'magit-read-repository)
                   (magit-read-repository))
