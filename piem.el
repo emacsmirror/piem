@@ -294,11 +294,14 @@ intended to be used by libraries implementing a function for
   "Like `piem-inbox-coderepo', but fall back to reading the repo."
   (let ((inbox
          (or (piem-inbox-coderepo)
-             (and (fboundp 'projectile-relevant-known-projects)
+             (and (bound-and-true-p projectile-known-projects)
                   (completing-read
                    "Project: "
-                   (projectile-relevant-known-projects)
-                   nil t))
+                   projectile-known-projects nil t nil nil
+                   (when-let ((current (and (fboundp 'projectile-project-root)
+                                            (projectile-project-root))))
+                     (abbreviate-file-name current))))
+
              (and piem-use-magit
                   (fboundp 'magit-read-repository)
                   (magit-read-repository))
