@@ -380,6 +380,16 @@ buffer."
     (setq piem--has-gunzip (executable-find "gunzip")))
   piem--has-gunzip)
 
+(defun piem--url-remove-header ()
+  (goto-char (1+ url-http-end-of-headers))
+  (delete-region (point-min) (point)))
+
+(defun piem--url-decompress ()
+  (unless (= 0 (call-process-region nil nil "gunzip" nil t))
+    (error "Decompressing t.mbox.gz failed"))
+  (delete-region (point) (point-max))
+  (goto-char (point-min)))
+
 (defun piem--write-mbox-to-maildir ()
   (let ((n-messages 0))
     (while (and (not (eobp))
@@ -414,13 +424,9 @@ buffer."
         (let ((error-status (plist-get status :error)))
           (if error-status
               (signal (car error-status) (cdr error-status))
-            (goto-char (1+ url-http-end-of-headers))
-            (delete-region (point-min) (point))
+            (piem--url-remove-header)
             (unless message-only
-              (unless (= 0 (call-process-region nil nil "gunzip" nil t))
-                (error "Decompressing t.mbox.gz failed"))
-              (delete-region (point) (point-max)))
-            (goto-char (point-min))
+              (piem--url-decompress))
             (let ((message-count (piem--write-mbox-to-maildir)))
               (message "%d message(s) for %s moved to %s"
                        message-count mid piem-maildir-directory))
