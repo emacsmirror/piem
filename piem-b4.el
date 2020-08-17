@@ -56,17 +56,17 @@
                   (make-temp-file "piem-b4-" t)))
          (root (concat outdir "m"))
          (mbox-thread (concat root "-piem"))
-         (custom-p nil))
+         (local-mbox-p nil))
     (when-let ((fn (run-hook-with-args-until-success
                     'piem-mid-to-thread-functions mid)))
       (with-temp-file mbox-thread
         (funcall fn)
         (unless (= (point-max) 1)
-          (setq custom-p t))))
+          (setq local-mbox-p t))))
     ;; Move to the coderepo so that we pick up any b4 configuration
     ;; from there.
     (apply #'piem-process-call coderepo piem-b4-b4-executable "am"
-           (and custom-p
+           (and local-mbox-p
                 (concat "--use-local-mbox=" mbox-thread))
            (concat "--outdir=" outdir)
            (concat "--mbox-name=m")
