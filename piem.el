@@ -390,6 +390,21 @@ buffer."
   (delete-region (point) (point-max))
   (goto-char (point-min)))
 
+(defun piem--decompress-callback (status)
+  (if (plist-get status :error)
+      (kill-buffer (current-buffer))
+    (piem--url-remove-header)
+    (piem--url-decompress)))
+
+(defun piem-download-and-decompress (url)
+  "Retrieve gzipped content at URL and decompress it.
+A buffer with the decompressed content is returned.  A live
+buffer indicates that the request did not result in an error."
+  (unless (piem-check-gunzip)
+    (user-error "gunzip executable not found"))
+  (let ((url-asynchronous nil))
+    (url-retrieve url #'piem--decompress-callback)))
+
 (defun piem--write-mbox-to-maildir ()
   (let ((n-messages 0))
     (while (and (not (eobp))

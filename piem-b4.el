@@ -47,10 +47,6 @@
 
 ;;;; Internals
 
-;; In many cases, we don't really need b4 to download the mbox for us,
-;; as we already have our own mbox to URL mapping.  Perhaps we should
-;; default to using that, but it should still be an option to use b4
-;; so that we honor its customization/URL resolution.
 (defun piem-b4--get-am-files (mid coderepo args)
   (let* ((outdir (file-name-as-directory
                   (make-temp-file "piem-b4-" t)))
@@ -62,6 +58,21 @@
       (with-temp-file mbox-thread
         (funcall fn)
         (unless (= (point-max) 1)
+          (setq local-mbox-p t))))
+    ;; `piem-mid-to-thread-functions' didn't generate an mbox.  Next
+    ;; try to download it from a URL at `piem-inboxes'.  Finally, fall
+    ;; back to b4's configuration.
+    (unless local-mbox-p
+      (when-let ((url (piem-inbox-url))
+                 (mid (piem-mid))
+                 (buffer (condition-case nil
+                             (piem-download-and-decompress
+                              (concat url mid "/t.mbox.gz"))
+                           (user-error nil))))
+        (when (buffer-live-p buffer)
+          (with-current-buffer buffer
+            (write-region nil nil mbox-thread))
+          (kill-buffer buffer)
           (setq local-mbox-p t))))
     ;; Move to the coderepo so that we pick up any b4 configuration
     ;; from there.
