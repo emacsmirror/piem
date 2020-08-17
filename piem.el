@@ -33,6 +33,8 @@
 (require 'subr-x)
 (require 'url)
 
+(defvar url-http-end-of-headers)
+
 
 ;;;; Options
 
@@ -405,7 +407,7 @@ buffer."
         (let ((error-status (plist-get status :error)))
           (if error-status
               (signal (car error-status) (cdr error-status))
-            (search-forward "\n\n")
+            (goto-char (1+ url-http-end-of-headers))
             (delete-region (point-min) (point))
             (unless message-only
               (unless (= 0 (call-process-region nil nil "gunzip" nil t))
