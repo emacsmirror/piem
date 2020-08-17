@@ -373,6 +373,13 @@ buffer."
 
 ;;;; Maildir injection
 
+(defvar piem--has-gunzip)
+(defun piem-check-gunzip ()
+  "Return non-nil if gunzip is available."
+  (unless (boundp 'piem--has-gunzip)
+    (setq piem--has-gunzip (executable-find "gunzip")))
+  piem--has-gunzip)
+
 (defun piem--write-mbox-to-maildir ()
   (let ((n-messages 0))
     (while (and (not (eobp))
@@ -421,8 +428,6 @@ buffer."
       (and (buffer-live-p buffer)
            (kill-buffer buffer)))))
 
-(defvar piem--has-gunzip)
-
 ;;;###autoload
 (defun piem-inject-thread-into-maildir (mid &optional message-only)
   "Inject thread containing MID into `piem-maildir-directory'.
@@ -436,15 +441,13 @@ This function depends on :url being configured for entries in
    (list (or (piem-mid)
              (user-error "No message ID found for the current buffer"))
          current-prefix-arg))
-  (unless (or message-only (boundp 'piem--has-gunzip))
-    (setq piem--has-gunzip (executable-find "gunzip")))
   (cond
    ((not piem-maildir-directory)
     (user-error "`piem-maildir-directory' is not configured"))
    ((not (piem-maildir-dir-is-maildir-p piem-maildir-directory))
     (user-error
      "`piem-maildir-directory' does not look like a Maildir directory"))
-   ((not (or message-only piem--has-gunzip))
+   ((not (or message-only (piem-check-gunzip)))
     (user-error "gunzip executable not found")))
   (url-retrieve (concat (or (piem-inbox-url)
                             (user-error
