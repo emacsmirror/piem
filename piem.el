@@ -444,7 +444,8 @@ buffer indicates that the request did not result in an error."
               (piem--url-decompress))
             (let ((message-count (piem--write-mbox-to-maildir)))
               (message "%d message(s) for %s moved to %s"
-                       message-count mid piem-maildir-directory))
+                       message-count mid
+                       (abbreviate-file-name piem-maildir-directory)))
             (run-hook-with-args 'piem-after-mail-injection-functions mid)))
       (and (buffer-live-p buffer)
            (kill-buffer buffer)))))
