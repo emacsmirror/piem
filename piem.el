@@ -145,6 +145,16 @@ the following information about the patch series:
 If non-nil, this must be an existing Maildir directory."
   :type 'string)
 
+(defcustom piem-mail-injection-skipif-predicate nil
+  "Predicate to decide whether to skip injecting a message.
+
+The function is called with the message ID (no surrounding
+brackets) within a buffer that is narrowed to the message.  The
+function does not need to worry about saving point.  A non-nil
+return value signals that `piem-inject-thread-into-maildir'
+should skip the message."
+  :type 'function)
+
 (defcustom piem-after-mail-injection-functions nil
   "Functions called after writing messages to `piem-maildir-directory'.
 Functions should accept one argument, the message ID given to
@@ -406,7 +416,8 @@ buffer indicates that the request did not result in an error."
     (url-retrieve url #'piem--decompress-callback)))
 
 (defun piem--write-mbox-to-maildir ()
-  (let ((n-messages 0))
+  (let ((n-added 0)
+        (n-skipped 0))
     (while (and (not (eobp))
                 (search-forward "From mboxrd@z" nil t))
       (let* ((beg (line-beginning-position 2))
@@ -417,21 +428,31 @@ buffer indicates that the request did not result in an error."
              (basename (piem-maildir-make-uniq-maildir-id))
              (tmpfile (concat piem-maildir-directory "/tmp/" basename)))
         (goto-char beg)
-        ;; TODO: Consider supporting a caller-specified predicate that
-        ;; could be used, for example, to skip messages already in
-        ;; their local mail.
-        (let ((case-fold-search nil))
-          (while (re-search-forward
-                  (rx line-start ">" (group (zero-or-more ">") "From "))
-                  end t)
-            (replace-match "\\1" t)))
-        (write-region beg end tmpfile nil nil nil 'excl)
-        (piem-maildir-move-tmp-to-new piem-maildir-directory
-                                      basename)
-        (delete-file tmpfile)
-        (cl-incf n-messages)
+        (if (and (functionp piem-mail-injection-skipif-predicate)
+                 (save-excursion
+                   (save-restriction
+                     (narrow-to-region beg end)
+                     (funcall piem-mail-injection-skipif-predicate
+                              (replace-regexp-in-string
+                               "\\`<\\(.*\\)>\\'" "\\1"
+                               (or (save-restriction
+                                     (save-excursion
+                                       (message-narrow-to-head-1)
+                                       (message-fetch-field "message-id" t)))
+                                   (error "Message lacks message-ID")))))))
+            (cl-incf n-skipped)
+          (let ((case-fold-search nil))
+            (while (re-search-forward
+                    (rx line-start ">" (group (zero-or-more ">") "From "))
+                    end t)
+              (replace-match "\\1" t)))
+          (write-region beg end tmpfile nil nil nil 'excl)
+          (piem-maildir-move-tmp-to-new piem-maildir-directory
+                                        basename)
+          (delete-file tmpfile)
+          (cl-incf n-added))
         (goto-char end)))
-    n-messages))
+    (cons n-added n-skipped)))
 
 (defun piem--inject-thread-callback (status mid message-only)
   (let ((buffer (current-buffer)))
@@ -442,9 +463,15 @@ buffer indicates that the request did not result in an error."
             (piem--url-remove-header)
             (unless message-only
               (piem--url-decompress))
-            (let ((message-count (piem--write-mbox-to-maildir)))
-              (message "%d message(s) for %s moved to %s"
-                       message-count mid
+            (pcase-let ((`(,added-count . ,skipped-count)
+                         (piem--write-mbox-to-maildir)))
+              (message "Added %d message%s%s for %s to %s"
+                       added-count
+                       (if (= added-count 1) "" "s")
+                       (if (> skipped-count 0)
+                           (format " (skipping %d)" skipped-count)
+                         "")
+                       mid
                        (abbreviate-file-name piem-maildir-directory)))
             (run-hook-with-args 'piem-after-mail-injection-functions mid)))
       (and (buffer-live-p buffer)
