@@ -47,21 +47,27 @@
   "Return the message ID of a `notmuch-show-mode' buffer."
   (notmuch-show-get-message-id 'bare))
 
+(defun piem-notmuch-known-mid-p (mid)
+  "Return non-nil if MID is known to Notmuch.
+The message ID should not include Notmuch's \"id:\" prefix or
+have surrounding brackets."
+  (let ((query (concat "id:" mid)))
+    (equal query
+           (string-trim-right
+            (with-output-to-string
+              (with-current-buffer standard-output
+                (call-process notmuch-command
+                              nil '(t nil) nil
+                              "search" "--output=messages" query)))))))
+
 (defun piem-notmuch-mid-to-thread (mid)
   "Return a function that inserts an mbox for MID's thread."
-  (let ((query (concat "id:" mid)))
-    (when (equal query
-                 (string-trim-right
-                  (with-output-to-string
-                    (with-current-buffer standard-output
-                      (call-process notmuch-command
-                                    nil '(t nil) nil
-                                    "search" "--output=messages" query)))))
-      (lambda ()
-        (call-process notmuch-command
-                      nil '(t nil) nil
-                      "show" "--format=mbox" "--entire-thread=true"
-                      query)))))
+  (when (piem-notmuch-known-mid-p mid)
+    (lambda ()
+      (call-process notmuch-command
+                    nil '(t nil) nil
+                    "show" "--format=mbox" "--entire-thread=true"
+                    (concat "id:" mid)))))
 
 (defun piem-notmuch-am-ready-mbox ()
   "Return a function that inserts an am-ready mbox.

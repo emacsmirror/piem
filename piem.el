@@ -152,7 +152,10 @@ The function is called with the message ID (no surrounding
 brackets) within a buffer that is narrowed to the message.  The
 function does not need to worry about saving point.  A non-nil
 return value signals that `piem-inject-thread-into-maildir'
-should skip the message."
+should skip the message.
+
+Notmuch users can use `piem-notmuch-known-mid-p' as the predicate
+to skip messages that are already in the Notmuch database."
   :type 'function)
 
 (defcustom piem-after-mail-injection-functions nil
