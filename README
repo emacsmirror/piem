@@ -2,7 +2,7 @@
 piem --- Emacs tools and glue for working with public-inbox archives
 ====================================================================
 
-This project is currently in the very early stages of development.  In
+This project is currently in the early stages of development.  In
 general, anything that relates to interacting with public-inbox [^1]
 archives from Emacs is worth considering, at least at this point.  The
 near-term focus is to support mapping public inbox endpoints (email,
@@ -11,8 +11,8 @@ context of applying patch series.
 
 [^1]: https://public-inbox.org/README
 
-There's not much in place yet, but bug reports, patches, questions,
-and other feedback are welcome.  Please send a plain-text email to
+Bug reports, patches, questions, and other feedback are welcome.
+Please send a plain-text email to
 
     piem@inbox.kyleam.com
 
