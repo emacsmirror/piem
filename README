@@ -3,13 +3,12 @@ piem --- Emacs tools and glue for working with public-inbox archives
 ====================================================================
 
 This project is currently in the early stages of development.  In
-general, anything that relates to interacting with public-inbox [^1]
-archives from Emacs is worth considering, at least at this point.  The
-near-term focus is to support mapping public inbox endpoints (email,
-nntp, http, rss) to associated code repositories, particularly in the
-context of applying patch series.
-
-[^1]: https://public-inbox.org/README
+general, anything that relates to interacting with public-inbox
+(https://public-inbox.org/README) archives from Emacs is worth
+considering, at least at this point.  The near-term focus is to
+support mapping public inbox endpoints (email, nntp, http, rss) to
+associated code repositories, particularly in the context of applying
+patch series.
 
 Bug reports, patches, questions, and other feedback are welcome.
 Please send a plain-text email to
