@@ -17,7 +17,7 @@ piem-autoloads.el: $(EL)
 	  '(package-generate-autoloads "piem" default-directory)'
 
 clean:
-	rm -f piem.info piem-autoloads.el $(ELC)
+	rm -f piem.info piem.html piem-autoloads.el $(ELC)
 
 piem-b4.elc: piem-b4.el piem.elc
 piem-elfeed.elc: piem-elfeed.el piem.elc
@@ -27,10 +27,13 @@ piem-maildir.elc: piem-maildir.el
 piem-notmuch.elc: piem-notmuch.el piem.elc
 piem.elc: piem.el piem-maildir.elc
 
-.SUFFIXES: .el .elc .texi .info
+.SUFFIXES: .el .elc .texi .info .html
 
 .el.elc:
 	$(BATCH) -f batch-byte-compile $<
 
 .texi.info:
 	makeinfo $<
+
+.texi.html:
+	makeinfo --html --no-split $<

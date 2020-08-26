@@ -1,6 +1,6 @@
 \input texinfo @c -*-texinfo-*-
 
-@set VERSION 0.0.0
+@set VERSION 0.1.0 (unreleased)
 
 @setfilename piem.info
 @documentencoding UTF-8
@@ -43,14 +43,11 @@ Documentation License''.
 This manual is for piem version @value{VERSION}.
 @end ifnottex
 
+
 @menu
 * Overview::
-* b4 interface::
-* Notmuch integration::
-* Gnus integration::
-* Elfeed integration::
-* EWW integration::
-* Related tools::
+* Getting started::
+* Applying patches::
 * Contributing::
 
 Appendices
@@ -63,33 +60,309 @@ Indices
 * Concept Index::
 @end menu
 
+
 @node Overview
 @chapter Overview
 
+piem is a collection of Emacs libraries for working with public-inbox
+archives.  As much of the hard work here is already done by other Emacs
+libraries---things like mail clients, news readers, Git interfaces, and
+even web browsers---piem is mostly about bridging some of these parts
+for convenience.
+
 @node public-inbox
 @section public-inbox
+@cindex public-inbox
+@cindex lore
 
-@node b4 interface
-@chapter b4 interface
+@url{https://public-inbox.org/README.html,public-inbox} is software for
+archiving public mailing lists.  Archives can be exposed over HTTP.  As
+examples, @url{https://public-inbox.org/meta} serves public-inbox's own
+mailing list, and @url{https://lore.kernel.org/lists.html} hosts the
+archives of many Linux development mailing lists.
 
-@node Notmuch integration
-@chapter Notmuch integration
+@cindex pull methods
+These web archives are good for searching, particularly if you don't
+have all of the list's messages on your local machine, or for linking to
+a message.  On the other hand, the web interface isn't convenient when
+you want to follow new activity on a list.  To do that, you could of
+course subscribe to the mailing list, but public-inbox offers a few
+``pull methods'' that you can use instead:
 
-@node Gnus integration
-@chapter Gnus integration
+@itemize
+@item
+an atom feed for the list as a whole or for specific searches
+@item
+read-only NNTP
+@item
+read-only IMAP (new in upcoming public-inbox v1.6.0)
+@end itemize
 
-@node Elfeed integration
-@chapter Elfeed integration
+Finally, archives are exposed as one or more Git repositories,
+facilitating replication (see
+@url{https://public-inbox.org/reproducibility.html}).  For example, you
+can clone the mailing list archives of @samp{git.vger.kernel.org} with
 
-@node EWW integration
-@chapter EWW integration
+@example
+git clone --mirror https://lore.kernel.org/git/0 git/git/0.git
+@end example
 
-@node Related tools
-@chapter Related tools
+@noindent
+After the initial clone, new messages can be retrieved with via
+@code{git fetch}.  Unsurprisingly @code{git log} is not a pleasant way
+to read a mailing list; instead this method is useful for mirroring the
+archive or bulk importing of the messages.  (See
+@url{https://public-inbox.org/clients.html} for a list of some tools
+designed to work with public-inbox archives.)
 
+
+@node Getting started
+@chapter Getting started
+
+@node Registering inboxes
+@section Registering inboxes
+@cindex coderepo
+@cindex inbox
+@vindex piem-inboxes
+
+A public-inbox archive, referred to as an @dfn{inbox}, is registered by
+adding an entry to @code{piem-inboxes}.  Here's an example entry for the
+Git project's mailing list:
+
+@lisp
+("git"
+ :url "https://lore.kernel.org/git/"
+ :address "git@@vger.kernel.org"
+ :listid "git.vger.kernel.org"
+ :coderepo "~/src/git/")
+@end lisp
+
+@noindent
+The first element is a name for the inbox and will typically match the
+name at the end of the @code{:url} value.  Specifying either
+@code{:listid} or @code{:address} is important so that a message in a
+buffer can be mapped to an inbox in @code{piem-inboxes}.
+
+@code{:coderepo} points to a local Git repository that contains code
+related to that archive (in the example above, a local clone of
+@url{https://git.kernel.org/pub/scm/git/git.git/}).  This information is
+required to apply patches from an archive to a local code repository
+(@pxref{Applying patches}).
+
+@node Enabling integration libraries
+@section Enabling integration libraries
+@findex piem-elfeed-mode
+@findex piem-eww-mode
+@findex piem-gnus-mode
+@findex piem-notmuch-mode
+
+With inboxes defined, the next step is to enable minor modes that teach
+particular Emacs modes to link a buffer with a registered inbox.  piem
+currently has libraries to support
+
+@itemize
+@item EWW
+@item Elfeed
+@item Gnus
+@item Notmuch
+@end itemize
+
+For example, if you use notmuch.el to read your mail, you can add
+support for applying patches from a Notmuch message buffer by enabling
+@code{piem-notmuch-mode} (@pxref{Applying patches}):
+
+@lisp
+(piem-notmuch-mode 1)
+@end lisp
+
+Help adding support for other modes, especially other mail clients, is
+welcome.
+
+
+@node Applying patches
+@chapter Applying patches
+@cindex am-ready mbox
+@cindex applying patches
+@cindex git-am
+
+With @code{piem-inboxes} configured and appropriate integration
+libraries enabled, a buffer that can be linked to an inbox can be mapped
+to a code repository.  When reading a message in a
+@code{notmuch-show-mode} buffer, for example, the list ID can be used to
+identify the inbox and thus the associated local code repository.
+
+There are two commands for applying patches:
+
+@table @code
+
+@item piem-am
+@findex piem-am
+This command tries to extract a patch from the current Notmuch or Gnus
+message buffer and can handle an inline patch as well as one or more
+patch attachments.
+
+@item piem-b4-am
+@findex piem-b4-am
+This command relies on the b4 command-line tool to do more sophisticated
+processing of the @emph{full thread} (e.g., pulling out the latest
+reroll of a series) to generate an mbox that can be fed to @code{git
+am}.  It is only compatible with inline patches.
+
+@end table
+
+@node Applying patches contained in a message
+@section Applying patches contained in a message
+
+@table @kbd
+@findex piem-am
+@item M-x piem-am @key{RET} @var{branch} @key{RET} @var{base}
+Apply the patch or patches in the current buffer to the associated code
+repository.  Before applying, checkout a new branch @var{branch}
+starting at @var{base}.
+@end table
+
+@findex piem-name-branch-who-what-v
+@vindex piem-default-branch-function
+You'll be queried for the name of the new branch.  The default name
+offered is generated by @code{piem-name-branch-who-what-v}, which uses
+the @samp{From:} and @samp{Subject:} headers to construct branch names
+like @samp{km/b4-short-subj__v3}.  To use a different function to
+generate the completion default, configure
+@code{piem-default-branch-function}.
+
+Next you'll be queried for the base to use as the starting point for the
+branch.  If the sender specified a base commit for the series, that will
+be provided as the default completion candidate.  Entering an empty base
+signals to use the current branch of the repository as the base.
+
+@cindex magit
+@vindex piem-use-magit
+When piem loads, it detects whether Magit is loaded and sets
+@code{piem-use-magit} accordingly.  If that option is non-nil, piem uses
+Magit for some operations, particularly those that are user-facing.
+This includes jumping to the Magit status buffer for a code repository
+after apply a patch.
+
+@findex piem-am-ready-mbox
+Note that the @code{piem-am} command works only for buffers from which
+@code{piem-am-ready-mbox} can generate an am-ready mbox, which depends
+on the enabled integration libraries.  Currently @code{piem-notmuch} and
+@code{piem-gnus} implement the necessary functionality.
+
+@node Using b4 to apply patches
+@section Using b4 to apply patches
+@cindex b4
+@cindex lore
+
+@url{https://git.kernel.org/pub/scm/utils/b4/b4.git,b4} is a
+command-line tool for interacting with public-inbox archives.  While
+useful for public-inbox archives in general, it is written for Linux
+kernel development and focuses on the public-inbox archives hosted at
+@url{https://lore.kernel.org}.
+
+It's a fast moving target at the moment, but some of its current
+capabilities include
+
+@itemize
+@item
+downloading the mbox for a thread based on a given message ID
+@item
+extracting patches from a thread's mbox that can be fed to @code{git am}
+@item
+submitting and verifying cryptographic attestation for patches
+@item
+fetching a pull request found in a message ID
+@item
+generating a thanks email for patches
+@end itemize
+
+@noindent
+The second item is the focus for piem, though at least some degree of
+support for all of the above features will likely be added.
+The entry point to applying patches with b4 is the @code{piem-b4-am}
+transient.  (See
+@ifinfo
+@ref{Top,,,transient}
+@end ifinfo
+@ifnotinfo
+@url{https://magit.vc/manual/transient/}
+@end ifnotinfo
+for more information on using Transient.)
+
+@findex piem-b4-am
+@code{piem-b4-am} offers the following actions:
+
+@table @kbd
+
+@item a
+@itemx M-x piem-b4-am-from-mid
+@findex piem-b4-am-from-mid
+Generate or download a thread's mbox based on the specified message ID,
+process it into an am-ready mbox with b4, and then feed it to @code{git
+am} called within an associated Git repository
+
+@item i
+@itemx M-x piem-b4-am-ready-from-mid
+@findex piem-b4-am-ready-from-mid
+Like @code{piem-b4-am-from-mid}, but stop before feeding the am-ready
+mbox to @code{git am}, ending at the same point that b4 does when called
+from the command line.
+
+@item b
+@itemx M-x piem-b4-am-ready-from-mbox
+@findex piem-b4-am-ready-from-mbox
+Like @code{piem-b4-am-ready-from-mid}, but process a local mbox rather
+than identifying the thread based on the specified the message ID.
+
+@end table
+
+
 @node Contributing
 @chapter Contributing
 
+Patches, bug reports, and other feedback are welcome.  Please send a
+plain-text email to @email{piem@@inbox.kyleam.com}.  Messages that
+include this address are public and available as public-inbox archives
+at @url{https://inbox.kyleam.com/piem}.  Note that this is not a mailing
+list, and there are no subcribers.  Updates can be followed through one
+of public-inbox's pull methods (@pxref{public-inbox}).  This means it is
+particularly important to @emph{not} drop participants when replying
+@footnote{@dots{} and in this author's opinion, doing so is a bad
+practice anyway.}.
+
+You can, unsurprisingly, use piem to work on piem by adding an entry
+like this to @code{piem-inboxes}.
+
+@lisp
+("piem"
+ :coderepo "<path/to/local/clone>"
+ :address "piem@@inbox.kyleam.com"
+ :url "https://inbox.kyleam.com/piem/")
+@end lisp
+
+The source repository is available at @url{https://git.kyleam.com/piem}.
+Here are some guidelines for sending patches:
+
+@itemize
+@item Please send patches inline rather than as attachments.
+
+If you're using @code{git send-email}, you may want to set
+@code{sendemail.to} to @code{piem@@inbox.kyleam.com} in your local
+repository.
+
+@item Specify the base commit.
+
+This can be done via the @code{--base=} option of @code{git
+format-patch} or by configuring @code{format.useAutoBase}.
+
+@item Keep rerolls in the same thread.
+
+In general, prefer to keep iterations of a patch series in the same
+thread, labeling rerolls with an appropriate version.
+
+@end itemize
+
+
 @node GNU Free Documentation License
 @chapter GNU Free Documentation License
 @include fdl-1.3.texi
