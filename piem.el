@@ -384,7 +384,7 @@ buffer."
         nil))))
 
 
-;;;; Maildir injection
+;;;; Download helpers
 
 (defvar piem--has-gunzip)
 (defun piem-check-gunzip ()
@@ -417,6 +417,9 @@ buffer indicates that the request did not result in an error."
     (user-error "gunzip executable not found"))
   (let ((url-asynchronous nil))
     (url-retrieve url #'piem--decompress-callback)))
+
+
+;;;; Maildir injection
 
 (defun piem--write-mbox-to-maildir ()
   (let ((n-added 0)
