@@ -48,6 +48,7 @@ This manual is for piem version @value{VERSION}.
 * Overview::
 * Getting started::
 * Applying patches::
+* Injecting messages into a Maildir directory::
 * Contributing::
 
 Appendices
@@ -315,6 +316,65 @@ Like @code{piem-b4-am-ready-from-mid}, but process a local mbox rather
 than identifying the thread based on the specified the message ID.
 
 @end table
+
+
+@node Injecting messages into a Maildir directory
+@chapter Injecting messages into a Maildir directory
+@cindex Maildir
+
+public-inbox allows you to follow lists through several mechanisms
+(@pxref{public-inbox}).  You may prefer different methods for different
+projects depending on things like how actively you are following the
+development and how high traffic the list is.  For a project you
+maintain, perhaps you want to receive every message as regular mail.
+For a project you actively follow and occasionally contribute to, you
+may prefer to not clutter your local mail store and instead follow via
+read-only NNTP or IMAP in Gnus (which may or may not be your MUA).  And
+for a project you're new to or are digging into for a particular reason,
+HTTP via EWW may be all you need.
+
+@findex piem-inject-thread-into-maildir
+@vindex piem-maildir-directory
+Depending on your mail setup, a problem with this approach is that it
+can be inconvenient to start participating in a thread that you aren't
+reading in your regular MUA (e.g., if you use notmuch.el to read your
+regular mail but are following a project via NNTP in Gnus).  In this
+case, you can use the command @code{piem-inject-thread-into-maildir} to
+move the thread's messages into a local Maildir directory
+(@code{piem-maildir-directory}).  By default the command downloads
+entire thread for the message ID associated with the current buffer.  A
+prefix argument restricts the download to only the message.
+
+@vindex piem-after-mail-injection-functions
+After the messages are injected, each function in
+@code{piem-after-mail-injection-functions} is called with the message ID
+that was used to identify the thread.  This can be used to pop to the
+message in your mail client.  For example, Notmuch users may want
+something like this:
+
+@lisp
+(defun my/notmuch-new-and-show (mid)
+  (message "Running notmuch new")
+  (call-process notmuch-command nil nil nil "new")
+  (notmuch-show (concat "id:"  mid)))
+
+(add-hook 'piem-after-mail-injection-functions
+          #'my/notmuch-new-and-show)
+@end lisp
+
+@vindex piem-mail-injection-skipif-predicate
+@findex piem-notmuch-known-mid-p
+To prevent duplicate messages from being written on subsequent calls to
+@code{piem-inject-thread-into-maildir}, you can set
+@code{piem-mail-injection-skipif-predicate} to a function that returns
+non-nil if a message ID is known and should be skipped.  For Notmuch,
+@code{piem-notmuch} provides a function that works for this purpose,
+@code{piem-notmuch-known-mid-p}:
+
+@lisp
+(setq piem-mail-injection-skipif-predicate
+      #'piem-notmuch-known-mid-p)
+@end lisp
 
 
 @node Contributing
