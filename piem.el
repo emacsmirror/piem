@@ -255,18 +255,20 @@ Functions should accept one argument, the message ID given to
 (defun piem--ensure-trailing-slash (s)
   (if (string-match-p ".+/\\'" s) s (concat s "/")))
 
-(defvar piem-link-re
-  (rx "/" (group (one-or-more (not (any "/" "\n"))))
-      "/" (group (one-or-more (not (any "/" "\n"))))
-      "/" (group (zero-or-one
-                  (or "raw"
-                      "t.mbox.gz"
-                      (and (or "t" "T") "/#"
-                           (one-or-more (not (any "/" "\n")))))))
-      string-end)
-  "Regular expression matching public-inbox HTTP link.
-The first group is the inbox, the second is the message ID, and
-the rest is any trailing endpoint.")
+(defun piem-message-link-re (url &optional mid)
+  "Return a regular expression matching a public-inbox url.
+URL should be the top-level url for the inbox.  If MID is
+non-nil, make the match specific for that message."
+  (rx-to-string
+   `(and ,(piem--ensure-trailing-slash url)
+         (group ,(or mid
+                     '(one-or-more (not (any "/" "\n")))))
+         "/" (group (zero-or-one
+                     (or "raw"
+                         "t.mbox.gz"
+                         (and (or "t" "T") "/#"
+                              (one-or-more (not (any "/" "\n")))))))
+         string-end)))
 
 (defun piem-inbox-by-header-match ()
   "Return inbox based on matching message headers.

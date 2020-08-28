@@ -43,10 +43,11 @@
 
 (defun piem-elfeed-get-mid ()
   "Return the message ID of an `elfeed-show-mode' buffer."
-  (when (derived-mode-p 'elfeed-show-mode)
-    (when-let ((link (elfeed-entry-link elfeed-show-entry)))
-      (and (string-match piem-link-re link)
-           (match-string 2 link)))))
+  (when-let ((inbox (piem-elfeed-get-inbox))
+             (inbox-url (piem-inbox-get :url inbox))
+             (link (elfeed-entry-link elfeed-show-entry)))
+    (and (string-match (piem-message-link-re inbox-url) link)
+         (match-string 1 link))))
 
 ;;;###autoload
 (define-minor-mode piem-elfeed-mode

@@ -42,10 +42,11 @@
 
 (defun piem-eww-get-mid ()
   "Return the message ID of an EWW buffer."
-  (when (derived-mode-p 'eww-mode)
-    (when-let ((link (plist-get eww-data :url)))
-      (and (string-match piem-link-re link)
-           (match-string 2 link)))))
+  (when-let ((inbox (piem-eww-get-inbox))
+             (inbox-url (piem-inbox-get :url inbox))
+             (url (plist-get eww-data :url)))
+    (and (string-match (piem-message-link-re inbox-url) url)
+         (match-string 1 url))))
 
 ;;;###autoload
 (define-minor-mode piem-eww-mode
