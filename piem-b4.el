@@ -63,7 +63,7 @@
     ;; try to download it from a URL at `piem-inboxes'.  Finally, fall
     ;; back to b4's configuration.
     (unless local-mbox-p
-      (when-let ((url (piem-inbox-url))
+      (when-let ((url (piem-inbox-get :url))
                  (mid (piem-mid))
                  (buffer (condition-case nil
                              (piem-download-and-decompress

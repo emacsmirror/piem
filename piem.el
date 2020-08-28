@@ -298,10 +298,14 @@ intended to be used by libraries implementing a function for
   "Return the current buffer's inbox."
   (run-hook-with-args-until-success 'piem-get-inbox-functions))
 
+(defun piem-inbox-get (key)
+  "Get info KEY for the inbox entry in `piem-inboxes'."
+  (when-let ((p (piem-inbox)))
+    (plist-get (cdr (assoc p piem-inboxes)) key)))
+
 (defun piem-inbox-coderepo ()
   "Return the code repository of current buffer's inbox."
-  (when-let ((p (piem-inbox))
-             (repo (plist-get (cdr (assoc p piem-inboxes)) :coderepo)))
+  (when-let ((repo (piem-inbox-get :coderepo)))
     (expand-file-name repo)))
 
 (defun piem-inbox-by-url-match (url)
@@ -314,11 +318,6 @@ intended to be used by libraries implementing a function for
         (setq p-url (piem--ensure-trailing-slash p-url))
         (when (string-match-p (regexp-quote p-url) url)
           (throw 'hit (car inbox)))))))
-
-(defun piem-inbox-url ()
-  "Return the URL of current buffer's inbox."
-  (when-let ((p (piem-inbox)))
-    (plist-get (cdr (assoc p piem-inboxes)) :url)))
 
 (defun piem-inbox-coderepo-maybe-read ()
   "Like `piem-inbox-coderepo', but fall back to reading the repo."
@@ -495,7 +494,7 @@ This function depends on :url being configured for entries in
      "`piem-maildir-directory' does not look like a Maildir directory"))
    ((not (or message-only (piem-check-gunzip)))
     (user-error "gunzip executable not found")))
-  (when-let ((url (concat (or (piem-inbox-url)
+  (when-let ((url (concat (or (piem-inbox-get :url)
                               (user-error
                                "Could not find inbox URL for current buffer"))
                           mid
