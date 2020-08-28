@@ -34,6 +34,7 @@
 (require 'url)
 
 (defvar url-http-end-of-headers)
+(defvar url-http-response-status)
 
 
 ;;;; Options
@@ -403,20 +404,19 @@ buffer."
   (delete-region (point) (point-max))
   (goto-char (point-min)))
 
-(defun piem--decompress-callback (status)
-  (if (plist-get status :error)
-      (kill-buffer (current-buffer))
-    (piem--url-remove-header)
-    (piem--url-decompress)))
-
 (defun piem-download-and-decompress (url)
   "Retrieve gzipped content at URL and decompress it.
-A buffer with the decompressed content is returned.  A live
-buffer indicates that the request did not result in an error."
+A buffer with the decompressed content is returned."
   (unless (piem-check-gunzip)
     (user-error "gunzip executable not found"))
-  (let ((url-asynchronous nil))
-    (url-retrieve url #'piem--decompress-callback)))
+  (when-let ((buffer (url-retrieve-synchronously url 'silent)))
+    (with-current-buffer buffer
+      (if (/= url-http-response-status 200)
+          (progn (kill-buffer buffer)
+                 (error "Download of %s failed" url))
+        (piem--url-remove-header)
+        (piem--url-decompress))
+      buffer)))
 
 
 ;;;; Maildir injection
@@ -460,29 +460,6 @@ buffer indicates that the request did not result in an error."
         (goto-char end)))
     (cons n-added n-skipped)))
 
-(defun piem--inject-thread-callback (status mid message-only)
-  (let ((buffer (current-buffer)))
-    (unwind-protect
-        (let ((error-status (plist-get status :error)))
-          (if error-status
-              (signal (car error-status) (cdr error-status))
-            (piem--url-remove-header)
-            (unless message-only
-              (piem--url-decompress))
-            (pcase-let ((`(,added-count . ,skipped-count)
-                         (piem--write-mbox-to-maildir)))
-              (message "Added %d message%s%s for %s to %s"
-                       added-count
-                       (if (= added-count 1) "" "s")
-                       (if (> skipped-count 0)
-                           (format " (skipping %d)" skipped-count)
-                         "")
-                       mid
-                       (abbreviate-file-name piem-maildir-directory)))
-            (run-hook-with-args 'piem-after-mail-injection-functions mid)))
-      (and (buffer-live-p buffer)
-           (kill-buffer buffer)))))
-
 ;;;###autoload
 (defun piem-inject-thread-into-maildir (mid &optional message-only)
   "Inject thread containing MID into `piem-maildir-directory'.
@@ -504,13 +481,31 @@ This function depends on :url being configured for entries in
      "`piem-maildir-directory' does not look like a Maildir directory"))
    ((not (or message-only (piem-check-gunzip)))
     (user-error "gunzip executable not found")))
-  (url-retrieve (concat (or (piem-inbox-url)
-                            (user-error
-                             "Could not find inbox URL for current buffer"))
-                        mid
-                        (if message-only "/raw" "/t.mbox.gz"))
-                #'piem--inject-thread-callback
-                (list mid message-only)))
+  (when-let ((url (concat (or (piem-inbox-url)
+                              (user-error
+                               "Could not find inbox URL for current buffer"))
+                          mid
+                          (if message-only "/raw" "/t.mbox.gz")))
+             (buffer (url-retrieve-synchronously url 'silent)))
+    (unwind-protect
+        (with-current-buffer buffer
+          (if (/= url-http-response-status 200)
+              (error "Download of %s failed" url)
+            (piem--url-remove-header)
+            (unless message-only
+              (piem--url-decompress))
+            (pcase-let ((`(,added-count . ,skipped-count)
+                         (piem--write-mbox-to-maildir)))
+              (message "Added %d message%s%s for %s to %s"
+                       added-count
+                       (if (= added-count 1) "" "s")
+                       (if (> skipped-count 0)
+                           (format " (skipping %d)" skipped-count)
+                         "")
+                       mid
+                       (abbreviate-file-name piem-maildir-directory)))
+            (run-hook-with-args 'piem-after-mail-injection-functions mid)))
+      (kill-buffer buffer))))
 
 
 ;;;; Patch handling

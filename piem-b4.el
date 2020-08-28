@@ -68,12 +68,11 @@
                  (buffer (condition-case nil
                              (piem-download-and-decompress
                               (concat url mid "/t.mbox.gz"))
-                           (user-error nil))))
-        (when (buffer-live-p buffer)
-          (with-current-buffer buffer
-            (write-region nil nil mbox-thread))
-          (kill-buffer buffer)
-          (setq local-mbox-p t))))
+                           (error nil))))
+        (with-current-buffer buffer
+          (write-region nil nil mbox-thread))
+        (kill-buffer buffer)
+        (setq local-mbox-p t)))
     ;; Move to the coderepo so that we pick up any b4 configuration
     ;; from there.
     (apply #'piem-process-call coderepo piem-b4-b4-executable "am"
