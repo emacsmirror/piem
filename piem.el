@@ -298,14 +298,15 @@ intended to be used by libraries implementing a function for
   "Return the current buffer's inbox."
   (run-hook-with-args-until-success 'piem-get-inbox-functions))
 
-(defun piem-inbox-get (key)
-  "Get info KEY for the inbox entry in `piem-inboxes'."
-  (when-let ((p (piem-inbox)))
+(defun piem-inbox-get (key &optional inbox)
+  "Get info KEY for INBOX's entry in `piem-inboxes'.
+If INBOX is nil, use the inbox returned by `piem-inbox'."
+  (when-let ((p (or inbox (piem-inbox))))
     (plist-get (cdr (assoc p piem-inboxes)) key)))
 
-(defun piem-inbox-coderepo ()
+(defun piem-inbox-coderepo (&optional inbox)
   "Return the code repository of current buffer's inbox."
-  (when-let ((repo (piem-inbox-get :coderepo)))
+  (when-let ((repo (piem-inbox-get :coderepo inbox)))
     (expand-file-name repo)))
 
 (defun piem-inbox-by-url-match (url)
