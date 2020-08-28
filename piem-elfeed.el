@@ -39,8 +39,7 @@
   "Return inbox name from an `elfeed-show-mode' buffer."
   (when (derived-mode-p 'elfeed-show-mode)
     (when-let ((link (elfeed-entry-link elfeed-show-entry)))
-      (and (string-match piem-link-re link)
-           (match-string 1 link)))))
+      (piem-inbox-by-url-match link))))
 
 (defun piem-elfeed-get-mid ()
   "Return the message ID of an `elfeed-show-mode' buffer."

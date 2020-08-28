@@ -252,6 +252,9 @@ Functions should accept one argument, the message ID given to
 
 ;;;; Extractors
 
+(defun piem--ensure-trailing-slash (s)
+  (if (string-match-p ".+/\\'" s) s (concat s "/")))
+
 (defvar piem-link-re
   (rx "/" (group (one-or-more (not (any "/" "\n"))))
       "/" (group (one-or-more (not (any "/" "\n"))))
@@ -300,6 +303,17 @@ intended to be used by libraries implementing a function for
   (when-let ((p (piem-inbox))
              (repo (plist-get (cdr (assoc p piem-inboxes)) :coderepo)))
     (expand-file-name repo)))
+
+(defun piem-inbox-by-url-match (url)
+  "Return inbox based on matching URL against `:url'."
+  (setq url (piem--ensure-trailing-slash url))
+  (catch 'hit
+    (dolist (inbox piem-inboxes)
+      (when-let ((info (cdr inbox))
+                 (p-url (plist-get info :url)))
+        (setq p-url (piem--ensure-trailing-slash p-url))
+        (when (string-match-p (regexp-quote p-url) url)
+          (throw 'hit (car inbox)))))))
 
 (defun piem-inbox-url ()
   "Return the URL of current buffer's inbox."
