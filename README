@@ -10,7 +10,7 @@ functionality focuses on mapping public inbox endpoints (email, nntp,
 http, rss) to associated code repositories in order to apply patches.
 Documentation is available online at
 
-    https://kyleam.com/manual/piem/
+    https://docs.kyleam.com/piem/
 
 Bug reports, patches, questions, and other feedback are welcome.
 Please send a plain-text email to
