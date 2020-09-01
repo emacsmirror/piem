@@ -298,16 +298,35 @@ for more information on using Transient.)
 @item a
 @itemx M-x piem-b4-am-from-mid
 @findex piem-b4-am-from-mid
-Generate or download a thread's mbox based on the specified message ID,
-process it into an am-ready mbox with b4, and then feed it to @code{git
-am} called within an associated Git repository
+@findex piem-mid
+Generate or download a thread's mbox for the current buffer's message
+ID, process it into an am-ready mbox with b4, and then feed it to
+@code{git am} called within an associated Git repository.  If a message
+ID of the current buffer is not known (i.e. @code{piem-mid} returns
+nil), one is read from the caller.  The caller is also queried for the
+branch name and base, as described for @code{piem-am} (@pxref{Applying
+patches contained in a message}).
+
+@findex piem-mid-to-thread-functions
+To generate the input thread, first any functions in
+@code{piem-mid-to-thread-functions} are tried.  This allows for a thread
+to be retrieved from a local store (e.g., the Notmuch database).  If
+that fails, the thread is downloaded from the public-inbox URL
+associated with the current buffer.  Finally, if an inbox's entry in
+@code{piem-inboxes} doesn't specify a URL, @code{b4 am} is called
+without a local mbox, letting it download the thread according to its
+own configuration.
 
 @item i
 @itemx M-x piem-b4-am-ready-from-mid
 @findex piem-b4-am-ready-from-mid
-Like @code{piem-b4-am-from-mid}, but stop before feeding the am-ready
-mbox to @code{git am}, ending at the same point that b4 does when called
-from the command line.
+Call @code{b4 am} with a given message ID.  This differs from
+@code{piem-b4-am-from-mid} in that it is a direct wrapper around a
+command-line call to @code{b4 am}.  The caller is always queried for the
+message ID, and the final product is an am-ready mbox.  @code{b4} is
+responsible for downloading the thread, so the caller must point b4's
+configuration option @code{b4.midmask} to the appropriate public-inbox
+URL.
 
 @item b
 @itemx M-x piem-b4-am-ready-from-mbox
