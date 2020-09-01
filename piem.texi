@@ -313,7 +313,7 @@ from the command line.
 @itemx M-x piem-b4-am-ready-from-mbox
 @findex piem-b4-am-ready-from-mbox
 Like @code{piem-b4-am-ready-from-mid}, but process a local mbox rather
-than identifying the thread based on the specified the message ID.
+than identifying the thread based on the specified message ID.
 
 @end table
 
