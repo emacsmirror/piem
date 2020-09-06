@@ -4,7 +4,6 @@
 
 ;; Author: Kyle Meyer <kyle@kyleam.com>
 ;; Keywords: vc, tools
-;; Version: 0.0.0
 ;; Package-Requires: ((emacs "26.3") (transient "0.2.0"))
 
 ;; This program is free software; you can redistribute it and/or modify
