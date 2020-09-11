@@ -32,7 +32,6 @@
 
 (defgroup piem-gnus nil
   "Gnus integration for piem."
-  :link '(info-link "(piem)Gnus integration")
   :group 'piem)
 
 (defun piem-gnus-get-inbox ()

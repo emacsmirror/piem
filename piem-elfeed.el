@@ -31,7 +31,6 @@
 
 (defgroup piem-elfeed nil
   "Elfeed integration for piem."
-  :link '(info-link "(piem)Elfeed integration")
   :group 'piem)
 
 (defun piem-elfeed-get-inbox ()

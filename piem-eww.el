@@ -30,7 +30,6 @@
 
 (defgroup piem-eww nil
   "EWW integration for piem."
-  :link '(info-link "(piem)EWW integration")
   :group 'piem)
 
 (defun piem-eww-get-inbox ()

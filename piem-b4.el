@@ -36,7 +36,7 @@
 
 (defgroup piem-b4 nil
   "Control the b4 tool from Emacs."
-  :link '(info-link "(piem)b4 integration")
+  :link '(info-link "(piem)Using b4 to apply patches")
   :group 'piem)
 
 (defcustom piem-b4-b4-executable "b4"
