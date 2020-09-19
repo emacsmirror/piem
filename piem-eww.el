@@ -44,7 +44,7 @@
              (inbox-url (piem-inbox-get :url inbox))
              (url (plist-get eww-data :url)))
     (and (string-match (piem-message-link-re inbox-url) url)
-         (match-string 1 url))))
+         (url-unhex-string (match-string 1 url)))))
 
 ;;;###autoload
 (define-minor-mode piem-eww-mode
