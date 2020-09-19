@@ -1,4 +1,4 @@
-;;; piem.el --- Emacs tools for working with public-index  -*- lexical-binding: t; -*-
+;;; piem.el --- Emacs tools for working with public-inbox  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2020  Kyle Meyer
 
