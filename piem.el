@@ -6,6 +6,7 @@
 ;; Keywords: vc, tools
 ;; Version: 0.1.0
 ;; Package-Requires: ((emacs "26.3"))
+;; Homepage: https://git.kyleam.com/piem/about/
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
