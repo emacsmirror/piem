@@ -21,7 +21,11 @@
 
 ;;; Commentary:
 
+;; This library provides a Transient [1] interface to b4 [2].  It is
+;; documented in the piem manual.
 ;;
+;; [1] https://magit.vc/manual/transient/
+;; [2] https://git.kernel.org/pub/scm/utils/b4/b4.git
 
 ;;; Code:
 

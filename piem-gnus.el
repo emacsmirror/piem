@@ -21,7 +21,9 @@
 
 ;;; Commentary:
 
-;;
+;; This library provides a minor mode, `piem-gnus-mode', that modifies
+;; `piem' variables to teach functions like `piem-inbox' and
+;; `piem-am-ready-mbox' how to extract information from Gnus buffers.
 
 ;;; Code:
 

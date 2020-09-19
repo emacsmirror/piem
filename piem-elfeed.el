@@ -21,7 +21,9 @@
 
 ;;; Commentary:
 
-;;
+;; This library provides a minor mode, `piem-elfeed-mode', that
+;; modifies `piem' variables to teach functions like `piem-inbox' how
+;; to extract information from Elfeed buffers.
 
 ;;; Code:
 

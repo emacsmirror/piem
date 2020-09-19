@@ -21,7 +21,10 @@
 
 ;;; Commentary:
 
-;;
+;; This library provides a minor mode, `piem-notmuch-mode', that
+;; modifies `piem' variables to teach functions like `piem-inbox' and
+;; `piem-am-ready-mbox' how to extract information from Notmuch
+;; buffers.
 
 ;;; Code:
 

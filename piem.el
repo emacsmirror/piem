@@ -23,7 +23,17 @@
 
 ;;; Commentary:
 
+;; This library provides functionality for working with public-inbox
+;; archives [1] within Emacs (e.g., applying a patch series to the
+;; associated Git repository or downloading an mbox for the thread and
+;; injecting it into a local Maildir directory).  The user option
+;; `piem-inboxes' defines a set of public-inbox archives.  For most
+;; the functions here to do something useful, the current buffer needs
+;; to be linked to an inbox in that list, which requires enabling the
+;; minor mode provided by at least one integration library (such as
+;; `piem-gnus', `piem-eww', or `piem-notmuch').
 ;;
+;; [1] https://public-inbox.org/README
 
 ;;; Code:
 
