@@ -261,7 +261,7 @@ URL should be the top-level url for the inbox.  If MID is
 non-nil, make the match specific for that message."
   (rx-to-string
    `(and ,(piem--ensure-trailing-slash url)
-         (group ,(or mid
+         (group ,(or (and mid (piem-escape-mid mid))
                      '(one-or-more (not (any "/" "\n")))))
          "/" (group (zero-or-one
                      (or "raw"
@@ -403,6 +403,16 @@ buffer."
 
 ;;;; Download helpers
 
+(defconst piem--unreserved-chars
+  (append url-unreserved-chars
+          ;; These extra characters follow what's used by
+          ;; public-inbox's mid_escape().
+          (list ?! ?$ ?& ?' ?\( ?\) ?* ?+ ?, ?= ?: ?\; ?@)))
+
+(defun piem-escape-mid (mid)
+  "Escape MID for use in path part of a public-inbox URL."
+  (url-hexify-string mid piem--unreserved-chars))
+
 (defvar piem--has-gunzip)
 (defun piem-check-gunzip ()
   "Return non-nil if gunzip is available."
@@ -500,7 +510,7 @@ This function depends on :url being configured for entries in
   (when-let ((url (concat (or (piem-inbox-get :url)
                               (user-error
                                "Could not find inbox URL for current buffer"))
-                          mid
+                          (piem-escape-mid mid)
                           (if message-only "/raw" "/t.mbox.gz")))
              (buffer (url-retrieve-synchronously url 'silent)))
     (unwind-protect

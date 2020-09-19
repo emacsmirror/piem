@@ -66,7 +66,7 @@
                  (mid (piem-mid))
                  (buffer (condition-case nil
                              (piem-download-and-decompress
-                              (concat url mid "/t.mbox.gz"))
+                              (concat url (piem-escape-mid mid) "/t.mbox.gz"))
                            (error nil))))
         (with-current-buffer buffer
           (write-region nil nil mbox-thread))
