@@ -1,6 +1,6 @@
 \input texinfo @c -*-texinfo-*-
 
-@set VERSION 0.1.0
+@set VERSION 0.2.0 (unreleased)
 
 @setfilename piem.info
 @documentencoding UTF-8
@@ -335,6 +335,28 @@ Like @code{piem-b4-am-ready-from-mid}, but process a local mbox rather
 than identifying the thread based on the specified message ID.
 
 @end table
+
+@node Applying patches without a public-inbox archive
+@section Applying patches without a public-inbox archive
+
+Much of the functionality described in the previous sections can work
+even if messages aren't available in a public-inbox archive.
+@code{piem-am} and @code{piem-b4-am-from-mid} try to generate the
+am-ready mbox from a local source (e.g., via Notmuch or Gnus) before
+falling back to downloading the thread from a public-inbox archive.
+
+Note, however, that the @code{piem-notmuch} integration library is
+currently the only library that can generate an entire @emph{thread}
+from a given message ID.  As a result, if you're not a Notmuch user and
+are working with a project that doesn't have a public-inbox archive,
+you're unlikely to find the @code{piem-b4-am-from-mid} command useful.
+
+@cindex mailscripts
+Also, for those not working with public-inbox archives, it's worth
+checking out @url{https://git.spwhitton.name/mailscripts/,mailscripts},
+a nice set of Debian-focused tools by Sean Whitton that provides, among
+other things, functionality for applying patch series, including
+b4-inspired patch extraction.
 
 
 @node Injecting messages into a Maildir directory
