@@ -38,6 +38,7 @@
 ;;; Code:
 
 (require 'cl-lib)
+(require 'mail-extr)
 (require 'message)
 (require 'piem-maildir)
 (require 'rfc2047)
@@ -611,7 +612,9 @@ indicated in the subject.
 INFO is a plist with properties documented
 in `piem-default-branch-function'."
   (when-let ((from (plist-get info :from))
-             (sender (car (mail-extract-address-components from)))
+             (sender (let ((mail-extr-ignore-single-names nil)
+                           (mail-extr-ignore-realname-equals-mailbox-name nil))
+                       (car (mail-extract-address-components from))))
              (subject (plist-get info :subject)))
     (let* ((subnames (split-string sender))
            (initials (mapconcat
