@@ -47,7 +47,7 @@
              (inbox-url (piem-inbox-get :url inbox))
              (link (elfeed-entry-link elfeed-show-entry)))
     (and (string-match (piem-message-link-re inbox-url) link)
-         (url-unhex-string (match-string 1 url)))))
+         (url-unhex-string (match-string 1 link)))))
 
 ;;;###autoload
 (define-minor-mode piem-elfeed-mode
