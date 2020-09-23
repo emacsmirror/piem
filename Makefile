@@ -36,4 +36,4 @@ piem.elc: piem.el piem-maildir.elc
 	makeinfo $<
 
 .texi.html:
-	makeinfo --html --no-split $<
+	makeinfo --html -c TOP_NODE_UP_URL=/ --no-split $<
