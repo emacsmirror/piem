@@ -17,7 +17,11 @@ piem-autoloads.el: $(EL)
 	  '(package-generate-autoloads "piem" default-directory)'
 
 clean:
-	rm -f piem.info piem.html piem-autoloads.el $(ELC)
+	rm -f piem.info piem.html html/ piem-autoloads.el $(ELC)
+
+docs: piem.html piem.info
+	rm -rf html/
+	makeinfo --html -o html/ -c TOP_NODE_UP_URL=/ piem.texi
 
 piem-b4.elc: piem-b4.el piem.elc
 piem-elfeed.elc: piem-elfeed.el piem.elc
