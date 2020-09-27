@@ -50,12 +50,18 @@
 
 ;;;; Internals
 
+(defvar piem-b4-keep-temp-directory nil
+  "Don't clean up the directory created by `piem-b4-am-from-mid'.
+This is intended to be used for debugging purposes.")
+
 (defun piem-b4--get-am-files (mid coderepo args)
   (let* ((outdir (file-name-as-directory
                   (make-temp-file "piem-b4-" t)))
          (root (concat outdir "m"))
          (mbox-thread (concat root "-piem"))
-         (local-mbox-p nil))
+         (local-mbox-p nil)
+         (clean-fn (and (not piem-b4-keep-temp-directory)
+                        (lambda () (delete-directory outdir t)))))
     (when-let ((fn (run-hook-with-args-until-success
                     'piem-mid-to-thread-functions mid)))
       (with-temp-file mbox-thread
@@ -78,19 +84,25 @@
         (setq local-mbox-p t)))
     ;; Move to the coderepo so that we pick up any b4 configuration
     ;; from there.
-    (apply #'piem-process-call coderepo piem-b4-b4-executable "am"
-           (and local-mbox-p
-                (concat "--use-local-mbox=" mbox-thread))
-           (concat "--outdir=" outdir)
-           (concat "--mbox-name=m")
-           (append args (list mid)))
+    (condition-case err
+        (apply #'piem-process-call coderepo piem-b4-b4-executable "am"
+               (and local-mbox-p
+                    (concat "--use-local-mbox=" mbox-thread))
+               (concat "--outdir=" outdir)
+               (concat "--mbox-name=m")
+               (append args (list mid)))
+      (piem-process-error
+       (when clean-fn
+         (funcall clean-fn))
+       (signal (car err) (cdr err))))
     (let ((mbox-cover (concat root ".cover"))
           (mbox-am (concat root ".mbx")))
       (list (and (file-exists-p mbox-cover)
                  mbox-cover)
             (if (file-exists-p mbox-am)
                 mbox-am
-              (error "Expected mbox file does not exist: %s" mbox-am))))))
+              (error "Expected mbox file does not exist: %s" mbox-am))
+            clean-fn))))
 
 
 ;;;; Commands
@@ -135,15 +147,18 @@ am-ready mbox, feed the result to `git am'."
                       args)))
     (user-error "%s is incompatible with this command" badopt))
   (pcase-let* ((coderepo (piem-inbox-coderepo-maybe-read))
-               (`(,cover ,mbox-file)
+               (`(,cover ,mbox-file ,clean-fn)
                 (piem-b4--get-am-files mid coderepo args))
                (default-directory coderepo))
-    (piem-am mbox-file
-             nil
-             (with-temp-buffer
-               (insert-file-contents (or cover mbox-file))
-               (piem-extract-mbox-info))
-             coderepo)))
+    (unwind-protect
+        (piem-am mbox-file
+                 nil
+                 (with-temp-buffer
+                   (insert-file-contents (or cover mbox-file))
+                   (piem-extract-mbox-info))
+                 coderepo)
+      (when clean-fn
+        (funcall clean-fn)))))
 
 (define-infix-argument piem-b4-am:--outdir ()
   :description "Output directory"
