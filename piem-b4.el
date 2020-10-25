@@ -101,6 +101,8 @@ This is intended to be used for debugging purposes.")
                  mbox-cover)
             (if (file-exists-p mbox-am)
                 mbox-am
+              (when clean-fn
+                (funcall clean-fn))
               (error "Expected mbox file does not exist: %s" mbox-am))
             clean-fn))))
 
