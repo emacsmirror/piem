@@ -5,7 +5,7 @@
 ;; Author: Kyle Meyer <kyle@kyleam.com>
 ;; Keywords: vc, tools
 ;; Version: 0.1.0
-;; Package-Requires: ((emacs "26.3"))
+;; Package-Requires: ((emacs "26.3") (transient "0.2.0"))
 ;; Homepage: https://git.kyleam.com/piem/about/
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -43,6 +43,7 @@
 (require 'piem-maildir)
 (require 'rfc2047)
 (require 'subr-x)
+(require 'transient)
 (require 'url)
 
 (defvar url-http-end-of-headers)
@@ -698,6 +699,13 @@ If CODEREPO is given, switch to this directory before calling
              (fboundp 'magit-status-setup-buffer))
         (magit-status-setup-buffer)
       (dired "."))))
+
+;;;###autoload (autoload 'piem-dispatch "piem" nil t)
+(define-transient-command piem-dispatch ()
+  "Invoke a piem command."
+  [("a" "apply patch" piem-am)
+   ("b" "call b4-am" piem-b4-am)
+   ("i" "inject thread into maildir" piem-inject-thread-into-maildir)])
 
 
 

@@ -119,6 +119,21 @@ designed to work with public-inbox archives.)
 
 @node Getting started
 @chapter Getting started
+@findex piem-dispatch
+
+@code{piem-dispatch} transient
+(see
+@ifinfo
+@ref{Top,,,transient}
+@end ifinfo
+@ifnotinfo
+@url{https://magit.vc/manual/transient/}
+@end ifnotinfo
+)
+provides an entry point to piem commands.
+It's recommended to bind @code{piem-dispatch} to a key.  However, before
+most of those commands do anything useful, you need to register inboxes
+and activate at least one minor mode.
 
 @node Registering inboxes
 @section Registering inboxes
