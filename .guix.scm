@@ -45,27 +45,6 @@
 ;;; Package definitions that should eventually be polished and
 ;;; submitted upstream.
 
-(define-public b4
-  (package
-    (name "b4")
-    (version "0.5.2")
-    (source
-     (origin
-       (method git-fetch)
-       (uri (git-reference
-             (url "https://git.kernel.org/pub/scm/utils/b4/b4.git")
-             (commit (string-append "v" version))))
-       (file-name (string-append name "-" version "-checkout"))
-       (sha256
-        (base32 "1w11fiyspyncz2m7njrjfylgzch4azi7560ngd8i733wvjjhg3mj"))))
-    (build-system python-build-system)
-    (inputs
-     `(("python-requests" ,python-requests)))
-    (home-page "https://git.kernel.org/pub/scm/utils/b4/b4.git")
-    (synopsis "")
-    (description "")
-    (license license:gpl2+)))
-
 (define-public piem
   (package
     (name "piem")
