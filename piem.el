@@ -663,7 +663,7 @@ non-nil, it is used to construct the default completion value."
                   (replace-regexp-in-string "/" "-" branch))))))
 
 ;;;###autoload
-(defun piem-am (mbox &optional format info coderepo)
+(defun piem-am (mbox &optional format info coderepo toggle-worktree)
   "Feed an am-ready mbox to `git am'.
 
 MBOX is a buffer whose contents are an am-ready mbox (obtained
@@ -677,7 +677,11 @@ branch name or starting point (see `piem-default-branch-function'
 for a list of possible properties).
 
 CODEREPO, if given, indicates the code repository to operate
-within.  If not specified, the default directory is used."
+within.  If not specified, the default directory is used.
+
+When prefix argument TOGGLE-WORKTREE is non-nil, invert the
+meaning of `piem-am-create-worktree'.  With the default value,
+this triggers the creation of a new worktree."
   (interactive
    (pcase-let ((`(,mbox . ,format)
                 (or (piem-am-ready-mbox)
@@ -689,10 +693,12 @@ within.  If not specified, the default directory is used."
      (list (cons :interactive mbox)
            format
            (piem-extract-mbox-info mbox)
-           (piem-inbox-coderepo-maybe-read))))
+           (piem-inbox-coderepo-maybe-read)
+           current-prefix-arg)))
   (setq format (or format "mboxrd"))
   (let* ((default-directory (or coderepo default-directory))
          (am-directory default-directory)
+         (use-worktree (xor piem-am-create-worktree toggle-worktree))
          (interactivep (eq (car-safe mbox) :interactive)))
     (when interactivep
       (setq mbox (cdr mbox)))
@@ -707,7 +713,7 @@ within.  If not specified, the default directory is used."
                                    (magit-list-local-branch-names)))
                        (base (plist-get info :base-commit)))
                    (if base (cons base cands) cands)))))
-      (when piem-am-create-worktree
+      (when use-worktree
         (setq am-directory
               (expand-file-name
                (funcall piem-am-read-worktree-function
@@ -715,11 +721,11 @@ within.  If not specified, the default directory is used."
         (when (file-exists-p am-directory)
           (user-error "Worktree directory already exists")))
       (apply #'piem-process-call nil piem-git-executable
-             (append (if piem-am-create-worktree
+             (append (if use-worktree
                          (list "worktree" "add")
                        (list "checkout"))
                      (if new-branch (list "-b" new-branch) (list "--detach"))
-                     (and piem-am-create-worktree (list am-directory))
+                     (and use-worktree (list am-directory))
                      (and (not (string-blank-p base))
                           (list base)))))
     (let ((args (cons (concat "--patch-format=" format)

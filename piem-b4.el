@@ -130,15 +130,21 @@ list of arguments specified via ARGS."
          (append args (list mid))))
 
 ;;;###autoload
-(defun piem-b4-am-from-mid (mid &optional args)
+(defun piem-b4-am-from-mid (mid &optional args toggle-worktree)
   "Get the thread for MID, extract an am-ready mbox, and apply it.
+
 Try to get a thread for the Message-Id MID with
 `piem-mid-to-thread-functions', falling back to letting b4
 download it.  After calling `b4 am' with ARGS to prepare an
-am-ready mbox, feed the result to `git am'."
+am-ready mbox, feed the result to `git am'.
+
+When prefix argument TOGGLE-WORKTREE is non-nil, invert the
+meaning of `piem-am-create-worktree'.  With the default value,
+this triggers the creation of a new worktree."
   (interactive (list (or (piem-mid)
                          (read-string "Message ID: "))
-                     (transient-args 'piem-b4-am)))
+                     (transient-args 'piem-b4-am)
+                     current-prefix-arg))
   (when-let ((badopt (cl-some
                       (lambda (arg)
                         (and (string-match
@@ -158,7 +164,8 @@ am-ready mbox, feed the result to `git am'."
                  (with-temp-buffer
                    (insert-file-contents (or cover mbox-file))
                    (piem-extract-mbox-info))
-                 coderepo)
+                 coderepo
+                 toggle-worktree)
       (when clean-fn
         (funcall clean-fn)))))
 
