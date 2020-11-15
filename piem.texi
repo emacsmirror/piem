@@ -251,6 +251,17 @@ branch.  If the sender specified a base commit for the series, that will
 be provided as the default completion candidate.  Entering an empty base
 signals to use the current branch of the repository as the base.
 
+@vindex piem-am-create-worktree
+@vindex piem-am-read-worktree-function
+Rather than applying the patches directly to the associated code
+repository, you can create a dedicated worktree by setting
+@code{piem-am-create-worktree} to a non-nil value.  Giving a prefix
+argument to @code{piem-am} inverts the meaning of
+@code{piem-am-create-worktree}; that is, by default a prefix argument is
+useful if you generally prefer to work within the configured code
+repository but would like to trigger the one-off creation of a worktree
+for a particular call.
+
 @cindex magit
 @vindex piem-use-magit
 When piem loads, it detects whether Magit is loaded and sets
@@ -314,13 +325,17 @@ for more information on using Transient.)
 @itemx M-x piem-b4-am-from-mid
 @findex piem-b4-am-from-mid
 @findex piem-mid
+@vindex piem-am-create-worktree
+@vindex piem-am-read-worktree-function
 Generate or download a thread's mbox for the current buffer's message
 ID, process it into an am-ready mbox with b4, and then feed it to
 @code{git am} called within an associated Git repository.  If a message
 ID of the current buffer is not known (i.e. @code{piem-mid} returns
 nil), one is read from the caller.  The caller is also queried for the
 branch name and base, as described for @code{piem-am} (@pxref{Applying
-patches contained in a message}).
+patches contained in a message}).  And, as with @code{piem-am}, a
+worktree can be created by configuring @code{piem-am-create-worktree} to
+a non-nil value or by giving a prefix argument.
 
 @findex piem-mid-to-thread-functions
 To generate the input thread, first any functions in

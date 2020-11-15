@@ -154,6 +154,18 @@ the following information about the patch series:
       The reported base commit of the patch, if any."
   :type 'function)
 
+(defcustom piem-am-create-worktree nil
+  "Whether to create a dedicated worktree for applying patches."
+  :type 'boolean)
+
+(defcustom piem-am-read-worktree-function #'piem-am-read-worktree
+  "Function that reads a to-be-created worktree from the user.
+This function is called with two arguments, the directory of the
+code repository that the worktree will be created from and the
+name of the branch that will be created.  The branch may be nil
+if the caller requested a detached HEAD."
+  :type 'function)
+
 (defcustom piem-maildir-directory nil
   "Inject public-inbox threads into this directory.
 If non-nil, this must be an existing Maildir directory."
@@ -636,8 +648,22 @@ in `piem-default-branch-function'."
 
 (defvar piem-am-args (list "--scissors" "--3way"))
 
+(defun piem-am-read-worktree (coderepo branch)
+  "Read a worktree to create for applying patches.
+This function is intended to be used as a value of
+`piem-am-read-worktree-function'.  The worktree directory is
+completed from the parent directory of CODEREPO.  If BRANCH is
+non-nil, it is used to construct the default completion value."
+  (let ((fname (directory-file-name coderepo)))
+    (read-directory-name
+     "Create worktree: "
+     (file-name-directory fname) nil nil
+     (and branch
+          (concat (file-name-nondirectory fname) "-"
+                  (replace-regexp-in-string "/" "-" branch))))))
+
 ;;;###autoload
-(defun piem-am (mbox &optional format info coderepo)
+(defun piem-am (mbox &optional format info coderepo toggle-worktree)
   "Feed an am-ready mbox to `git am'.
 
 MBOX is a buffer whose contents are an am-ready mbox (obtained
@@ -650,8 +676,12 @@ INFO is a plist that with information to help choose a default
 branch name or starting point (see `piem-default-branch-function'
 for a list of possible properties).
 
-If CODEREPO is given, switch to this directory before calling
-`git am'."
+CODEREPO, if given, indicates the code repository to operate
+within.  If not specified, the default directory is used.
+
+When prefix argument TOGGLE-WORKTREE is non-nil, invert the
+meaning of `piem-am-create-worktree'.  With the default value,
+this triggers the creation of a new worktree."
   (interactive
    (pcase-let ((`(,mbox . ,format)
                 (or (piem-am-ready-mbox)
@@ -663,15 +693,19 @@ If CODEREPO is given, switch to this directory before calling
      (list (cons :interactive mbox)
            format
            (piem-extract-mbox-info mbox)
-           (piem-inbox-coderepo-maybe-read))))
+           (piem-inbox-coderepo-maybe-read)
+           current-prefix-arg)))
   (setq format (or format "mboxrd"))
-  (let ((default-directory (or coderepo default-directory))
-        (interactivep (eq (car-safe mbox) :interactive)))
+  (let* ((default-directory (or coderepo default-directory))
+         (am-directory default-directory)
+         (use-worktree (xor piem-am-create-worktree toggle-worktree))
+         (interactivep (eq (car-safe mbox) :interactive)))
     (when interactivep
       (setq mbox (cdr mbox)))
-    (let ((new-branch (read-string
-                       "New branch (empty for detached): "
-                       (funcall piem-default-branch-function info)))
+    (let ((new-branch
+           (let ((b (read-string "New branch (empty for detached): "
+                                 (funcall piem-default-branch-function info))))
+             (and (not (string-empty-p b)) b)))
           (base (completing-read
                  "Base commit: "
                  (let ((cands (and piem-use-magit
@@ -679,10 +713,19 @@ If CODEREPO is given, switch to this directory before calling
                                    (magit-list-local-branch-names)))
                        (base (plist-get info :base-commit)))
                    (if base (cons base cands) cands)))))
-      (apply #'piem-process-call nil piem-git-executable "checkout"
-             (append (if (string-empty-p new-branch)
-                         (list "--detach")
-                       (list "-b" new-branch))
+      (when use-worktree
+        (setq am-directory
+              (expand-file-name
+               (funcall piem-am-read-worktree-function
+                        default-directory new-branch)))
+        (when (file-exists-p am-directory)
+          (user-error "Worktree directory already exists")))
+      (apply #'piem-process-call nil piem-git-executable
+             (append (if use-worktree
+                         (list "worktree" "add")
+                       (list "checkout"))
+                     (if new-branch (list "-b" new-branch) (list "--detach"))
+                     (and use-worktree (list am-directory))
                      (and (not (string-blank-p base))
                           (list base)))))
     (let ((args (cons (concat "--patch-format=" format)
@@ -690,15 +733,15 @@ If CODEREPO is given, switch to this directory before calling
       (if (bufferp mbox)
           (unwind-protect
               (apply #'piem-process-call-with-buffer-input
-                     nil mbox piem-git-executable "am" args)
+                     am-directory mbox piem-git-executable "am" args)
             (when interactivep
               (kill-buffer mbox)))
-        (apply #'piem-process-call nil piem-git-executable "am"
+        (apply #'piem-process-call am-directory piem-git-executable "am"
                (append args (list mbox)))))
     (if (and piem-use-magit
              (fboundp 'magit-status-setup-buffer))
-        (magit-status-setup-buffer)
-      (dired "."))))
+        (magit-status-setup-buffer am-directory)
+      (dired am-directory))))
 
 ;;;###autoload (autoload 'piem-dispatch "piem" nil t)
 (define-transient-command piem-dispatch ()
