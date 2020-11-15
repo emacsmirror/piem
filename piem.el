@@ -669,9 +669,10 @@ within.  If not specified, the default directory is used."
         (interactivep (eq (car-safe mbox) :interactive)))
     (when interactivep
       (setq mbox (cdr mbox)))
-    (let ((new-branch (read-string
-                       "New branch (empty for detached): "
-                       (funcall piem-default-branch-function info)))
+    (let ((new-branch
+           (let ((b (read-string "New branch (empty for detached): "
+                                 (funcall piem-default-branch-function info))))
+             (and (not (string-empty-p b)) b)))
           (base (completing-read
                  "Base commit: "
                  (let ((cands (and piem-use-magit
@@ -680,9 +681,7 @@ within.  If not specified, the default directory is used."
                        (base (plist-get info :base-commit)))
                    (if base (cons base cands) cands)))))
       (apply #'piem-process-call nil piem-git-executable "checkout"
-             (append (if (string-empty-p new-branch)
-                         (list "--detach")
-                       (list "-b" new-branch))
+             (append (if new-branch (list "-b" new-branch) (list "--detach"))
                      (and (not (string-blank-p base))
                           (list base)))))
     (let ((args (cons (concat "--patch-format=" format)
