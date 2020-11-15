@@ -257,7 +257,7 @@ When piem loads, it detects whether Magit is loaded and sets
 @code{piem-use-magit} accordingly.  If that option is non-nil, piem uses
 Magit for some operations, particularly those that are user-facing.
 This includes jumping to the Magit status buffer for a code repository
-after apply a patch.
+after applying a patch.
 
 @findex piem-am-ready-mbox
 Note that the @code{piem-am} command works only for buffers from which
