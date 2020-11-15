@@ -158,6 +158,14 @@ the following information about the patch series:
   "Whether to create a dedicated worktree for applying patches."
   :type 'boolean)
 
+(defcustom piem-am-read-worktree-function #'piem-am-read-worktree
+  "Function that reads a to-be-created worktree from the user.
+This function is called with two arguments, the directory of the
+code repository that the worktree will be created from and the
+name of the branch that will be created.  The branch may be nil
+if the caller requested a detached HEAD."
+  :type 'function)
+
 (defcustom piem-maildir-directory nil
   "Inject public-inbox threads into this directory.
 If non-nil, this must be an existing Maildir directory."
@@ -702,7 +710,8 @@ within.  If not specified, the default directory is used."
       (when piem-am-create-worktree
         (setq am-directory
               (expand-file-name
-               (piem-am-read-worktree default-directory new-branch)))
+               (funcall piem-am-read-worktree-function
+                        default-directory new-branch)))
         (when (file-exists-p am-directory)
           (user-error "Worktree directory already exists")))
       (apply #'piem-process-call nil piem-git-executable
