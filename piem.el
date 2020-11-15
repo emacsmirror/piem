@@ -752,6 +752,9 @@ this triggers the creation of a new worktree."
         (magit-status-setup-buffer am-directory)
       (dired am-directory))))
 
+
+;;;; Dispatch
+
 ;;;###autoload (autoload 'piem-dispatch "piem" nil t)
 (define-transient-command piem-dispatch ()
   "Invoke a piem command."
