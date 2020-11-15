@@ -650,8 +650,8 @@ INFO is a plist that with information to help choose a default
 branch name or starting point (see `piem-default-branch-function'
 for a list of possible properties).
 
-If CODEREPO is given, switch to this directory before calling
-`git am'."
+CODEREPO, if given, indicates the code repository to operate
+within.  If not specified, the default directory is used."
   (interactive
    (pcase-let ((`(,mbox . ,format)
                 (or (piem-am-ready-mbox)
