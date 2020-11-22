@@ -70,7 +70,8 @@ message itself if it looks like a patch."
                         (mapcar (lambda (handle)
                                   (and (listp handle)
                                        (piem-am-patch-attachment-p
-                                        (mm-handle-media-type handle))
+                                        (mm-handle-media-type handle)
+                                        (mm-handle-filename handle))
                                        (with-temp-buffer
                                          (mm-display-inline handle)
                                          (buffer-substring-no-properties

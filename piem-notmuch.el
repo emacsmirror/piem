@@ -92,7 +92,8 @@ message itself if it looks like a patch."
                      (delq nil
                            (mapcar (lambda (part)
                                      (and (piem-am-patch-attachment-p
-                                           (plist-get part :content-type))
+                                           (plist-get part :content-type)
+                                           (plist-get part :filename))
                                           (plist-get part :content)))
                                    (plist-get body :content)))))
            (cons (lambda ()
