@@ -91,8 +91,8 @@ message itself if it looks like a patch."
          (let ((patches
                 (delq nil
                       (mapcar (lambda (part)
-                                (and (member (plist-get part :content-type)
-                                             '("text/x-diff" "text/x-patch"))
+                                (and (piem-am-patch-attachment-p
+                                      (plist-get part :content-type))
                                      (plist-get part :content)))
                               (plist-get body :content)))))
            (when patches

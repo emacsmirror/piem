@@ -561,6 +561,11 @@ This function depends on :url being configured for entries in
 
 ;;;; Patch handling
 
+(defun piem-am-patch-attachment-p (type)
+  "Return non-nil if an attachment should be treated as a patch.
+TYPE is a media type such as \"text/x-patch\"."
+  (member type '("text/x-diff" "text/x-patch")))
+
 (defun piem-extract-mbox-info (&optional buffer)
   "Collect information from message in BUFFER.
 If BUFFER is nil, the current buffer is used.  Any message after
