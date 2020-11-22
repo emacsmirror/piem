@@ -69,7 +69,7 @@ message itself if it looks like a patch."
              (delq nil
                    (mapcar (lambda (handle)
                              (and (listp handle)
-                                  (member (caar (cdr handle))
+                                  (member (mm-handle-media-type handle)
                                           '("text/x-diff" "text/x-patch"))
                                   (with-temp-buffer
                                     (mm-display-inline handle)
