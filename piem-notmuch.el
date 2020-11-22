@@ -88,18 +88,17 @@ message itself if it looks like a patch."
              (call-process notmuch-command nil t nil
                            "show" "--format=mbox" id))))
         ("multipart/mixed"
-         (let ((patches
-                (delq nil
-                      (mapcar (lambda (part)
-                                (and (piem-am-patch-attachment-p
-                                      (plist-get part :content-type))
-                                     (plist-get part :content)))
-                              (plist-get body :content)))))
-           (when patches
-             (cons (lambda ()
-                     (dolist (patch patches)
-                       (insert patch)))
-                   "mbox"))))))))
+         (when-let ((patches
+                     (delq nil
+                           (mapcar (lambda (part)
+                                     (and (piem-am-patch-attachment-p
+                                           (plist-get part :content-type))
+                                          (plist-get part :content)))
+                                   (plist-get body :content)))))
+           (cons (lambda ()
+                   (dolist (patch patches)
+                     (insert patch)))
+                 "mbox")))))))
 
 ;;;###autoload
 (define-minor-mode piem-notmuch-mode

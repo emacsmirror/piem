@@ -65,33 +65,31 @@ message itself if it looks like a patch."
   (when (derived-mode-p 'gnus-article-mode 'gnus-summary-mode)
     (cond
      (gnus-article-mime-handles
-      (let ((patches
-             (delq nil
-                   (mapcar (lambda (handle)
-                             (and (listp handle)
-                                  (piem-am-patch-attachment-p
-                                   (mm-handle-media-type handle))
-                                  (with-temp-buffer
-                                    (mm-display-inline handle)
-                                    (buffer-substring-no-properties
-                                     (point-min) (point-max)))))
-                           gnus-article-mime-handles))))
-        (when patches
-          (cons (lambda ()
-                  (dolist (patch patches)
-                    (insert patch)))
-                "mbox"))))
+      (when-let ((patches
+                  (delq nil
+                        (mapcar (lambda (handle)
+                                  (and (listp handle)
+                                       (piem-am-patch-attachment-p
+                                        (mm-handle-media-type handle))
+                                       (with-temp-buffer
+                                         (mm-display-inline handle)
+                                         (buffer-substring-no-properties
+                                          (point-min) (point-max)))))
+                                gnus-article-mime-handles))))
+        (cons (lambda ()
+                (dolist (patch patches)
+                  (insert patch)))
+              "mbox")))
      (gnus-article-buffer
-      (let ((patch (with-current-buffer gnus-article-buffer
-                     (save-restriction
-                       (widen)
-                       (and (string-match-p piem-patch-subject-re
-                                            (message-field-value "subject"))
-                            (buffer-substring-no-properties
-                             (point-min) (point-max)))))))
-        (when patch
-          (cons (lambda () (insert patch))
-                "mbox")))))))
+      (when-let ((patch (with-current-buffer gnus-article-buffer
+                          (save-restriction
+                            (widen)
+                            (and (string-match-p piem-patch-subject-re
+                                                 (message-field-value "subject"))
+                                 (buffer-substring-no-properties
+                                  (point-min) (point-max)))))))
+        (cons (lambda () (insert patch))
+              "mbox"))))))
 
 ;;;###autoload
 (define-minor-mode piem-gnus-mode
