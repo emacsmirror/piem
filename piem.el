@@ -195,7 +195,8 @@ Functions should accept one argument, the message ID given to
 
 (defvar piem-process-mode-font-lock-keywords
   `((,(rx line-start
-          ";;; " (or "process" "directory") ":" (one-or-more not-newline)
+          ";;; " (or "process" "directory" "time")
+          ":" (one-or-more not-newline)
           line-end)
       (0 font-lock-comment-face t))
     (,(rx line-start
@@ -231,10 +232,14 @@ Functions should accept one argument, the message ID given to
       (goto-char (point-max))
       (display-buffer buffer)
       (let ((inhibit-read-only t))
-        (insert (format "\n%s\n;;; process: %S\n;;; directory:  %s\n"
+        (insert (format (concat "%s\n"
+                                ";;; process: %S\n"
+                                ";;; directory:  %s\n"
+                                ";;; time: %s\n")
                         (char-to-string 12) ; form feed
                         (cons program program-args)
-                        default-directory))
+                        default-directory
+                        (format-time-string "%FT%T%z")))
         (funcall fn)))))
 
 (defun piem-process-start (dir program &rest program-args)
