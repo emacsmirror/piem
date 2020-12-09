@@ -232,10 +232,12 @@ Functions should accept one argument, the message ID given to
       (goto-char (point-max))
       (display-buffer buffer)
       (let ((inhibit-read-only t))
-        (insert (format (concat "%s\n"
-                                ";;; process: %S\n"
-                                ";;; directory:  %s\n"
-                                ";;; time: %s\n")
+        (insert (format "
+%s
+;;; process: %S
+;;; directory:  %s
+;;; time: %s
+"
                         (char-to-string 12) ; form feed
                         (cons program program-args)
                         default-directory
