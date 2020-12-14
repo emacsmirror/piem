@@ -122,7 +122,7 @@ ARGS is a list of arguments to pass to `b4 am'."
 ;;;###autoload
 (defun piem-b4-am-ready-from-mid (mid &optional args)
   "Download the thread for MID and and extract an am-ready mbox.
-MID is a Message-Id to pass directly to `b4 am', along with the
+MID is a message ID to pass directly to `b4 am', along with the
 list of arguments specified via ARGS."
   (interactive (list (read-string "Message ID: " nil nil (piem-mid))
                      (transient-args 'piem-b4-am)))
