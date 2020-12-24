@@ -77,7 +77,7 @@ list that supports the following properties:
   :coderepo
       Local path of the code repository associated with the inbox.
   :url
-      A URL hosting HTTPS archives.
+      A URL hosting HTTPS archives.  This value must end with a slash.
 
 Here's an example for the public-inbox project itself:
 
