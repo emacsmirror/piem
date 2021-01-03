@@ -302,17 +302,22 @@ non-nil, make the match specific for that message."
                               (one-or-more (not (any "/" "\n")))))))
          string-end)))
 
+(defun piem--message-fetch-decoded-fields (headers)
+  (save-excursion
+    (save-restriction
+      (message-narrow-to-head)
+      (mapcar (lambda (header)
+                (when-let ((val (message-fetch-field header)))
+                  (rfc2047-decode-string val)))
+              headers))))
+
 (defun piem-inbox-by-header-match ()
   "Return inbox based on matching message headers.
 This should be called from a buffer containing a message and is
 intended to be used by libraries implementing a function for
 `piem-get-mid-functions'."
   (pcase-let ((`(,listid ,to ,cc)
-               (save-restriction
-                 (message-narrow-to-head)
-                 (list (message-fetch-field "list-id")
-                       (message-fetch-field "to")
-                       (message-fetch-field "cc")))))
+               (piem--message-fetch-decoded-fields '("list-id" "to" "cc"))))
     (catch 'hit
       (dolist (inbox piem-inboxes)
         (let* ((info (cdr inbox))
@@ -582,13 +587,9 @@ attachment file name, if any."
 If BUFFER is nil, the current buffer is used.  Any message after
 the first will be ignored."
   (with-current-buffer (or buffer (current-buffer))
-    (let ((info (save-excursion
-                  (save-restriction
-                    (message-narrow-to-head)
-                    (list :date (message-fetch-field "date")
-                          :from (when-let ((from (message-fetch-field "from")))
-                                  (rfc2047-decode-string from))
-                          :subject (message-fetch-field "subject"))))))
+    (let ((info (cl-mapcan #'list '(:date :from :subject)
+                           (piem--message-fetch-decoded-fields
+                            '("date" "from" "subject")))))
       (when (re-search-forward (rx line-start "base-commit: "
                                    (group (>= 40 hex-digit))
                                    line-end)

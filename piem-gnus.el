@@ -31,6 +31,7 @@
 (require 'gnus-sum)
 (require 'message)
 (require 'piem)
+(require 'rfc2047)
 
 (defgroup piem-gnus nil
   "Gnus integration for piem."
@@ -85,8 +86,10 @@ message itself if it looks like a patch."
       (when-let ((patch (with-current-buffer gnus-article-buffer
                           (save-restriction
                             (widen)
-                            (and (string-match-p piem-patch-subject-re
-                                                 (message-field-value "subject"))
+                            (and (string-match-p
+                                  piem-patch-subject-re
+                                  (rfc2047-decode-string
+                                   (message-field-value "subject")))
                                  (buffer-substring-no-properties
                                   (point-min) (point-max)))))))
         (cons (lambda () (insert patch))
