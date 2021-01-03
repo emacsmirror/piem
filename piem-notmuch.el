@@ -1,6 +1,6 @@
 ;;; piem-notmuch.el --- Notmuch integration for piem  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2020  Kyle Meyer
+;; Copyright (C) 2020-2021  Kyle Meyer
 
 ;; Author: Kyle Meyer <kyle@kyleam.com>
 ;; Keywords: vc, tools

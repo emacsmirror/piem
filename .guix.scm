@@ -1,6 +1,6 @@
 ;;; Guix package definition for piem development environment
 
-;; Copyright (C) 2020  Kyle Meyer
+;; Copyright (C) 2020-2021  Kyle Meyer
 
 ;; Author: Kyle Meyer <kyle@kyleam.com>
 
