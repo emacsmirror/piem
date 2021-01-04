@@ -28,6 +28,7 @@
 
 ;;; Code:
 
+(require 'mm-decode)
 (require 'notmuch)
 (require 'piem)
 (require 'subr-x)
@@ -78,29 +79,34 @@ If the buffer has any MIME parts that look like a patch, use
 those parts' contents (in order) as the mbox.  Otherwise, use the
 message itself if it looks like a patch."
   (when (derived-mode-p 'notmuch-show-mode)
-    (let ((body (car (plist-get (notmuch-show-get-message-properties)
-                                :body))))
-      (pcase (plist-get body :content-type)
-        ((and "text/plain"
-              (guard (string-match-p piem-patch-subject-re
-                                     (notmuch-show-get-subject))))
-         (let ((id (notmuch-show-get-message-id)))
-           (lambda ()
-             (call-process notmuch-command nil t nil
-                           "show" "--format=mbox" id))))
-        ("multipart/mixed"
-         (when-let ((patches
-                     (delq nil
-                           (mapcar (lambda (part)
-                                     (and (piem-am-patch-attachment-p
-                                           (plist-get part :content-type)
-                                           (plist-get part :filename))
-                                          (plist-get part :content)))
-                                   (plist-get body :content)))))
-           (cons (lambda ()
-                   (dolist (patch patches)
-                     (insert patch)))
-                 "mbox")))))))
+    (let* ((handle (piem-notmuch--with-current-message
+                     (mm-dissect-buffer)))
+           (n-attachments (notmuch-count-attachments handle))
+           patches)
+      (if (= n-attachments 0)
+          (when (string-match-p piem-patch-subject-re
+                                (notmuch-show-get-subject))
+            (let ((id (notmuch-show-get-message-id)))
+              (lambda ()
+                (call-process notmuch-command nil t nil
+                              "show" "--format=mbox" id))))
+        (notmuch-foreach-mime-part
+         (lambda (p)
+           (and (piem-am-patch-attachment-p
+                 (mm-handle-media-type p)
+                 (mm-handle-filename p))
+                (with-temp-buffer
+                  (mm-display-inline p)
+                  (push (buffer-substring-no-properties
+                         (point-min) (point-max))
+                        patches))))
+         handle)
+        (when patches
+          (setq patches (nreverse patches))
+          (cons (lambda ()
+                  (dolist (patch patches)
+                    (insert patch)))
+                "mbox"))))))
 
 ;;;###autoload
 (define-minor-mode piem-notmuch-mode
