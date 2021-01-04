@@ -92,14 +92,8 @@ message itself if it looks like a patch."
                               "show" "--format=mbox" id))))
         (notmuch-foreach-mime-part
          (lambda (p)
-           (and (piem-am-patch-attachment-p
-                 (mm-handle-media-type p)
-                 (mm-handle-filename p))
-                (with-temp-buffer
-                  (mm-display-inline p)
-                  (push (buffer-substring-no-properties
-                         (point-min) (point-max))
-                        patches))))
+           (when-let ((patch (piem-am-extract-attached-patch p)))
+             (push patch patches)))
          handle)
         (when patches
           (setq patches (nreverse patches))

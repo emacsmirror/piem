@@ -66,18 +66,8 @@ message itself if it looks like a patch."
   (when (derived-mode-p 'gnus-article-mode 'gnus-summary-mode)
     (cond
      (gnus-article-mime-handles
-      (when-let ((patches
-                  (delq nil
-                        (mapcar (lambda (handle)
-                                  (and (listp handle)
-                                       (piem-am-patch-attachment-p
-                                        (mm-handle-media-type handle)
-                                        (mm-handle-filename handle))
-                                       (with-temp-buffer
-                                         (mm-display-inline handle)
-                                         (buffer-substring-no-properties
-                                          (point-min) (point-max)))))
-                                gnus-article-mime-handles))))
+      (when-let ((patches (delq nil (mapcar #'piem-am-extract-attached-patch
+                                            gnus-article-mime-handles))))
         (cons (lambda ()
                 (dolist (patch patches)
                   (insert patch)))

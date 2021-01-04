@@ -40,6 +40,7 @@
 (require 'cl-lib)
 (require 'mail-extr)
 (require 'message)
+(require 'mm-decode)
 (require 'piem-maildir)
 (require 'rfc2047)
 (require 'subr-x)
@@ -573,14 +574,18 @@ This function depends on :url being configured for entries in
 
 ;;;; Patch handling
 
-(defun piem-am-patch-attachment-p (type filename)
-  "Return non-nil if an attachment should be treated as a patch.
-TYPE is a media type such as \"text/x-patch\".  FILENAME is the
-attachment file name, if any."
-  (or (member type '("text/x-diff" "text/x-patch"))
-      (and filename
-           (equal type "text/plain")
-           (string-match-p "\\.patch\\'" filename))))
+(defun piem-am-extract-attached-patch (handle)
+  "Return content for HANDLE if it looks like a patch."
+  (and (listp handle)
+       (let ((type (mm-handle-media-type handle))
+             (filename (mm-handle-filename handle)))
+         (or (member type '("text/x-diff" "text/x-patch"))
+             (and filename
+                  (equal type "text/plain")
+                  (string-match-p "\\.patch\\'" filename))))
+       (with-temp-buffer
+         (mm-display-inline handle)
+         (buffer-substring-no-properties (point-min) (point-max)))))
 
 (defun piem-extract-mbox-info (&optional buffer)
   "Collect information from message in BUFFER.
