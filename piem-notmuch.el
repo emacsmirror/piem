@@ -33,6 +33,7 @@
 (require 'subr-x)
 
 (defmacro piem-notmuch--with-current-message (&rest body)
+  (declare (indent 0) (debug (body)))
   (let ((rv (make-symbol "rv")))
     `(let (,rv)
        (with-current-notmuch-show-message
@@ -43,7 +44,7 @@
   "Return inbox name from a `notmuch-show-mode' buffer."
   (when (derived-mode-p 'notmuch-show-mode)
     (piem-notmuch--with-current-message
-     (piem-inbox-by-header-match))))
+      (piem-inbox-by-header-match))))
 
 (defun piem-notmuch-get-mid ()
   "Return the message ID of a `notmuch-show-mode' buffer."
