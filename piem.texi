@@ -109,7 +109,7 @@ git clone --mirror https://lore.kernel.org/git/0 git/git/0.git
 @end example
 
 @noindent
-After the initial clone, new messages can be retrieved with via
+After the initial clone, new messages can be retrieved with
 @code{git fetch}.  Unsurprisingly @code{git log} is not a pleasant way
 to read a mailing list; instead this method is useful for mirroring the
 archive or bulk importing of the messages.  (See
