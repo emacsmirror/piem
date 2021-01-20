@@ -28,6 +28,7 @@
 ;;; Code:
 
 (require 'gnus)
+(require 'gnus-art)
 (require 'gnus-sum)
 (require 'message)
 (require 'piem)
@@ -55,8 +56,38 @@
             (match-string 1 mid)
           mid)))))
 
-;; If there is an easy way to generate an mbox for a thread in Gnus, a
-;; function for `piem-mid-to-thread-functions' should be defined.
+(defun piem-gnus-mid-to-thread (mid)
+  (when (and (derived-mode-p 'gnus-summary-mode)
+             (string-equal (substring
+                            (mail-header-id (gnus-summary-article-header))
+                            1 -1)       ; Remove "<" and ">"
+                           mid))
+    (save-excursion
+      ;; Cursor has to be at the root of the thread
+      (gnus-summary-refer-parent-article most-positive-fixnum)
+      (let ((articles (gnus-summary-articles-in-thread))
+            messages
+            ;; Just show raw message
+            (gnus-have-all-headers t)
+            gnus-article-prepare-hook
+            gnus-article-decode-hook
+            gnus-display-mime-function
+            gnus-break-pages)
+        (mapc (lambda (article)
+                (gnus-summary-display-article article)
+                (push (format
+                       "From mboxrd@z Thu Jan  1 00:00:00 1970\n%s\n"
+                       (replace-regexp-in-string ; From-munge
+                        "^>*From "
+                        ">\\&"
+                        (with-current-buffer gnus-article-buffer
+                          (buffer-substring-no-properties
+                           (point-min)
+                           (point-max)))))
+                      messages))
+              articles)
+        (lambda ()
+          (insert (apply #'concat (nreverse messages))))))))
 
 (defun piem-gnus-am-ready-mbox ()
   "Return a function that inserts an am-ready mbox.
@@ -97,10 +128,12 @@ the mode if ARG is omitted or nil."
       (progn
         (add-hook 'piem-am-ready-mbox-functions #'piem-gnus-am-ready-mbox)
         (add-hook 'piem-get-inbox-functions #'piem-gnus-get-inbox)
-        (add-hook 'piem-get-mid-functions #'piem-gnus-get-mid))
+        (add-hook 'piem-get-mid-functions #'piem-gnus-get-mid)
+        (add-hook 'piem-mid-to-thread-functions #'piem-gnus-mid-to-thread))
     (remove-hook 'piem-am-ready-mbox-functions #'piem-gnus-am-ready-mbox)
     (remove-hook 'piem-get-inbox-functions #'piem-gnus-get-inbox)
-    (remove-hook 'piem-get-mid-functions #'piem-gnus-get-mid)))
+    (remove-hook 'piem-get-mid-functions #'piem-gnus-get-mid)
+    (remove-hook 'piem-mid-to-thread-functions #'piem-gnus-mid-to-thread)))
 
 ;;; piem-gnus.el ends here
 (provide 'piem-gnus)
