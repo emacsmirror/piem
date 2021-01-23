@@ -2,15 +2,20 @@
 
 EMACS   = emacs
 # Rely on EMACSLOADPATH for everything but the current directory.
-BATCH   = $(EMACS) --batch -Q -L .
+BATCH   = $(EMACS) --batch -Q -L . -L tests
 
 EL = piem.el piem-b4.el piem-elfeed.el piem-eww.el piem-gnus.el \
-     piem-maildir.el piem-notmuch.el
+     piem-maildir.el piem-notmuch.el \
+     tests/piem-tests.el
 ELC = $(EL:.el=.elc)
 
 all: compile piem.info piem-autoloads.el
 
 compile: $(ELC)
+
+check: test
+test: $(ELC)
+	$(BATCH) -l tests/piem-tests.elc -f ert-run-tests-batch
 
 piem-autoloads.el: $(EL)
 	$(BATCH) -l package --eval \
@@ -31,6 +36,7 @@ piem-gnus.elc: piem-gnus.el piem.elc
 piem-maildir.elc: piem-maildir.el
 piem-notmuch.elc: piem-notmuch.el piem.elc
 piem.elc: piem.el piem-maildir.elc
+tests/piem-tests.elc: tests/piem-tests.el piem.elc
 
 .SUFFIXES: .el .elc .texi .info .html
 
