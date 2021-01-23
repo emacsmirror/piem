@@ -375,12 +375,6 @@ even if messages aren't available in a public-inbox archive.
 am-ready mbox from a local source (e.g., via Notmuch or Gnus) before
 falling back to downloading the thread from a public-inbox archive.
 
-Note, however, that the @code{piem-notmuch} integration library is
-currently the only library that can generate an entire @emph{thread}
-from a given message ID.  As a result, if you're not a Notmuch user and
-are working with a project that doesn't have a public-inbox archive,
-you're unlikely to find the @code{piem-b4-am-from-mid} command useful.
-
 @cindex mailscripts
 Also, for those not working with public-inbox archives, it's worth
 checking out @url{https://git.spwhitton.name/mailscripts/,mailscripts},
