@@ -33,6 +33,10 @@
 (require 'piem)
 (require 'subr-x)
 
+(defgroup piem-notmuch nil
+  "Notmuch integration for piem."
+  :group 'piem)
+
 (defmacro piem-notmuch--with-current-message (&rest body)
   (declare (indent 0) (debug (body)))
   (let ((rv (make-symbol "rv")))
