@@ -286,7 +286,7 @@ Functions should accept one argument, the message ID given to
 ;;;; Extractors
 
 (defun piem--ensure-trailing-slash (s)
-  (if (string-match-p ".+/\\'" s) s (concat s "/")))
+  (if (string-suffix-p "/" s) s (concat s "/")))
 
 (defun piem-message-link-re (url &optional mid)
   "Return a regular expression matching a public-inbox url.
@@ -582,7 +582,7 @@ This function depends on :url being configured for entries in
          (or (member type '("text/x-diff" "text/x-patch"))
              (and filename
                   (equal type "text/plain")
-                  (string-match-p "\\.patch\\'" filename))))
+                  (string-suffix-p ".patch" filename t))))
        (with-temp-buffer
          (mm-display-inline handle)
          (buffer-substring-no-properties (point-min) (point-max)))))
