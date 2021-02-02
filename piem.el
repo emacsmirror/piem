@@ -372,6 +372,11 @@ If INBOX is nil, use the inbox returned by `piem-inbox'."
                     (when-let ((current (and (fboundp 'projectile-project-root)
                                              (projectile-project-root))))
                       (abbreviate-file-name current)))))
+             (and (bound-and-true-p project-list-file)
+                  (file-exists-p project-list-file)
+                  (fboundp 'project-prompt-project-dir)
+                  (expand-file-name
+                   (project-prompt-project-dir)))
              (and piem-use-magit
                   (fboundp 'magit-read-repository)
                   (magit-read-repository))
