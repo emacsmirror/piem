@@ -483,6 +483,13 @@ format-patch} or by configuring @code{format.useAutoBase}.
 In general, prefer to keep iterations of a patch series in the same
 thread, labeling rerolls with an appropriate version.
 
+@item Consider adding a range-diff to the cover letter of rerolls.
+
+For a multi-patch series, @code{git range-diff} can often provide a nice
+overview of the changes between the previous and last iteration.  Note
+that @code{git format-patch} has a @code{--range-diff} convenience
+option.
+
 @end itemize
 
 
