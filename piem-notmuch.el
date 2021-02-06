@@ -106,12 +106,31 @@ message itself if it looks like a patch."
                     (insert patch)))
                 "mbox"))))))
 
+(defun piem-notmuch-show-get-public-inbox-link (mid)
+  "Given the message-id MID, return the public-inbox url.
+This will lookup the url in the `piem-inboxes' variable."
+  (let* ((inbox (or (piem-notmuch-get-inbox)
+                    (user-error "No inbox associated with current buffer")))
+         (link (or (piem-inbox-get :url inbox)
+                   (user-error "No url was found for %s" inbox))))
+    (concat
+     (piem--ensure-trailing-slash link)
+     (piem-escape-mid mid))))
+
 ;;;###autoload
 (define-minor-mode piem-notmuch-mode
   "Toggle Notmuch support for piem.
+
 With a prefix argument ARG, enable piem-notmuch mode if ARG is
 positive, and disable it otherwise.  If called from Lisp, enable
-the mode if ARG is omitted or nil."
+the mode if ARG is omitted or nil.
+
+This will add a new entry to
+`notmuch-show-stash-mlarchive-link-alist' which will determine
+the archive url by reading the `piem-inboxes' variable.  You can
+also set `notmuch-show-stash-mlarchive-link-default' to \"piem\"
+to make this the default behavior when calling
+`notmuch-show-stash-mlarchive-link'."
   :global t
   :init-value nil
   (if piem-notmuch-mode
@@ -119,11 +138,16 @@ the mode if ARG is omitted or nil."
         (add-hook 'piem-am-ready-mbox-functions #'piem-notmuch-am-ready-mbox)
         (add-hook 'piem-get-inbox-functions #'piem-notmuch-get-inbox)
         (add-hook 'piem-get-mid-functions #'piem-notmuch-get-mid)
-        (add-hook 'piem-mid-to-thread-functions #'piem-notmuch-mid-to-thread))
+        (add-hook 'piem-mid-to-thread-functions #'piem-notmuch-mid-to-thread)
+        (add-to-list 'notmuch-show-stash-mlarchive-link-alist
+                     '("piem" . piem-notmuch-show-get-public-inbox-link)))
     (remove-hook 'piem-am-ready-mbox-functions #'piem-notmuch-am-ready-mbox)
     (remove-hook 'piem-get-inbox-functions #'piem-notmuch-get-inbox)
     (remove-hook 'piem-get-mid-functions #'piem-notmuch-get-mid)
-    (remove-hook 'piem-mid-to-thread-functions #'piem-notmuch-mid-to-thread)))
+    (remove-hook 'piem-mid-to-thread-functions #'piem-notmuch-mid-to-thread)
+    (setq notmuch-show-stash-mlarchive-link-alist
+          (delete '("piem" . piem-notmuch-show-get-public-inbox-link)
+                  notmuch-show-stash-mlarchive-link-alist))))
 
 ;;; piem-notmuch.el ends here
 (provide 'piem-notmuch)
