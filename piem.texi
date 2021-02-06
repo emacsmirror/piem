@@ -449,11 +449,9 @@ Patches, bug reports, and other feedback are welcome.  Please send a
 plain-text email to @email{piem@@inbox.kyleam.com}.  Messages that
 include this address are public and available as public-inbox archives
 at @url{https://inbox.kyleam.com/piem}.  Note that this is not a mailing
-list, and there are no subcribers.  Updates can be followed through one
-of public-inbox's pull methods (@pxref{public-inbox}).  This means it is
-particularly important to @emph{not} drop participants when replying
-@footnote{@dots{} and in this author's opinion, doing so is a bad
-practice anyway.}.
+list.  Updates can be followed through one of public-inbox's pull
+methods (@pxref{public-inbox}).  This means it is particularly important
+to @emph{not} drop participants when replying.
 
 You can, unsurprisingly, use piem to work on piem by adding an entry
 like this to @code{piem-inboxes}.
