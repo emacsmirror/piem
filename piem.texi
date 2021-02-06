@@ -50,6 +50,7 @@ This manual is for piem version @value{VERSION}.
 * Applying patches::
 * Injecting messages into a Maildir directory::
 * Contributing::
+* Related projects and tools::
 
 Appendices
 * GNU Free Documentation License::  The license for this documentation.
@@ -491,6 +492,52 @@ that @code{git format-patch} has a @code{--range-diff} convenience
 option.
 
 @end itemize
+
+
+@node Related projects and tools
+@chapter Related projects and tools
+
+Here's a (short and incomplete) list of tools that you, as someone that
+cared to look at piem's manual, may be interested in---things that
+either have some connection to public-inbox or to using an email-based
+development workflow in Emacs.  Corrections and additions are welcome.
+
+@itemize
+
+@item
+git-email provides an Emacs interface for preparing and sending patches.
+
+@url{https://sr.ht/~yoctocell/git-email/}
+
+@cindex magit
+@item
+@code{git range-diff} is a built-in Git command for comparing iterations
+of a patch series.  If you use Magit, the
+@url{https://github.com/magit/magit-tbdiff,magit-tbdiff} extension
+provides an interface for @code{git range-diff}.
+
+@url{https://kernel.org/pub/software/scm/git/docs/git-range-diff.html}
+
+@item
+grokmirror enables efficient replication of large Git repository
+collections.  The HTTP interface for public-inbox exposes a
+grokmirror-compatible manifest.js.gz endpoint.
+
+@url{https://git.kernel.org/pub/scm/utils/grokmirror/grokmirror.git}
+
+@cindex mailscripts
+@item
+mailscripts, mentioned earlier in the manual (@pxref{Applying patches
+without a public-inbox archive}), is a ``collection of scripts for
+manipulating e-mail on Debian'', including b4-inspired patch extraction
+and an Emacs interface for some of the functionality.
+
+@url{https://git.spwhitton.name/mailscripts/}
+
+@end itemize
+
+A list of more public-inbox-related tools is at
+@url{https://public-inbox.org/clients.txt}.
 
 
 @node GNU Free Documentation License
