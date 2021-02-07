@@ -109,13 +109,9 @@ message itself if it looks like a patch."
 (defun piem-notmuch-show-get-public-inbox-link (mid)
   "Given the message-id MID, return the public-inbox url.
 This will lookup the url in the `piem-inboxes' variable."
-  (let* ((inbox (or (piem-notmuch-get-inbox)
-                    (user-error "No inbox associated with current buffer")))
-         (link (or (piem-inbox-get :url inbox)
-                   (user-error "No url was found for %s" inbox))))
-    (concat
-     (piem--ensure-trailing-slash link)
-     (piem-escape-mid mid))))
+  (piem-mid-url mid
+                (or (piem-notmuch-get-inbox)
+                    (user-error "No inbox associated with current buffer"))))
 
 ;;;###autoload
 (define-minor-mode piem-notmuch-mode

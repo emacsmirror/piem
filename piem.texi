@@ -48,7 +48,7 @@ This manual is for piem version @value{VERSION}.
 * Overview::
 * Getting started::
 * Applying patches::
-* Injecting messages into a Maildir directory::
+* Miscellaneous functionality::
 * Contributing::
 * Related projects and tools::
 
@@ -384,8 +384,11 @@ other things, functionality for applying patch series, including
 b4-inspired patch extraction.
 
 
+@node Miscellaneous functionality
+@chapter Miscellaneous functionality
+
 @node Injecting messages into a Maildir directory
-@chapter Injecting messages into a Maildir directory
+@section Injecting messages into a Maildir directory
 @cindex Maildir
 
 public-inbox allows you to follow lists through several mechanisms
@@ -441,6 +444,34 @@ non-nil if a message ID is known and should be skipped.  For Notmuch,
 (setq piem-mail-injection-skipif-predicate
       #'piem-notmuch-known-mid-p)
 @end lisp
+
+@node Copying public-inbox URLs
+@section Copying public-inbox URLs
+
+@findex piem-copy-mid-url
+When referring to a message from a public-inbox archive, a common format
+to use is a URL that points to a specific archive and ends with
+@code{/$INBOX/$MESSAGE_ID}, e.g.,
+@url{https://public-inbox.org/meta/20190108015420.GA28903@@dcvr}.
+Calling @code{piem-copy-mid-url} (available in the @code{piem-dispatch}
+transient) constructs such a URL, using the message ID and inbox
+asscociated with the current buffer, and then copies the URL to the kill
+ring.  When a prefix agument is given, @code{browse-url} is called after
+copying the URL.
+
+@vindex piem-browse-url-browser-function
+Note that EWW works nicely with public-inbox's HTTP interface.  If you'd
+prefer it to be invoked even though it's not your default browser (as
+configured by @code{browse-url-browser-function}), you can set
+@code{piem-browse-url-browser-function} to @code{eww-browse-url}.
+
+@findex piem-notmuch-mode
+@findex piem-notmuch-show-get-public-inbox-link
+For notmuch.el users, there's an additional entry point for copying
+public-inbox URLs: enabling @code{piem-notmuch-mode} adds a ``piem''
+candidate to archives offered by
+@code{notmuch-show-stash-mlarchive-link} and
+@code{notmuch-show-stash-mlarchive-link-and-go}.
 
 
 @node Contributing

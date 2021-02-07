@@ -37,6 +37,7 @@
 
 ;;; Code:
 
+(require 'browse-url)
 (require 'cl-lib)
 (require 'mail-extr)
 (require 'message)
@@ -190,6 +191,29 @@ to skip messages that are already in the Notmuch database."
 Functions should accept one argument, the message ID given to
 `piem-inject-thread-into-maildir'."
   :type 'hook)
+
+(defcustom piem-browse-url-browser-function nil
+  "Overriding value for `browse-url-browser-function'.
+
+public-inbox's HTTP interface is well suited for browsers like
+w3m and EWW, allowing you to stay in Emacs rather than launch an
+external browser.  However, assuming you have `browse-url'
+configured to usually go through an external browser, sending
+public-inbox URLs through, say, EWW would require you to
+configure `browse-url-browser-function' with a regular expression
+for each inbox URL that you want to be handled by
+`eww-browse-url'.
+
+Instead, you can simply set this option to `eww-browse-url' (or
+anything else `browse-url-browser-function' accepts), and piem
+will use it when calling `browse-url'.
+
+When this option is nil, piem calls `browse-url' without
+overriding the value of `browse-url-browser-function'."
+  :type (append
+         '(choice
+           (const :tag "Don't override `browse-url-browser-function'" nil))
+         (cdr (get 'browse-url-browser-function 'custom-type))))
 
 
 ;;;; Subprocess handling
@@ -444,7 +468,7 @@ buffer."
         nil))))
 
 
-;;;; Download helpers
+;;;; Link handling
 
 (defconst piem--unreserved-chars
   (append url-unreserved-chars
@@ -455,6 +479,38 @@ buffer."
 (defun piem-escape-mid (mid)
   "Escape MID for use in path part of a public-inbox URL."
   (url-hexify-string mid piem--unreserved-chars))
+
+(defun piem-mid-url (mid &optional inbox)
+  "Return a public-inbox URL for MID.
+The URL is determined by INBOX's entry in `piem-inboxes'.  If
+INBOX is nil, use the inbox returned by `piem-inbox'."
+  (concat
+   (piem--ensure-trailing-slash
+    (or (piem-inbox-get :url inbox)
+        (user-error "Couldn't find URL for %s"
+                    (or inbox "current buffer"))))
+   (piem-escape-mid mid)))
+
+(defun piem-copy-mid-url (&optional browse)
+  "Copy public-inbox URL for the current buffer's message.
+With prefix argument BROWSE, call `browse-url' on the URL
+afterwards.  If `piem-browse-url-browser-function' is non-nil, it
+is used as the value of `browse-url-browser-function'."
+  (interactive "P")
+  (let ((url (piem-mid-url
+              (or (piem-mid)
+                  (user-error "No message ID found for the current buffer"))
+              (piem-inbox))))
+    (prog1
+        (kill-new (message "%s" url))
+      (when browse
+        (let ((browse-url-browser-function
+               (or piem-browse-url-browser-function
+                   browse-url-browser-function)))
+          (browse-url url))))))
+
+
+;;;; Download helpers
 
 (defvar piem--has-gunzip)
 (defun piem-check-gunzip ()
@@ -550,10 +606,7 @@ This function depends on :url being configured for entries in
      "`piem-maildir-directory' does not look like a Maildir directory"))
    ((not (or message-only (piem-check-gunzip)))
     (user-error "gunzip executable not found")))
-  (when-let ((url (concat (or (piem-inbox-get :url)
-                              (user-error
-                               "Could not find inbox URL for current buffer"))
-                          (piem-escape-mid mid)
+  (when-let ((url (concat (piem-mid-url mid)
                           (if message-only "/raw" "/t.mbox.gz")))
              (buffer (url-retrieve-synchronously url 'silent)))
     (unwind-protect
@@ -776,9 +829,10 @@ this triggers the creation of a new worktree."
 ;;;###autoload (autoload 'piem-dispatch "piem" nil t)
 (define-transient-command piem-dispatch ()
   "Invoke a piem command."
-  [("a" "apply patch" piem-am)
-   ("b" "call b4-am" piem-b4-am)
-   ("i" "inject thread into maildir" piem-inject-thread-into-maildir)])
+  [[("a" "apply patch" piem-am)
+    ("b" "call b4-am" piem-b4-am)]
+   [("i" "inject thread into maildir" piem-inject-thread-into-maildir)
+    ("l" "copy public-inbox link" piem-copy-mid-url)]])
 
 
 
