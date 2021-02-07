@@ -37,6 +37,7 @@
 
 ;;; Code:
 
+(require 'browse-url)
 (require 'cl-lib)
 (require 'mail-extr)
 (require 'message)
@@ -467,15 +468,19 @@ INBOX is nil, use the inbox returned by `piem-inbox'."
                     (or inbox "current buffer"))))
    (piem-escape-mid mid)))
 
-(defun piem-copy-mid-url ()
-  "Copy public-inbox URL for the current buffer's message."
-  (interactive)
-  (kill-new
-   (message "%s"
-            (piem-mid-url
-             (or (piem-mid)
-                 (user-error "No message ID found for the current buffer"))
-             (piem-inbox)))))
+(defun piem-copy-mid-url (&optional browse)
+  "Copy public-inbox URL for the current buffer's message.
+With prefix argument BROWSE, call `browse-url' on the URL
+afterwards."
+  (interactive "P")
+  (let ((url (piem-mid-url
+              (or (piem-mid)
+                  (user-error "No message ID found for the current buffer"))
+              (piem-inbox))))
+    (prog1
+        (kill-new (message "%s" url))
+      (when browse
+        (browse-url url)))))
 
 
 ;;;; Download helpers
