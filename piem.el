@@ -192,6 +192,29 @@ Functions should accept one argument, the message ID given to
 `piem-inject-thread-into-maildir'."
   :type 'hook)
 
+(defcustom piem-browse-url-browser-function nil
+  "Overriding value for `browse-url-browser-function'.
+
+public-inbox's HTTP interface is well suited for browsers like
+w3m and EWW, allowing you to stay in Emacs rather than launch an
+external browser.  However, assuming you have `browse-url'
+configured to usually go through an external browser, sending
+public-inbox URLs through, say, EWW would require you to
+configure `browse-url-browser-function' with a regular expression
+for each inbox URL that you want to be handled by
+`eww-browse-url'.
+
+Instead, you can simply set this option to `eww-browse-url' (or
+anything else `browse-url-browser-function' accepts), and piem
+will use it when calling `browse-url'.
+
+When this option is nil, piem calls `browse-url' without
+overriding the value of `browse-url-browser-function'."
+  :type (append
+         '(choice
+           (const :tag "Don't override `browse-url-browser-function'" nil))
+         (cdr (get 'browse-url-browser-function 'custom-type))))
+
 
 ;;;; Subprocess handling
 
@@ -471,7 +494,8 @@ INBOX is nil, use the inbox returned by `piem-inbox'."
 (defun piem-copy-mid-url (&optional browse)
   "Copy public-inbox URL for the current buffer's message.
 With prefix argument BROWSE, call `browse-url' on the URL
-afterwards."
+afterwards.  If `piem-browse-url-browser-function' is non-nil, it
+is used as the value of `browse-url-browser-function'."
   (interactive "P")
   (let ((url (piem-mid-url
               (or (piem-mid)
@@ -480,7 +504,10 @@ afterwards."
     (prog1
         (kill-new (message "%s" url))
       (when browse
-        (browse-url url)))))
+        (let ((browse-url-browser-function
+               (or piem-browse-url-browser-function
+                   browse-url-browser-function)))
+          (browse-url url))))))
 
 
 ;;;; Download helpers
