@@ -467,6 +467,16 @@ INBOX is nil, use the inbox returned by `piem-inbox'."
                     (or inbox "current buffer"))))
    (piem-escape-mid mid)))
 
+(defun piem-copy-mid-url ()
+  "Copy public-inbox URL for the current buffer's message."
+  (interactive)
+  (kill-new
+   (message "%s"
+            (piem-mid-url
+             (or (piem-mid)
+                 (user-error "No message ID found for the current buffer"))
+             (piem-inbox)))))
+
 
 ;;;; Download helpers
 
@@ -787,9 +797,10 @@ this triggers the creation of a new worktree."
 ;;;###autoload (autoload 'piem-dispatch "piem" nil t)
 (define-transient-command piem-dispatch ()
   "Invoke a piem command."
-  [("a" "apply patch" piem-am)
-   ("b" "call b4-am" piem-b4-am)
-   ("i" "inject thread into maildir" piem-inject-thread-into-maildir)])
+  [[("a" "apply patch" piem-am)
+    ("b" "call b4-am" piem-b4-am)]
+   [("i" "inject thread into maildir" piem-inject-thread-into-maildir)
+    ("l" "copy public-inbox link" piem-copy-mid-url)]])
 
 
 
