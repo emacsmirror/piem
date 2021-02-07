@@ -491,6 +491,7 @@ INBOX is nil, use the inbox returned by `piem-inbox'."
                     (or inbox "current buffer"))))
    (piem-escape-mid mid)))
 
+;;;###autoload
 (defun piem-copy-mid-url (&optional browse)
   "Copy public-inbox URL for the current buffer's message.
 With prefix argument BROWSE, call `browse-url' on the URL
