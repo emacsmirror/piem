@@ -444,7 +444,7 @@ buffer."
         nil))))
 
 
-;;;; Download helpers
+;;;; Link handling
 
 (defconst piem--unreserved-chars
   (append url-unreserved-chars
@@ -455,6 +455,20 @@ buffer."
 (defun piem-escape-mid (mid)
   "Escape MID for use in path part of a public-inbox URL."
   (url-hexify-string mid piem--unreserved-chars))
+
+(defun piem-mid-url (mid &optional inbox)
+  "Return a public-inbox URL for MID.
+The URL is determined by INBOX's entry in `piem-inboxes'.  If
+INBOX is nil, use the inbox returned by `piem-inbox'."
+  (concat
+   (piem--ensure-trailing-slash
+    (or (piem-inbox-get :url inbox)
+        (user-error "Couldn't find URL for %s"
+                    (or inbox "current buffer"))))
+   (piem-escape-mid mid)))
+
+
+;;;; Download helpers
 
 (defvar piem--has-gunzip)
 (defun piem-check-gunzip ()
@@ -550,10 +564,7 @@ This function depends on :url being configured for entries in
      "`piem-maildir-directory' does not look like a Maildir directory"))
    ((not (or message-only (piem-check-gunzip)))
     (user-error "gunzip executable not found")))
-  (when-let ((url (concat (or (piem-inbox-get :url)
-                              (user-error
-                               "Could not find inbox URL for current buffer"))
-                          (piem-escape-mid mid)
+  (when-let ((url (concat (piem-mid-url mid)
                           (if message-only "/raw" "/t.mbox.gz")))
              (buffer (url-retrieve-synchronously url 'silent)))
     (unwind-protect

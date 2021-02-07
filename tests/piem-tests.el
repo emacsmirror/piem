@@ -49,6 +49,19 @@
   (should (equal (piem-escape-mid "msg@id") "msg@id"))
   (should (equal (piem-escape-mid "m/g@id") "m%2Fg@id")))
 
+(ert-deftest piem-mid-url ()
+  (let ((piem-inboxes '(("inbox-a" :url "https://example.com/a/")
+                        ("inbox-b" :url "https://example.com/b/"))))
+    (should (equal (piem-mid-url "msg@id" "inbox-a")
+                   "https://example.com/a/msg@id"))
+    (should (equal (piem-mid-url "m/sg@id" "inbox-b")
+                   "https://example.com/b/m%2Fsg@id"))
+    (should-error (piem-mid-url "msg@id")
+                  :type 'user-error))
+  (let ((piem-inboxes '(("inbox-a"))))
+    (should-error (piem-mid-url "msg@id" "inbox-a")
+                  :type 'user-error)))
+
 (ert-deftest piem-name-branch-who-what-v ()
   (should (equal (piem-name-branch-who-what-v
                   (list :from "Foo Bar <f@example.com>"
