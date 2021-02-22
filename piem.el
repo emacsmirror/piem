@@ -5,7 +5,7 @@
 ;; Author: Kyle Meyer <kyle@kyleam.com>
 ;; Keywords: vc, tools
 ;; Version: 0.1.0
-;; Package-Requires: ((emacs "26.3") (transient "0.2.0"))
+;; Package-Requires: ((emacs "26.3") (transient "0.3.0"))
 ;; Homepage: https://git.kyleam.com/piem/about/
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -828,7 +828,7 @@ this triggers the creation of a new worktree."
 ;;;; Dispatch
 
 ;;;###autoload (autoload 'piem-dispatch "piem" nil t)
-(define-transient-command piem-dispatch ()
+(transient-define-prefix piem-dispatch ()
   "Invoke a piem command."
   [[("a" "apply patch" piem-am)
     ("b" "call b4-am" piem-b4-am)]

@@ -4,7 +4,7 @@
 
 ;; Author: Kyle Meyer <kyle@kyleam.com>
 ;; Keywords: vc, tools
-;; Package-Requires: ((emacs "26.3") (transient "0.2.0"))
+;; Package-Requires: ((emacs "26.3") (transient "0.3.0"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -169,28 +169,28 @@ this triggers the creation of a new worktree."
       (when clean-fn
         (funcall clean-fn)))))
 
-(define-infix-argument piem-b4-am:--outdir ()
+(transient-define-argument piem-b4-am:--outdir ()
   :description "Output directory"
   :class 'transient-option
   :shortarg "-o"
   :argument "--outdir="
   :reader #'transient-read-existing-directory)
 
-(define-infix-argument piem-b4-am:--mbox-name ()
+(transient-define-argument piem-b4-am:--mbox-name ()
   :description "Base file name for mbox"
   :class 'transient-option
   :shortarg "-n"
   :argument "--mbox-name="
   :reader #'read-string)
 
-(define-infix-argument piem-b4-am:--use-version ()
+(transient-define-argument piem-b4-am:--use-version ()
   :description "Desired version of patch series"
   :class 'transient-option
   :shortarg "-v"
   :argument "--use-version="
   :reader #'transient-read-number-N+)
 
-(define-infix-argument piem-b4-am:--cherry-pick ()
+(transient-define-argument piem-b4-am:--cherry-pick ()
   :description "Select a subset of patches by number"
   :class 'transient-option
   :shortarg "-P"
@@ -198,7 +198,7 @@ this triggers the creation of a new worktree."
   :reader #'read-string)
 
 ;;;###autoload (autoload 'piem-b4-am "piem-b4" nil t)
-(define-transient-command piem-b4-am ()
+(transient-define-prefix piem-b4-am ()
   "Filter mbox to patches and feed to git-am"
   ["General options"
    ("-c" "Check newer versions" "--check-newer-revisions")
