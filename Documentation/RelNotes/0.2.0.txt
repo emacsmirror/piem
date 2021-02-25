@@ -1,0 +1,56 @@
+piem v0.2.0 release notes
+=========================
+
+Changes since v0.1.0
+--------------------
+
+ * New transient piem-dispatch provides a command launcher.
+
+ * Enabling piem-notmuch-mode now teaches Notmuch how to copy the
+   public-inbox URL for the current message via
+   notmuch-show-stash-mlarchive-link.
+
+ * The public-inbox URL for the current buffer can be copied with the
+   new piem-copy-mid-url command (available in the piem-dispatch
+   transient).
+
+ * Patches can be applied in a new worktree.  See the
+   piem-am-create-worktree and piem-am-read-worktree-function options.
+   Thanks to zimoun for the suggestion.
+
+ * In addition to piem-notmuch-mode, piem-gnus-mode defines a function
+   for piem-mid-to-thread-functions, allowing b4 to operate on an mbox
+   generated from the Gnus thread rather one downloaded from a
+   public-inbox URL.
+
+ * piem-b4-am-from-mid learned how to use project.el.
+
+ * b4 now cleans up its temporary directory unless
+   piem-b4-keep-temp-directory is non-nil.
+
+ * The process buffer gained a time header to make it easier to digest
+   and group the subprocess commands when inspecting the buffer later.
+
+ * The manual now has a section about applying patches without
+   public-inbox and a section pointing to related projects.
+
+ * The file .guix.scm defines a Guix package for setting up a
+   development environment.
+
+
+Fixes since v0.1.0
+------------------
+
+ * piem-name-branch-who-what-v, the default function that extracts
+   message information for generating the suggested branch name,
+   didn't return anything useful for addresses without a name or with
+   only a single name.
+
+ * The logic for detecting attached patches has been improved.
+
+ * Message IDs weren't properly escaped when constructing URLs.
+
+ * Some message headers weren't decoded.
+
+ * piem-inject-thread-into-maildir didn't anchor its "From mboxrd@z
+   ..." search to the beginning of the buffer.
