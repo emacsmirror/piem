@@ -9,7 +9,7 @@ EL = piem.el piem-b4.el piem-elfeed.el piem-eww.el piem-gnus.el \
      tests/piem-tests.el
 ELC = $(EL:.el=.elc)
 
-all: compile piem.info piem-autoloads.el
+all: compile Documentation/piem.info piem-autoloads.el
 
 compile: $(ELC)
 
@@ -22,12 +22,14 @@ piem-autoloads.el: $(EL)
 	  '(package-generate-autoloads "piem" default-directory)'
 
 clean:
-	rm -f piem.info piem.html piem-autoloads.el $(ELC)
+	rm -f Documentation/piem.info Documentation/piem.html piem-autoloads.el
+	rm -f $(ELC)
 	rm -rf html/
 
-docs: piem.html piem.info
-	rm -rf html/
-	makeinfo --html --css-ref=../manual.css -o html/ -c TOP_NODE_UP_URL=/ piem.texi
+docs: Documentation/piem.html Documentation/piem.info
+	rm -rf Documentation/html/
+	makeinfo --html --css-ref=../manual.css -o Documentation/html/ \
+		-c TOP_NODE_UP_URL=/ Documentation/piem.texi
 
 piem-b4.elc: piem-b4.el piem.elc
 piem-elfeed.elc: piem-elfeed.el piem.elc
@@ -44,7 +46,8 @@ tests/piem-tests.elc: tests/piem-tests.el piem.elc
 	$(BATCH) -f batch-byte-compile $<
 
 .texi.info:
-	makeinfo $<
+	makeinfo -o $@ $<
 
 .texi.html:
-	makeinfo --html --css-ref=manual.css -c TOP_NODE_UP_URL=/ --no-split $<
+	makeinfo --html --css-ref=manual.css -c TOP_NODE_UP_URL=/ --no-split \
+		-o $@  $<
