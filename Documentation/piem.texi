@@ -408,11 +408,13 @@ Depending on your mail setup, a problem with this approach is that it
 can be inconvenient to start participating in a thread that you aren't
 reading in your regular MUA (e.g., if you use notmuch.el to read your
 regular mail but are following a project via NNTP in Gnus).  In this
-case, you can use the command @code{piem-inject-thread-into-maildir} to
-move the thread's messages into a local Maildir directory
-(@code{piem-maildir-directory}).  By default the command downloads the
-entire thread for the message ID associated with the current buffer.  A
-prefix argument restricts the download to only the message.
+case, you can use the command @code{piem-inject-thread-into-maildir}
+to move the thread's messages into a local Maildir directory specified
+by the current inbox's @code{:maildir} value in @code{piem-inboxes},
+falling back to @code{piem-maildir-directory}.  By default the command
+downloads the entire thread for the message ID associated with the
+current buffer.  A prefix argument restricts the download to only the
+message.
 
 @vindex piem-after-mail-injection-functions
 After the messages are injected, each function in

@@ -80,6 +80,8 @@ list that supports the following properties:
       Local path of the code repository associated with the inbox.
   :url
       A URL hosting HTTPS archives.  This value must end with a slash.
+  :maildir
+      A Maildir directory to inject messages into.
 
 Here's an example for the public-inbox project itself:
 
@@ -87,7 +89,8 @@ Here's an example for the public-inbox project itself:
      :coderepo \"~/src/public-inbox/\"
      :address \"meta@public-inbox.org\"
      :listid \"meta.public-inbox.org\"
-     :url \"https://public-inbox.org/meta/\")"
+     :url \"https://public-inbox.org/meta/\"
+     :maildir \"~/.local/share/mail/.lists.mail.public-inbox\")"
   :type '(alist :key-type string
                 :value-type
                 (plist :value-type string)))
@@ -169,8 +172,11 @@ if the caller requested a detached HEAD."
   :type 'function)
 
 (defcustom piem-maildir-directory nil
-  "Inject public-inbox threads into this directory.
-If non-nil, this must be an existing Maildir directory."
+  "Default directory to inject public-inbox threads into.
+
+If non-nil, this must be an existing Maildir directory.  This can be
+overriden on a per-list basis by using the \":maildir\" keyword in
+`piem-inboxes'."
   :type 'string)
 
 (defcustom piem-mail-injection-skipif-predicate nil
@@ -373,6 +379,15 @@ If INBOX is nil, use the inbox returned by `piem-inbox'."
   (when-let ((repo (piem-inbox-get :coderepo inbox)))
     (expand-file-name repo)))
 
+(defun piem-inbox-maildir-directory (&optional inbox)
+  "Return the maildir for INBOX's entry in `piem-inboxes'.
+
+If INBOX is nil, use the inbox returned by `piem-inbox'.  If the
+INBOX doesn't have a maildir configured, return the value of
+`piem-maildir-directory'."
+  (or (piem-inbox-get :maildir inbox)
+      piem-maildir-directory))
+
 (defun piem-inbox-by-url-match (url)
   "Return inbox based on matching URL against `:url'."
   (setq url (piem--ensure-trailing-slash url))
@@ -547,7 +562,7 @@ A buffer with the decompressed content is returned."
 
 ;;;; Maildir injection
 
-(defun piem--write-mbox-to-maildir ()
+(defun piem--write-mbox-to-maildir (maildir-directory)
   (let ((n-added 0)
         (n-skipped 0))
     (while (and (not (eobp))
@@ -558,7 +573,7 @@ A buffer with the decompressed content is returned."
                                   (point-marker)))
                       (point-max-marker)))
              (basename (piem-maildir-make-uniq-maildir-id))
-             (tmpfile (concat piem-maildir-directory "/tmp/" basename)))
+             (tmpfile (concat maildir-directory "/tmp/" basename)))
         (goto-char beg)
         (if (and (functionp piem-mail-injection-skipif-predicate)
                  (save-excursion
@@ -579,7 +594,7 @@ A buffer with the decompressed content is returned."
                     end t)
               (replace-match "\\1" t)))
           (write-region beg end tmpfile nil nil nil 'excl)
-          (piem-maildir-move-tmp-to-new piem-maildir-directory
+          (piem-maildir-move-tmp-to-new maildir-directory
                                         basename)
           (delete-file tmpfile)
           (cl-incf n-added))
@@ -588,7 +603,7 @@ A buffer with the decompressed content is returned."
 
 ;;;###autoload
 (defun piem-inject-thread-into-maildir (mid &optional message-only)
-  "Inject thread containing MID into `piem-maildir-directory'.
+  "Inject thread containing MID into `piem-inbox-maildir-directory'.
 
 If prefix argument MESSAGE-ONLY is non-nil, inject just the
 message for MID, not the entire thread.
@@ -599,36 +614,37 @@ This function depends on :url being configured for entries in
    (list (or (piem-mid)
              (user-error "No message ID found for the current buffer"))
          current-prefix-arg))
-  (cond
-   ((not piem-maildir-directory)
-    (user-error "`piem-maildir-directory' is not configured"))
-   ((not (piem-maildir-dir-is-maildir-p piem-maildir-directory))
-    (user-error
-     "`piem-maildir-directory' does not look like a Maildir directory"))
-   ((not (or message-only (piem-check-gunzip)))
-    (user-error "gunzip executable not found")))
-  (when-let ((url (concat (piem-mid-url mid)
-                          (if message-only "/raw" "/t.mbox.gz")))
-             (buffer (url-retrieve-synchronously url 'silent)))
-    (unwind-protect
-        (with-current-buffer buffer
-          (if (/= url-http-response-status 200)
-              (error "Download of %s failed" url)
-            (piem--url-remove-header)
-            (unless message-only
-              (piem--url-decompress))
-            (pcase-let ((`(,added-count . ,skipped-count)
-                         (piem--write-mbox-to-maildir)))
-              (message "Added %d message%s%s for %s to %s"
-                       added-count
-                       (if (= added-count 1) "" "s")
-                       (if (> skipped-count 0)
-                           (format " (skipping %d)" skipped-count)
-                         "")
-                       mid
-                       (abbreviate-file-name piem-maildir-directory)))
-            (run-hook-with-args 'piem-after-mail-injection-functions mid)))
-      (kill-buffer buffer))))
+  (let ((maildir-directory (piem-inbox-maildir-directory)))
+    (cond
+     ((not maildir-directory)
+      (user-error "No directory returned by `piem-inbox-maildir-directory'"))
+     ((not (piem-maildir-dir-is-maildir-p maildir-directory))
+      (user-error
+       "Does not look like a Maildir directory: %s" maildir-directory))
+     ((not (or message-only (piem-check-gunzip)))
+      (user-error "gunzip executable not found")))
+    (when-let ((url (concat (piem-mid-url mid)
+                            (if message-only "/raw" "/t.mbox.gz")))
+               (buffer (url-retrieve-synchronously url 'silent)))
+      (unwind-protect
+          (with-current-buffer buffer
+            (if (/= url-http-response-status 200)
+                (error "Download of %s failed" url)
+              (piem--url-remove-header)
+              (unless message-only
+                (piem--url-decompress))
+              (pcase-let ((`(,added-count . ,skipped-count)
+                           (piem--write-mbox-to-maildir maildir-directory)))
+                (message "Added %d message%s%s for %s to %s"
+                         added-count
+                         (if (= added-count 1) "" "s")
+                         (if (> skipped-count 0)
+                             (format " (skipping %d)" skipped-count)
+                           "")
+                         mid
+                         (abbreviate-file-name maildir-directory)))
+              (run-hook-with-args 'piem-after-mail-injection-functions mid)))
+        (kill-buffer buffer)))))
 
 
 ;;;; Patch handling
