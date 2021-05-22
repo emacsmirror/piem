@@ -140,7 +140,7 @@ the return value of `piem-mid'."
   :type 'string)
 
 (defcustom piem-use-magit (featurep 'magit)
-  "Whether to use Magit where possible."
+  "Whether to use Magit for some user-facing operations."
   :type 'boolean)
 
 (defcustom piem-default-branch-function
