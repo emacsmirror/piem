@@ -139,7 +139,7 @@ the return value of `piem-mid'."
   "Which git executable to use."
   :type 'string)
 
-(defcustom piem-use-magit (featurep 'magit)
+(defcustom piem-use-magit t
   "Whether to use Magit for some user-facing operations."
   :type 'boolean)
 
