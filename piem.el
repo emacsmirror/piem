@@ -47,9 +47,9 @@
 (require 'subr-x)
 (require 'transient)
 (require 'url)
+(require 'url-handlers)
+(require 'url-http)
 
-(defvar url-http-end-of-headers)
-(defvar url-http-response-status)
 
 
 ;;;; Options
@@ -535,29 +535,39 @@ is used as the value of `browse-url-browser-function'."
     (setq piem--has-gunzip (executable-find "gunzip")))
   piem--has-gunzip)
 
-(defun piem--url-remove-header ()
-  (goto-char (1+ url-http-end-of-headers))
-  (delete-region (point-min) (point)))
-
-(defun piem--url-decompress ()
+(defun piem-gunzip-buffer ()
+  (goto-char (point-min))
   (unless (= 0 (call-process-region nil nil "gunzip" nil t))
     (error "Decompressing t.mbox.gz failed"))
   (delete-region (point) (point-max))
   (goto-char (point-min)))
 
-(defun piem-download-and-decompress (url)
-  "Retrieve gzipped content at URL and decompress it.
-A buffer with the decompressed content is returned."
-  (unless (piem-check-gunzip)
-    (user-error "gunzip executable not found"))
-  (when-let ((buffer (url-retrieve-synchronously url 'silent)))
-    (with-current-buffer buffer
-      (if (/= url-http-response-status 200)
-          (progn (kill-buffer buffer)
-                 (error "Download of %s failed" url))
-        (piem--url-remove-header)
-        (piem--url-decompress))
-      buffer)))
+(defmacro piem-with-url-contents (url &rest body)
+  "Insert URL contents literally into temporary buffer and evaluate BODY."
+  (declare (indent 1) (debug t))
+  (let ((u (cl-gensym "url")))
+    `(with-temp-buffer
+       (set-buffer-multibyte nil)
+       ;; This mostly copies `url-insert-file-contents', but it embeds
+       ;; `url-http--insert-file-helper' and uses `url-insert' rather
+       ;; than `url-insert-buffer-contents' to insert the contents
+       ;; literally.
+       (let* ((,u ,url)
+              (buffer (url-retrieve-synchronously ,u)))
+         (unless buffer (signal 'file-error (list ,u "No Data")))
+         ;; This error handling follows what's in
+         ;; `url-http--insert-file-helper'.
+         (with-current-buffer buffer
+           (when (bound-and-true-p url-http-response-status)
+             (unless (or (and (>= url-http-response-status 200)
+                              (< url-http-response-status 300))
+                         (= url-http-response-status 304))
+               (let ((desc (nth 2 (assq url-http-response-status url-http-codes))))
+                 (kill-buffer buffer)
+                 (signal 'file-error (list ,u desc))))))
+         (url-insert buffer))
+       (goto-char (point-min))
+       ,@body)))
 
 
 ;;;; Maildir injection
@@ -623,28 +633,22 @@ This function depends on :url being configured for entries in
        "Does not look like a Maildir directory: %s" maildir-directory))
      ((not (or message-only (piem-check-gunzip)))
       (user-error "gunzip executable not found")))
-    (when-let ((url (concat (piem-mid-url mid)
-                            (if message-only "/raw" "/t.mbox.gz")))
-               (buffer (url-retrieve-synchronously url 'silent)))
-      (unwind-protect
-          (with-current-buffer buffer
-            (if (/= url-http-response-status 200)
-                (error "Download of %s failed" url)
-              (piem--url-remove-header)
-              (unless message-only
-                (piem--url-decompress))
-              (pcase-let ((`(,added-count . ,skipped-count)
-                           (piem--write-mbox-to-maildir maildir-directory)))
-                (message "Added %d message%s%s for %s to %s"
-                         added-count
-                         (if (= added-count 1) "" "s")
-                         (if (> skipped-count 0)
-                             (format " (skipping %d)" skipped-count)
-                           "")
-                         mid
-                         (abbreviate-file-name maildir-directory)))
-              (run-hook-with-args 'piem-after-mail-injection-functions mid)))
-        (kill-buffer buffer)))))
+    (let ((url (concat (piem-mid-url mid)
+                       (if message-only "/raw" "/t.mbox.gz"))))
+      (piem-with-url-contents url
+        (unless message-only
+          (piem-gunzip-buffer))
+        (pcase-let ((`(,added-count . ,skipped-count)
+                     (piem--write-mbox-to-maildir maildir-directory)))
+          (message "Added %d message%s%s for %s to %s"
+                   added-count
+                   (if (= added-count 1) "" "s")
+                   (if (> skipped-count 0)
+                       (format " (skipping %d)" skipped-count)
+                     "")
+                   mid
+                   (abbreviate-file-name maildir-directory))))
+      (run-hook-with-args 'piem-after-mail-injection-functions mid))))
 
 
 ;;;; Patch handling

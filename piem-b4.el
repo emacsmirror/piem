@@ -73,15 +73,14 @@ This is intended to be used for debugging purposes.")
     ;; back to b4's configuration.
     (unless local-mbox-p
       (when-let ((url (and (equal mid (piem-mid))
-                           (piem-inbox-get :url)))
-                 (buffer (condition-case nil
-                             (piem-download-and-decompress
-                              (concat url (piem-escape-mid mid) "/t.mbox.gz"))
-                           (error nil))))
-        (with-current-buffer buffer
-          (write-region nil nil mbox-thread))
-        (kill-buffer buffer)
-        (setq local-mbox-p t)))
+                           (piem-check-gunzip)
+                           (piem-inbox-get :url))))
+        (ignore-errors
+          (piem-with-url-contents
+              (concat url (piem-escape-mid mid) "/t.mbox.gz")
+            (piem-gunzip-buffer)
+            (write-region nil nil mbox-thread))
+          (setq local-mbox-p t))))
     ;; Move to the coderepo so that we pick up any b4 configuration
     ;; from there.
     (condition-case err
