@@ -536,7 +536,7 @@ is used as the value of `browse-url-browser-function'."
     (user-error "gunzip executable not found"))
   (goto-char (point-min))
   (unless (= 0 (call-process-region nil nil "gunzip" nil t))
-    (error "Decompressing t.mbox.gz failed"))
+    (error "Decompressing buffer failed"))
   (delete-region (point) (point-max))
   (goto-char (point-min)))
 
