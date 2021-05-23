@@ -536,6 +536,8 @@ is used as the value of `browse-url-browser-function'."
   piem--has-gunzip)
 
 (defun piem-gunzip-buffer ()
+  (unless (piem-check-gunzip)
+    (user-error "gunzip executable not found"))
   (goto-char (point-min))
   (unless (= 0 (call-process-region nil nil "gunzip" nil t))
     (error "Decompressing t.mbox.gz failed"))
@@ -630,9 +632,7 @@ This function depends on :url being configured for entries in
       (user-error "No directory returned by `piem-inbox-maildir-directory'"))
      ((not (piem-maildir-dir-is-maildir-p maildir-directory))
       (user-error
-       "Does not look like a Maildir directory: %s" maildir-directory))
-     ((not (or message-only (piem-check-gunzip)))
-      (user-error "gunzip executable not found")))
+       "Does not look like a Maildir directory: %s" maildir-directory)))
     (let ((url (concat (piem-mid-url mid)
                        (if message-only "/raw" "/t.mbox.gz"))))
       (piem-with-url-contents url
