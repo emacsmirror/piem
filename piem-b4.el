@@ -131,10 +131,15 @@ list of arguments specified via ARGS."
 (defun piem-b4-am-from-mid (mid &optional args toggle-worktree)
   "Get the thread for MID, extract an am-ready mbox, and apply it.
 
-Try to get a thread for the Message-Id MID with
-`piem-mid-to-thread-functions', falling back to letting b4
-download it.  After calling `b4 am' with ARGS to prepare an
-am-ready mbox, feed the result to `git am'.
+Try to generate a thread for the Message-Id MID with
+`piem-mid-to-thread-functions'.  If that fails, try to download
+the thread from the `piem-inboxes' URL associated with the
+current buffer, provided that the current buffer's message ID
+matches MID.  And if that doesn't work, let `b4 am' download the
+thread according to its own configuration.
+
+After calling `b4 am' with ARGS to prepare an am-ready mbox, feed
+the result to `git am'.
 
 When prefix argument TOGGLE-WORKTREE is non-nil, invert the
 meaning of `piem-am-create-worktree'.  With the default value,

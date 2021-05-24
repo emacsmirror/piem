@@ -341,11 +341,11 @@ a non-nil value or by giving a prefix argument.
 To generate the input thread, first any functions in
 @code{piem-mid-to-thread-functions} are tried.  This allows for a thread
 to be retrieved from a local store (e.g., the Notmuch database).  If
-that fails, the thread is downloaded from the public-inbox URL
-associated with the current buffer.  Finally, if an inbox's entry in
-@code{piem-inboxes} doesn't specify a URL, @code{b4 am} is called
-without a local mbox, letting it download the thread according to its
-own configuration.
+that fails, try to download the thread from the @code{piem-inboxes} URL
+associated with the current buffer, provided the current buffer's
+message ID matches the one @code{piem-b4-am-from-mid} was called with.
+As a last resort, call @code{b4 am} without a local mbox to let it
+download the thread according to its own configuration.
 
 @item i
 @itemx M-x piem-b4-am-ready-from-mid
