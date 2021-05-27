@@ -172,6 +172,7 @@ required to apply patches from an archive to a local code repository
 @findex piem-eww-mode
 @findex piem-gnus-mode
 @findex piem-notmuch-mode
+@findex piem-rmail-mode
 
 With inboxes defined, the next step is to enable minor modes that teach
 particular Emacs modes to link a buffer with a registered inbox.  piem
@@ -182,6 +183,7 @@ currently has libraries to support
 @item Elfeed
 @item Gnus
 @item Notmuch
+@item Rmail
 @end itemize
 
 For example, if you use notmuch.el to read your mail, you can add

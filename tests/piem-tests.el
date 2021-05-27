@@ -21,6 +21,7 @@
 
 (require 'ert)
 (require 'piem)
+(require 'piem-rmail-tests)
 
 (ert-deftest piem-message-link-re ()
   (should-not (string-match-p
