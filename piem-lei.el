@@ -21,6 +21,7 @@
 
 ;;; Code:
 
+(require 'json)
 (require 'message)
 (require 'piem)
 
@@ -138,6 +139,73 @@ unless DISPLAY is non-nil."
   (setq truncate-lines t)
   (setq buffer-read-only t)
   (setq font-lock-defaults (list piem-lei-show-mode-font-lock-keywords t))
+  (setq-local line-move-visual t))
+
+
+;;;; Searching
+
+(defun piem-lei-query--read-json-item ()
+  (let ((json-object-type 'alist)
+        (json-array-type 'list)
+        ;; Using symbols for lei-q's output should be fine, though
+        ;; it's a little odd for the "t:" field.
+        (json-key-type 'symbol)
+        (json-false nil)
+        (json-null nil))
+    (json-read)))
+
+(defvar piem-lei-query--date-re
+  (rx string-start
+      (group (= 4 digit) "-" (= 2 digit) "-" (= 2 digit))
+      "T" (group (= 2 digit) ":" (= 2 digit)) ":" (= 2 digit) "Z"
+      string-end))
+
+(defun piem-lei-query--format-date (data)
+  (let ((date (cdr (assq 'dt data))))
+    (if (string-match piem-lei-query--date-re date)
+        (concat (match-string 1 date) " " (match-string 2 date))
+      (error "Date did not match expected format: %S" date))))
+
+;;;###autoload
+(defun piem-lei-query (query)
+  "Call `lei q' with QUERY.
+QUERY is split according to `split-string-and-unquote'."
+  (interactive
+   (list (split-string-and-unquote
+          (read-string "Query: " "d:20.days.ago.. " 'piem-lei-query-history))))
+  (with-current-buffer (get-buffer-create "*lei-query*")
+    (let ((inhibit-read-only t))
+      (erase-buffer)
+      (apply #'call-process "lei" nil '(t nil) nil
+             "q" "--format=ldjson" query)
+      (goto-char (point-min))
+      (while (not (eobp))
+        (let ((data (piem-lei-query--read-json-item)))
+          (delete-region (line-beginning-position) (point))
+          (insert
+           (format "%s %3s %-20.20s %s"
+                   (piem-lei-query--format-date data)
+                   (if-let ((pct (cdr (assq 'pct data))))
+                       (concat (number-to-string (cdr (assq 'pct data)))
+                               "%")
+                     "")
+                   (let ((from (car (cdr (assq 'f data)))))
+                     (or (car from) (cadr from)))
+                   (cdr (assq 's data))))
+          (add-text-properties (line-beginning-position) (line-end-position)
+                               (list 'piem-lei-query-result data)))
+        (forward-line))
+      (insert "End of lei-q results"))
+    (goto-char (point-min))
+    (piem-lei-query-mode)
+    (pop-to-buffer-same-window (current-buffer))))
+
+(define-derived-mode piem-lei-query-mode special-mode "lei-query"
+  "Major mode for displaying overview of `lei q' results."
+  :group 'piem-lei
+  (buffer-disable-undo)
+  (setq truncate-lines t)
+  (setq buffer-read-only t)
   (setq-local line-move-visual t))
 
 ;;; piem-lei.el ends here
