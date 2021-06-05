@@ -139,6 +139,13 @@ unless DISPLAY is non-nil."
     ("^>>>> \\(.*\\)" 0 'piem-lei-show-cited-text-4))
   "Font lock keywords for `piem-lei-show-mode'.")
 
+(defvar piem-lei-show-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map "s" #'piem-lei-query)
+    (define-key map "t" #'piem-lei-query-thread)
+    map)
+  "Keymap for `piem-lei-show-mode'.")
+
 (define-derived-mode piem-lei-show-mode special-mode "lei-show"
   "Major mode for displaying message via lei."
   :group 'piem-lei
@@ -318,6 +325,18 @@ line's message, scroll its text downward, passing ARG to
    (cond ((eq arg '-) nil)
          (arg (- arg))
          (t '-))))
+
+(defvar piem-lei-query-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "RET") #'piem-lei-query-show)
+    (define-key map (kbd "DEL") #'piem-lei-query-show-or-scroll-down)
+    (define-key map (kbd "SPC") #'piem-lei-query-show-or-scroll-up)
+    (define-key map "n" #'piem-lei-query-next-line)
+    (define-key map "p" #'piem-lei-query-previous-line)
+    (define-key map "s" #'piem-lei-query)
+    (define-key map "t" #'piem-lei-query-thread)
+    map)
+  "Keymap for `piem-lei-query-mode'.")
 
 (define-derived-mode piem-lei-query-mode special-mode "lei-query"
   "Major mode for displaying overview of `lei q' results."
