@@ -5,7 +5,7 @@ EMACS   = emacs
 BATCH   = $(EMACS) --batch -Q -L . -L tests
 
 EL = piem.el piem-b4.el piem-elfeed.el piem-eww.el piem-gnus.el \
-     piem-maildir.el piem-notmuch.el piem-rmail.el \
+     piem-lei.el piem-maildir.el piem-notmuch.el piem-rmail.el \
      tests/piem-rmail-tests.el tests/piem-tests.el
 ELC = $(EL:.el=.elc)
 
@@ -35,6 +35,7 @@ piem-b4.elc: piem-b4.el piem.elc
 piem-elfeed.elc: piem-elfeed.el piem.elc
 piem-eww.elc: piem-eww.el piem.elc
 piem-gnus.elc: piem-gnus.el piem.elc
+piem-lei.elc: piem-lei.el piem.elc
 piem-maildir.elc: piem-maildir.el
 piem-notmuch.elc: piem-notmuch.el piem.elc
 piem-rmail.elc: piem-rmail.el piem.elc
