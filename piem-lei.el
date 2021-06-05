@@ -289,6 +289,36 @@ it to display the message."
   (interactive "p")
   (piem-lei-query-next-line (- n)))
 
+(defun piem-lei-query-show-or-scroll-up (arg)
+  "Show or scroll up message for current query line.
+If there is a visible `piem-lei-show-mode' buffer for the current
+line's message, scroll its text upward, passing ARG to
+`scroll-up-command'.  Otherwise show the message with
+`piem-lei-query-show'."
+  (interactive "^P")
+  (if-let ((mid (piem-lei-query-get-mid)))
+      (let ((w (piem-lei-query--get-visible-message-window)))
+        (if (and w
+                 (equal (with-current-buffer (window-buffer w)
+                          piem-lei-show-mid)
+                        mid))
+            (with-selected-window w
+              (scroll-up-command arg))
+          (piem-lei-query-show)))
+    (ding)))
+
+(defun piem-lei-query-show-or-scroll-down (arg)
+  "Show or scroll down message for current query line.
+If there is a visible `piem-lei-show-mode' buffer for the current
+line's message, scroll its text downward, passing ARG to
+`scroll-down-command'.  Otherwise show the message with
+`piem-lei-query-show'."
+  (interactive "^P")
+  (piem-lei-query-show-or-scroll-up
+   (cond ((eq arg '-) nil)
+         (arg (- arg))
+         (t '-))))
+
 (define-derived-mode piem-lei-query-mode special-mode "lei-query"
   "Major mode for displaying overview of `lei q' results."
   :group 'piem-lei
