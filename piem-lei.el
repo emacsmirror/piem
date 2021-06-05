@@ -498,7 +498,7 @@ Return a list with a `piem-lei-msg' object for each root."
 (defun piem-lei-query-thread (mid)
   "Show thread containing message MID."
   (interactive
-   (list (or (piem-lei-query-get-mid)
+   (list (or (piem-lei-get-mid)
              (read-string "Message ID: " nil nil (piem-mid)))))
   (let* ((records (piem-lei-query--slurp
                    (list "--threads" (concat "m:" mid))))
