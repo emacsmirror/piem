@@ -146,6 +146,22 @@ unless DISPLAY is non-nil."
 
 ;;;; Searching
 
+(defface piem-lei-query-date
+  '((t :inherit font-lock-variable-name-face))
+  "Face for date in `piem-lei-query-mode' buffers.")
+
+(defface piem-lei-query-pct
+  '((t :inherit shadow))
+  "Face for \"search relevance\" in `piem-lei-query-mode' buffers.")
+
+(defface piem-lei-query-from
+  '((t :inherit font-lock-doc-face))
+  "Face for sender name in `piem-lei-query-mode' buffers.")
+
+(defface piem-lei-query-subject
+  '((t :inherit default))
+  "Face for subject in `piem-lei-query-mode' buffers.")
+
 (defun piem-lei-query--read-json-item ()
   (let ((json-object-type 'alist)
         (json-array-type 'list)
@@ -164,9 +180,12 @@ unless DISPLAY is non-nil."
 
 (defun piem-lei-query--format-date (data)
   (let ((date (cdr (assq 'dt data))))
-    (if (string-match piem-lei-query--date-re date)
-        (concat (match-string 1 date) " " (match-string 2 date))
-      (error "Date did not match expected format: %S" date))))
+    (propertize
+     (if (string-match piem-lei-query--date-re date)
+         (concat (match-string 1 date) " "
+                 (match-string 2 date))
+       (error "Date did not match expected format: %S" date))
+     'font-lock-face 'piem-lei-query-date)))
 
 ;;;###autoload
 (defun piem-lei-query (query)
@@ -188,12 +207,16 @@ QUERY is split according to `split-string-and-unquote'."
            (format "%s %3s %-20.20s %s"
                    (piem-lei-query--format-date data)
                    (if-let ((pct (cdr (assq 'pct data))))
-                       (concat (number-to-string (cdr (assq 'pct data)))
-                               "%")
+                       (propertize
+                        (concat (number-to-string (cdr (assq 'pct data)))
+                                "%")
+                        'font-lock-face 'piem-lei-query-pct)
                      "")
-                   (let ((from (car (cdr (assq 'f data)))))
-                     (or (car from) (cadr from)))
-                   (cdr (assq 's data))))
+                   (propertize (let ((from (car (cdr (assq 'f data)))))
+                                 (or (car from) (cadr from)))
+                               'font-lock-face 'piem-lei-query-from)
+                   (propertize (cdr (assq 's data))
+                               'font-lock-face 'piem-lei-query-subject)))
           (add-text-properties (line-beginning-position) (line-end-position)
                                (list 'piem-lei-query-result data)))
         (forward-line))
@@ -230,6 +253,14 @@ line."
 
 
 ;;;;; Threading
+
+(defface piem-lei-query-thread-marker
+  '((t :inherit default))
+  "Face for thread marker in `piem-lei-query-mode' buffers.")
+
+(defface piem-lei-query-thread-ghost
+  '((t :inherit font-lock-comment-face))
+  "Face for ghost message IDs in `piem-lei-query-mode' buffers.")
 
 ;; The approach here tries to loosely follow what is in public-inbox's
 ;; SearchThread.pm, which in turn is a modified version of the
@@ -314,7 +345,7 @@ Return a list with a `piem-lei-msg' object for each root."
   (if (= level 0)
       ""
     (concat (make-string (* 2 (1- level)) ?\s)
-            "` ")))
+            (propertize "` " 'font-lock-face 'piem-lei-query-thread-marker))))
 
 (defun piem-lei-query--slurp (args)
   (with-temp-buffer
@@ -358,15 +389,20 @@ Return a list with a `piem-lei-msg' object for each root."
                    (piem-lei-query--format-date data) " "
                    (piem-lei-query--format-thread-marker depth)
                    (let ((from (car (cdr (assq 'f data)))))
-                     (or (car from) (cadr from)))
+                     (propertize (or (car from) (cadr from))
+                                 'font-lock-face 'piem-lei-query-from))
                    (concat "  "
-                           (cdr (assq 's data))))
+                           (propertize (cdr (assq 's data))
+                                       'font-lock-face
+                                       'piem-lei-query-subject)))
                   (add-text-properties (line-beginning-position)
                                        (line-end-position)
                                        (list 'piem-lei-query-result data)))
               (insert (make-string 17 ?\s) ; Date alignment.
                       (piem-lei-query--format-thread-marker depth)
-                      (concat " <" mid-msg ">")))
+                      (propertize (concat " <" mid-msg ">")
+                                  'font-lock-face
+                                  'piem-lei-query-thread-ghost)))
             (insert ?\n)))
         (insert "End of lei-q results"))
       (goto-char (point-min))
