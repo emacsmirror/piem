@@ -21,6 +21,8 @@
 
 ;;; Code:
 
+(require 'cl-lib)
+(require 'iso8601)
 (require 'json)
 (require 'message)
 (require 'piem)
@@ -225,6 +227,151 @@ line."
   (setq truncate-lines t)
   (setq buffer-read-only t)
   (setq-local line-move-visual t))
+
+
+;;;;; Threading
+
+;; The approach here tries to loosely follow what is in public-inbox's
+;; SearchThread.pm, which in turn is a modified version of the
+;; algorithm described at <https://www.jwz.org/doc/threading.html>.
+
+(cl-defstruct piem-lei-msg mid parent children time ghost)
+
+(defun piem-lei-query--add-child (parent child)
+  (let ((mid-parent (piem-lei-msg-mid parent))
+        (mid-child (piem-lei-msg-mid child)))
+    (when (equal mid-parent mid-child)
+      (error "Parent and child have same message ID: %s"
+             mid-parent))
+    (when-let ((parent-old (piem-lei-msg-parent child)))
+      (setf (piem-lei-msg-children parent-old)
+            (delq child (piem-lei-msg-children parent-old))))
+    (push child (piem-lei-msg-children parent))
+    (setf (piem-lei-msg-parent child) parent)))
+
+(defun piem-lei-query--has-descendant (msg1 msg2)
+  "Is MSG2 a descendant of MSG1?"
+  (let ((msg1-mid (piem-lei-msg-mid msg1))
+        seen)
+    (catch 'stop
+      (while msg2
+        (let ((msg2-mid (piem-lei-msg-mid msg2)))
+          (when (or (equal msg1-mid msg2-mid)
+                    (member msg2 seen))
+            (throw 'stop t))
+          (push msg2-mid seen))
+        (setq msg2 (piem-lei-msg-parent msg2)))
+      nil)))
+
+(defun piem-lei-query--thread (records)
+  "Thread messages in RECORDS.
+
+RECORDS is a list of alists with information from `lei q'.  This
+information is used to construct, link, and order `piem-lei-msg'
+objects.
+
+Return a list with a `piem-lei-msg' object for each root."
+  (let ((thread (make-hash-table :test #'equal)))
+    (dolist (record records)
+      (let ((mid (cdr (assq 'm record))))
+        (puthash mid
+                 (make-piem-lei-msg
+                  :mid mid :time (cdr (assq 'time record)))
+                 thread)))
+    (dolist (record (sort (copy-sequence records)
+                          (lambda (a b)
+                            (time-less-p (cdr (assq 'time a))
+                                         (cdr (assq 'time b))))))
+      (let ((msg-prev nil)
+            (msg-cur (gethash (cdr (assq 'm record)) thread)))
+        (dolist (ref (cdr (assq 'refs record)))
+          (let ((msg (or (gethash ref thread)
+                         (puthash ref
+                                  (make-piem-lei-msg :mid ref :ghost t)
+                                  thread))))
+            (when (and msg-prev
+                       (not (piem-lei-msg-parent msg))
+                       (not (piem-lei-query--has-descendant msg msg-prev)))
+              (piem-lei-query--add-child msg-prev msg))
+            (setq msg-prev msg)))
+        (when (and msg-prev
+                   (not (piem-lei-query--has-descendant msg-cur msg-prev)))
+          (piem-lei-query--add-child msg-prev msg-cur))))
+    (let (roots)
+      (maphash
+       (lambda (_ v)
+         (setf (piem-lei-msg-children v)
+               (sort (piem-lei-msg-children v)
+                     (lambda (a b)
+                       (time-less-p (piem-lei-msg-time a)
+                                    (piem-lei-msg-time b)))))
+         (unless (piem-lei-msg-parent v)
+           (push v roots)))
+       thread)
+      (nreverse roots))))
+
+(defun piem-lei-query--format-thread-marker (level)
+  (if (= level 0)
+      ""
+    (concat (make-string (* 2 (1- level)) ?\s)
+            "` ")))
+
+(defun piem-lei-query--slurp (args)
+  (with-temp-buffer
+    (apply #'call-process "lei" nil '(t nil) nil
+           "q" "--format=ldjson" args)
+    (goto-char (point-min))
+    (let (items)
+      (while (not (eobp))
+        (let ((item (piem-lei-query--read-json-item)))
+          (push (cons 'time (encode-time
+                             (iso8601-parse (cdr (assq 'dt item)))))
+                item)
+          (push (cons (cdr (assq 'm item)) item) items))
+        (forward-line))
+      (nreverse items))))
+
+(defun piem-lei-query-thread (mid)
+  "Show thread containing message MID."
+  (interactive
+   (list (or (piem-lei-query-get-mid)
+             (read-string "Message ID: " nil nil (piem-mid)))))
+  (let* ((records (piem-lei-query--slurp
+                   (list "--threads" (concat "m:" mid))))
+         (msgs (piem-lei-query--thread records))
+         depths)
+    (with-current-buffer (get-buffer-create "*lei-thread*")
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (while msgs
+          (let* ((msg (pop msgs))
+                 (mid-msg (piem-lei-msg-mid msg))
+                 (children (piem-lei-msg-children msg))
+                 (depth (1+ (or (cdr (assoc (piem-lei-msg-parent msg) depths))
+                                -1))))
+            (when children
+              (setq msgs (append children msgs)))
+            (push (cons msg depth) depths)
+            (if (not (piem-lei-msg-ghost msg))
+                (let ((data (cdr (assoc mid-msg records))))
+                  (insert
+                   (piem-lei-query--format-date data) " "
+                   (piem-lei-query--format-thread-marker depth)
+                   (let ((from (car (cdr (assq 'f data)))))
+                     (or (car from) (cadr from)))
+                   (concat "  "
+                           (cdr (assq 's data))))
+                  (add-text-properties (line-beginning-position)
+                                       (line-end-position)
+                                       (list 'piem-lei-query-result data)))
+              (insert (make-string 17 ?\s) ; Date alignment.
+                      (piem-lei-query--format-thread-marker depth)
+                      (concat " <" mid-msg ">")))
+            (insert ?\n)))
+        (insert "End of lei-q results"))
+      (goto-char (point-min))
+      (piem-lei-query-mode)
+      (pop-to-buffer-same-window (current-buffer)))))
 
 ;;; piem-lei.el ends here
 (provide 'piem-lei)
