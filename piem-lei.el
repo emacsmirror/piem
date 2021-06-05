@@ -77,6 +77,9 @@
   '((t :inherit message-cited-text-4))
   "Face for 4th-level cited text in `piem-lei-show-mode' buffers.")
 
+(defvar-local piem-lei-show-mid nil
+  "Message ID shown in current buffer.")
+
 (defun piem-lei-show--fontify-headers ()
   (save-excursion
     (let (last-value-face)
@@ -123,6 +126,7 @@ unless DISPLAY is non-nil."
         (delete-region (line-beginning-position)
                        (1+ (line-end-position))))
       (piem-lei-show-mode)
+      (setq piem-lei-show-mid mid)
       (piem-lei-show--fontify-headers))
     (if display
         (pop-to-buffer (current-buffer))
