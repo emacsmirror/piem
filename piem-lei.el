@@ -26,6 +26,7 @@
 (require 'json)
 (require 'message)
 (require 'piem)
+(require 'seq)
 
 (defgroup piem-lei nil
   "lei integration for piem."
@@ -242,6 +243,47 @@ line."
    '(display-buffer-below-selected
      (inhibit-same-window . t)
      (window-height . 0.8))))
+
+(defun piem-lei-query--get-visible-message-window ()
+  (seq-some
+   (lambda (w)
+     (with-current-buffer (window-buffer w)
+       (and (derived-mode-p 'piem-lei-show-mode)
+            w)))
+   (window-list (selected-frame))))
+
+(defun piem-lei-query-next-line (n)
+  "Move to the Nth next query result.
+If a `piem-lei-show-mode' buffer is visible in the frame, update
+it to display the message."
+  (interactive "p")
+  (unless (= n 0)
+    (pcase-let ((ntimes (abs n))
+                (`(,move-fn ,pos-fn)
+                 (if (> n 0)
+                     (list #'next-single-property-change
+                           #'line-end-position)
+                   (list #'previous-single-property-change
+                         #'line-beginning-position)))
+                (target nil))
+      (while (and (> ntimes 0)
+                  (setq target (funcall move-fn
+                                        (funcall pos-fn)
+                                        'piem-lei-query-result)))
+        (cl-decf ntimes))
+      (if (not target)
+          (ding)
+        (goto-char target)
+        (goto-char (line-beginning-position))
+        (when (piem-lei-query--get-visible-message-window)
+          (piem-lei-query-show))))))
+
+(defun piem-lei-query-previous-line (n)
+  "Move to the Nth previous query result.
+If a `piem-lei-show-mode' buffer is visible in the frame, update
+it to display the message."
+  (interactive "p")
+  (piem-lei-query-next-line (- n)))
 
 (define-derived-mode piem-lei-query-mode special-mode "lei-query"
   "Major mode for displaying overview of `lei q' results."
