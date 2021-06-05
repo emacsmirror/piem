@@ -387,7 +387,8 @@ Return a list with a `piem-lei-msg' object for each root."
                 (let* ((data (cdr (assoc mid-msg records)))
                        (subject (let ((case-fold-search t))
                                   (replace-regexp-in-string
-                                   (rx string-start "re:" (one-or-more space))
+                                   (rx string-start
+                                       (one-or-more "re:" (one-or-more space)))
                                    ""
                                    (string-trim (cdr (assq 's data)))))))
                   (insert
