@@ -341,6 +341,33 @@ Return a list with a `piem-lei-msg' object for each root."
        thread)
       (nreverse roots))))
 
+(defvar piem-lei-query--subject-split-re
+  (rx string-start
+      ;; Prefix.
+      (group (zero-or-more space)
+             (one-or-more "[" (one-or-more (not (any "]" "\n"))) "]"
+                          (one-or-more space)))
+      ;; Main subject.  A match consists of at least two islands of
+      ;; non-space characters because there's not much point in
+      ;; eliding one word.
+      (group (one-or-more (not space))
+             (one-or-more space)
+             (not space)
+             (one-or-more anychar))))
+
+(defun piem-lei-query--split-subject (s)
+  (if (string-match piem-lei-query--subject-split-re s)
+      (cons (match-string 1 s) (match-string 2 s))
+    (cons nil s)))
+
+(defun piem-lei-query--elide-subject (s1 s2)
+  (pcase-let ((`(,head2 . ,tail2) (piem-lei-query--split-subject s2)))
+    (if (and s1 head2
+             (let ((tail1 (cdr (piem-lei-query--split-subject s1))))
+               (equal tail1 tail2)))
+        (concat head2 (if (char-displayable-p ?…) "…" "..."))
+      s2)))
+
 (defun piem-lei-query--format-thread-marker (level)
   (if (= level 0)
       ""
@@ -400,7 +427,8 @@ Return a list with a `piem-lei-msg' object for each root."
                    (if (equal subject subject-prev)
                        ""
                      (concat "  "
-                             (propertize subject
+                             (propertize (piem-lei-query--elide-subject
+                                          subject-prev subject)
                                          'font-lock-face
                                          'piem-lei-query-subject))))
                   (add-text-properties (line-beginning-position)

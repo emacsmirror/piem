@@ -70,5 +70,47 @@
     (should-not (piem-lei-query--has-descendant m3 m2))
     (should-not (piem-lei-query--has-descendant m3 m1))))
 
+(ert-deftest piem-lei-query--elide-subject:keep-original ()
+  (should (equal "ghi jlk"
+                 (piem-lei-query--elide-subject
+                  nil
+                  "ghi jlk")))
+  (should (equal "ghi jlk"
+                 (piem-lei-query--elide-subject
+                  "abc def"
+                  "ghi jlk")))
+  (should (equal "abc def"
+                 (piem-lei-query--elide-subject
+                  "[PATCH] abc def"
+                  "abc def")))
+  (should (equal "abc def"
+                 (piem-lei-query--elide-subject
+                  "[bug#00000] [PATCH] abc def"
+                  "abc def")))
+  (should (equal "abc def"
+                 (piem-lei-query--elide-subject
+                  "[PATCH] abc def"
+                  "abc def")))
+  (should (equal "[bug#00000] [PATCH v2] abc"
+                 (piem-lei-query--elide-subject
+                  "[bug#00000] [PATCH] abc"
+                  "[bug#00000] [PATCH v2] abc")))
+  (should (equal "[bug#00000] [PATCH v2] ghi jlk mno"
+                 (piem-lei-query--elide-subject
+                  "[bug#00000] [PATCH] abc def"
+                  "[bug#00000] [PATCH v2] ghi jlk mno"))))
+
+(defvar piem-lei-tests-elide-string (if (char-displayable-p ?…) "…" "..."))
+
+(ert-deftest piem-lei-query--elide-subject:elide ()
+  (should (equal (concat "[PATCH v2] " piem-lei-tests-elide-string)
+                 (piem-lei-query--elide-subject
+                  "[PATCH] abc def"
+                  "[PATCH v2] abc def")))
+  (should (equal (concat "[bug#00000] [PATCH v2] " piem-lei-tests-elide-string)
+                 (piem-lei-query--elide-subject
+                  "[bug#00000] [PATCH] abc def"
+                  "[bug#00000] [PATCH v2] abc def"))))
+
 (provide 'piem-lei-tests)
 ;;; piem-lei-tests.el ends here
