@@ -345,8 +345,18 @@ Return a list with a `piem-lei-msg' object for each root."
   (rx string-start
       ;; Prefix.
       (group (zero-or-more space)
-             (one-or-more "[" (one-or-more (not (any "]" "\n"))) "]"
-                          (one-or-more space)))
+             (or (and (one-or-more (and "bug#" (one-or-more digit) ":"))
+                      (one-or-more space)
+                      (zero-or-more
+                       ;; This pattern...
+                       "[" (one-or-more (not (any "]" "\n"))) "]"
+                       (one-or-more space)))
+                 (one-or-more
+                  ;; ... is repeated here.  Extract it to an rx-let
+                  ;; binding once minimum Emacs version is at least
+                  ;; 27.
+                  "[" (one-or-more (not (any "]" "\n"))) "]"
+                  (one-or-more space))))
       ;; Main subject.  A match consists of at least two islands of
       ;; non-space characters because there's not much point in
       ;; eliding one word.

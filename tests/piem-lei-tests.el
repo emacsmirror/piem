@@ -110,7 +110,11 @@
   (should (equal (concat "[bug#00000] [PATCH v2] " piem-lei-tests-elide-string)
                  (piem-lei-query--elide-subject
                   "[bug#00000] [PATCH] abc def"
-                  "[bug#00000] [PATCH v2] abc def"))))
+                  "[bug#00000] [PATCH v2] abc def")))
+  (should (equal (concat "bug#00000: [PATCH v2] " piem-lei-tests-elide-string)
+                 (piem-lei-query--elide-subject
+                  "[bug#00000] [PATCH] abc def"
+                  "bug#00000: [PATCH v2] abc def"))))
 
 (provide 'piem-lei-tests)
 ;;; piem-lei-tests.el ends here
