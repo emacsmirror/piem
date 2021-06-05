@@ -27,6 +27,7 @@
 (require 'message)
 (require 'piem)
 (require 'seq)
+(require 'subr-x)
 
 (defgroup piem-lei nil
   "lei integration for piem."
@@ -553,6 +554,59 @@ Return a list with a `piem-lei-msg' object for each root."
       (goto-char (or pt-final (point-min)))
       (piem-lei-query-mode)
       (pop-to-buffer-same-window (current-buffer)))))
+
+
+;;;; piem integration
+
+(defun piem-lei-get-mid ()
+  "Return the message ID of a lei buffer."
+  (cond ((derived-mode-p 'piem-lei-show-mode)
+         piem-lei-show-mid)
+        ((derived-mode-p 'piem-lei-query-mode)
+         (piem-lei-query-get-mid))))
+
+(defun piem-lei-get-inbox ()
+  "Return inbox name from a lei buffer."
+  (when-let ((mid (piem-lei-get-mid)))
+    (with-temp-buffer
+      (call-process "lei" nil '(t nil) nil
+                    "q" "--format=mboxrd" (concat "m:" mid))
+      (goto-char (point-min))
+      (piem-inbox-by-header-match))))
+
+(defun piem-lei-known-mid-p (mid)
+  "Return non-nil if MID is known to lei.
+The message ID should not include have surrounding brackets."
+  (not (string-empty-p
+        (with-temp-buffer
+          (call-process "lei" nil '(t nil) nil
+                        "q" "--format=ldjson" (concat "m:" mid))
+          (buffer-string)))))
+
+(defun piem-lei-mid-to-thread (mid)
+  "Return a function that inserts an mbox for MID's thread."
+  (when (piem-lei-known-mid-p mid)
+    (lambda ()
+      (call-process "lei" nil '(t nil) nil
+                    "q" "--format=mboxrd" "--threads"
+                    (concat "m:" mid)))))
+
+;;;###autoload
+(define-minor-mode piem-lei-mode
+  "Toggle lei support for piem.
+With a prefix argument ARG, enable piem-lei mode if ARG is
+positive, and disable it otherwise.  If called from Lisp, enable
+the mode if ARG is omitted or nil."
+  :global t
+  :init-value nil
+  (if piem-lei-mode
+      (progn
+        (add-hook 'piem-get-inbox-functions #'piem-lei-get-inbox)
+        (add-hook 'piem-get-mid-functions #'piem-lei-get-mid)
+        (add-hook 'piem-mid-to-thread-functions #'piem-lei-mid-to-thread))
+    (remove-hook 'piem-get-inbox-functions #'piem-lei-get-inbox)
+    (remove-hook 'piem-get-mid-functions #'piem-lei-get-mid)
+    (remove-hook 'piem-mid-to-thread-functions #'piem-lei-mid-to-thread)))
 
 ;;; piem-lei.el ends here
 (provide 'piem-lei)
