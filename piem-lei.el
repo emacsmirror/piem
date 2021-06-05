@@ -30,10 +30,13 @@
 
 ;;;; Message display
 
-(defun piem-lei-show (mid)
-  "Show message for MID."
+(defun piem-lei-show (mid &optional display)
+  "Show message for MID.
+When called non-interactively, return the buffer but do not display it
+unless DISPLAY is non-nil."
   (interactive
-   (list (read-string "Message ID: " nil nil (piem-mid))))
+   (list (read-string "Message ID: " nil nil (piem-mid))
+         'display))
   (with-current-buffer (get-buffer-create "*lei-show*")
     (let ((inhibit-read-only t))
       (erase-buffer)
@@ -44,7 +47,9 @@
         (delete-region (line-beginning-position)
                        (1+ (line-end-position))))
       (piem-lei-show-mode))
-    (pop-to-buffer (current-buffer))))
+    (if display
+        (pop-to-buffer (current-buffer))
+      (current-buffer))))
 
 (define-derived-mode piem-lei-show-mode special-mode "lei-show"
   "Major mode for displaying message via lei."
