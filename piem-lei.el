@@ -370,7 +370,7 @@ Return a list with a `piem-lei-msg' object for each root."
   (let* ((records (piem-lei-query--slurp
                    (list "--threads" (concat "m:" mid))))
          (msgs (piem-lei-query--thread records))
-         depths pt-final)
+         depths pt-final subject-prev)
     (with-current-buffer (get-buffer-create "*lei-thread*")
       (let ((inhibit-read-only t))
         (erase-buffer)
@@ -384,25 +384,34 @@ Return a list with a `piem-lei-msg' object for each root."
               (setq msgs (append children msgs)))
             (push (cons msg depth) depths)
             (if (not (piem-lei-msg-ghost msg))
-                (let ((data (cdr (assoc mid-msg records))))
+                (let* ((data (cdr (assoc mid-msg records)))
+                       (subject (let ((case-fold-search t))
+                                  (replace-regexp-in-string
+                                   (rx string-start "re:" (one-or-more space))
+                                   ""
+                                   (string-trim (cdr (assq 's data)))))))
                   (insert
                    (piem-lei-query--format-date data) " "
                    (piem-lei-query--format-thread-marker depth)
                    (let ((from (car (cdr (assq 'f data)))))
                      (propertize (or (car from) (cadr from))
                                  'font-lock-face 'piem-lei-query-from))
-                   (concat "  "
-                           (propertize (cdr (assq 's data))
-                                       'font-lock-face
-                                       'piem-lei-query-subject)))
+                   (if (equal subject subject-prev)
+                       ""
+                     (concat "  "
+                             (propertize subject
+                                         'font-lock-face
+                                         'piem-lei-query-subject))))
                   (add-text-properties (line-beginning-position)
                                        (line-end-position)
-                                       (list 'piem-lei-query-result data)))
+                                       (list 'piem-lei-query-result data))
+                  (setq subject-prev subject))
               (insert (make-string 17 ?\s) ; Date alignment.
                       (piem-lei-query--format-thread-marker depth)
                       (propertize (concat " <" mid-msg ">")
                                   'font-lock-face
-                                  'piem-lei-query-thread-ghost)))
+                                  'piem-lei-query-thread-ghost))
+              (setq subject-prev nil))
             (when (equal mid-msg mid)
               (setq pt-final (line-beginning-position)))
             (insert ?\n)))
