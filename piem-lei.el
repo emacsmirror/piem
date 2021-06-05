@@ -21,6 +21,7 @@
 
 ;;; Code:
 
+(require 'message)
 (require 'piem)
 
 (defgroup piem-lei nil
@@ -29,6 +30,77 @@
 
 
 ;;;; Message display
+
+(defface piem-lei-show-header-name
+  '((t :inherit message-header-name))
+  "Face for header names in `piem-lei-show-mode' buffers.")
+
+(defface piem-lei-show-header-from
+  ;; Given it's focused on sending, message.el unsurprisingly doesn't
+  ;; define a -from.
+  '((t :inherit message-header-to))
+  "Face for From headers in `piem-lei-show-mode' buffers.")
+
+(defface piem-lei-show-header-to
+  '((t :inherit message-header-to))
+  "Face for To headers in `piem-lei-show-mode' buffers.")
+
+(defface piem-lei-show-header-cc
+  '((t :inherit message-header-cc))
+  "Face for Cc headers in `piem-lei-show-mode' buffers.")
+
+(defface piem-lei-show-header-other
+  '((t :inherit message-header-other))
+  "Face for all other headers in `piem-lei-show-mode' buffers.")
+
+(defface piem-lei-show-header-subject
+  '((t :inherit message-header-subject))
+  "Face for Subject headers in `piem-lei-show-mode' buffers.")
+
+(defface piem-lei-show-cited-text-1
+  '((t :inherit message-cited-text-1))
+  "Face for 1st-level cited text in `piem-lei-show-mode' buffers.")
+
+(defface piem-lei-show-cited-text-2
+  '((t :inherit message-cited-text-2))
+  "Face for 2nd-level cited text in `piem-lei-show-mode' buffers.")
+
+(defface piem-lei-show-cited-text-3
+  '((t :inherit message-cited-text-3))
+  "Face for 3rd-level cited text in `piem-lei-show-mode' buffers.")
+
+(defface piem-lei-show-cited-text-4
+  '((t :inherit message-cited-text-4))
+  "Face for 4th-level cited text in `piem-lei-show-mode' buffers.")
+
+(defun piem-lei-show--fontify-headers ()
+  (save-excursion
+    (let (last-value-face)
+      (while (looking-at
+              (rx line-start
+                  (group (one-or-more (not (or ":" "\n"))) ":")
+                  (group (one-or-more not-newline))))
+        (put-text-property
+         (match-beginning 1) (match-end 1)
+         'font-lock-face 'piem-lei-show-header-name)
+        (put-text-property
+         (match-beginning 2) (match-end 2)
+         'font-lock-face
+         (setq last-value-face
+               (pcase (downcase (match-string 1))
+                 ("cc:" 'piem-lei-show-header-cc)
+                 ("from:" 'piem-lei-show-header-from)
+                 ("subject:" 'piem-lei-show-header-subject)
+                 ("to:" 'piem-lei-show-header-to)
+                 (_ 'piem-lei-show-header-other))))
+        (forward-line)
+        ;; Handle values that continue onto next line.
+        (while (eq (char-after) ?\t)
+          (save-excursion
+            (skip-chars-forward "\t")
+            (put-text-property (point) (line-end-position)
+                               'font-lock-face last-value-face))
+          (forward-line))))))
 
 (defun piem-lei-show (mid &optional display)
   "Show message for MID.
@@ -46,10 +118,18 @@ unless DISPLAY is non-nil."
       (when (looking-at-p "# blob:")
         (delete-region (line-beginning-position)
                        (1+ (line-end-position))))
-      (piem-lei-show-mode))
+      (piem-lei-show-mode)
+      (piem-lei-show--fontify-headers))
     (if display
         (pop-to-buffer (current-buffer))
       (current-buffer))))
+
+(defvar piem-lei-show-mode-font-lock-keywords
+  '(("^> \\(.*\\)" 0 'piem-lei-show-cited-text-1)
+    ("^>> \\(.*\\)" 0 'piem-lei-show-cited-text-2)
+    ("^>>> \\(.*\\)" 0 'piem-lei-show-cited-text-3)
+    ("^>>>> \\(.*\\)" 0 'piem-lei-show-cited-text-4))
+  "Font lock keywords for `piem-lei-show-mode'.")
 
 (define-derived-mode piem-lei-show-mode special-mode "lei-show"
   "Major mode for displaying message via lei."
@@ -57,6 +137,7 @@ unless DISPLAY is non-nil."
   (buffer-disable-undo)
   (setq truncate-lines t)
   (setq buffer-read-only t)
+  (setq font-lock-defaults (list piem-lei-show-mode-font-lock-keywords t))
   (setq-local line-move-visual t))
 
 ;;; piem-lei.el ends here
