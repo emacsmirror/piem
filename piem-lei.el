@@ -370,7 +370,7 @@ Return a list with a `piem-lei-msg' object for each root."
   (let* ((records (piem-lei-query--slurp
                    (list "--threads" (concat "m:" mid))))
          (msgs (piem-lei-query--thread records))
-         depths)
+         depths pt-final)
     (with-current-buffer (get-buffer-create "*lei-thread*")
       (let ((inhibit-read-only t))
         (erase-buffer)
@@ -403,9 +403,11 @@ Return a list with a `piem-lei-msg' object for each root."
                       (propertize (concat " <" mid-msg ">")
                                   'font-lock-face
                                   'piem-lei-query-thread-ghost)))
+            (when (equal mid-msg mid)
+              (setq pt-final (line-beginning-position)))
             (insert ?\n)))
         (insert "End of lei-q results"))
-      (goto-char (point-min))
+      (goto-char (or pt-final (point-min)))
       (piem-lei-query-mode)
       (pop-to-buffer-same-window (current-buffer)))))
 
