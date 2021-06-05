@@ -200,6 +200,24 @@ QUERY is split according to `split-string-and-unquote'."
     (piem-lei-query-mode)
     (pop-to-buffer-same-window (current-buffer))))
 
+(defun piem-lei-query-get-mid (&optional pos)
+  "Return message ID for position POS in a `piem-lei-query-mode' buffer.
+When POS is nil, use the position at the start of the current
+line."
+  (cdr (assq 'm (get-text-property (or pos (line-beginning-position))
+                                   'piem-lei-query-result))))
+
+(defun piem-lei-query-show ()
+  "Display message for current `piem-lei-query-mode' line."
+  (interactive)
+  (display-buffer
+   (piem-lei-show
+    (or (piem-lei-query-get-mid)
+        (user-error "No Message ID associated with current line")))
+   '(display-buffer-below-selected
+     (inhibit-same-window . t)
+     (window-height . 0.8))))
+
 (define-derived-mode piem-lei-query-mode special-mode "lei-query"
   "Major mode for displaying overview of `lei q' results."
   :group 'piem-lei
