@@ -63,7 +63,7 @@
 ;; supported.
 ;;
 ;; TODO: Decide how to deal with inboxes that map to more than one
-;; coderepos.  This is important to support for people that want to
+;; coderepo.  This is important to support for people that want to
 ;; use a catchall inbox for small projects which they don't think
 ;; (yet) need a dedicated address.
 (defcustom piem-inboxes nil
