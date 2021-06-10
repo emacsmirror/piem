@@ -400,7 +400,7 @@ INBOX doesn't have a maildir configured, return the value of
 
 (defun piem-inbox-coderepo-maybe-read ()
   "Like `piem-inbox-coderepo', but fall back to reading the repo."
-  (let ((inbox
+  (let ((repo
          (or (piem-inbox-coderepo)
              (and (bound-and-true-p projectile-known-projects)
                   (expand-file-name
@@ -419,9 +419,9 @@ INBOX doesn't have a maildir configured, return the value of
                   (fboundp 'magit-read-repository)
                   (magit-read-repository))
              (read-directory-name "Git repository: "))))
-    (if (equal inbox "")
-        (user-error "No inbox specified")
-      inbox)))
+    (if (equal repo "")
+        (user-error "No code repository specified")
+      repo)))
 
 (defun piem-mid ()
   "Return the current buffer's message ID."
