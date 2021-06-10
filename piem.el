@@ -58,10 +58,6 @@
   :link '(info-link "(piem)Top")
   :group 'tools)
 
-;; TODO: These intentionally follow public-inbox's configuration
-;; names.  Eventually reading values from there as well should be
-;; supported.
-;;
 ;; TODO: Decide how to deal with inboxes that map to more than one
 ;; coderepo.  This is important to support for people that want to
 ;; use a catchall inbox for small projects which they don't think
@@ -93,10 +89,40 @@ Here's an example for the public-inbox project itself:
      :address \"meta@public-inbox.org\"
      :listid \"meta.public-inbox.org\"
      :url \"https://public-inbox.org/meta/\"
-     :maildir \"~/.local/share/mail/.lists.mail.public-inbox\")"
+     :maildir \"~/.local/share/mail/.lists.mail.public-inbox\")
+
+Inboxes may also be fully or partially defined via public-inbox
+configuration when `piem-get-inboxes-from-config' is non-nil.
+Prefer the function `piem-merged-inboxes' over inspecting
+`piem-inboxes' directly so that values from the public-inbox
+configuration are considered."
+  ;; Note: When adding a property to the list above, update
+  ;; `piem--merge-config-inboxes' so that the value can also be set in
+  ;; ~/.public-inbox/config.
   :type '(alist :key-type string
                 :value-type
-                (plist :value-type string)))
+                (plist :value-type string))
+  :set (lambda (var val)
+         (set var val)
+         (when (fboundp 'piem-clear-merged-inboxes)
+           (piem-clear-merged-inboxes))))
+
+(defcustom piem-get-inboxes-from-config nil
+  "Whether to construct inboxes from public-inbox's configuration.
+
+If any inboxes are mirrored locally, some of the information in
+the option `piem-inboxes' may already be present in
+~/.public-inbox/config.  When this option is non-nil, the
+function `piem-merged-inboxes' combines these two sources, with
+values from `piem-inboxes' taking precedence.  For details, see
+Info node `(piem) Registering inboxes'.
+
+If you change the option `piem-inboxes' outside of the
+`customize' interface or change public-inbox's configuration, the
+merged representation can be updated by calling
+`piem-clear-merged-inboxes'."
+  :package-version '(piem . "0.3.0")
+  :type 'boolean)
 
 (defcustom piem-get-inbox-functions nil
   "Functions tried to get the inbox of the current buffer.
@@ -316,6 +342,110 @@ overriding the value of `browse-url-browser-function'."
                                    program default-directory))))))))))
 
 
+;;;; Integration with public-inbox configuration
+
+(defun piem--git-config-list (&optional file)
+  "Return a hash table that maps git-config keys to values.
+
+The value for each key is a list in the order that would be
+reported by `git config --get-all $key'.  The first value has the
+highest precedence (i.e. what would be reported by `git config
+--get $key').
+
+If FILE is non-nil, report configuration values from that file.
+Otherwise report values from all standard Git configuration
+files."
+  (with-temp-buffer
+    (unless (= 0 (apply #'call-process piem-git-executable nil '(t nil) nil
+                        "config" "--list" "-z"
+                        (append (and file (list "--file" file)))))
+      (error "git-config call failed"))
+    (goto-char (point-min))
+    (let ((cfg (make-hash-table :test #'equal)))
+      (while (not (eobp))
+        (let* ((key-end (line-end-position))
+               (key (buffer-substring (point) key-end))
+               (value (progn (skip-chars-forward "^\0")
+                             (buffer-substring (1+ key-end) (point)))))
+          (puthash key (cons value (gethash key cfg)) cfg)
+          (forward-char 1)))
+      cfg)))
+
+(defvar piem--inboxes 'unset)
+
+(defun piem--merge-config-inboxes ()
+  (let ((cfg-file (or (getenv "PI_CONFIG")
+                      (expand-file-name "~/.public-inbox/config"))))
+    (if (not (file-readable-p cfg-file))
+        (setq piem--inboxes piem-inboxes)
+      (let ((case-fold-search t)
+            (pi-cfg (piem--git-config-list cfg-file))
+            cfg-inboxes)
+        (maphash
+         (lambda (key val)
+           (when (string-match
+                  (rx string-start "publicinbox."
+                      (group (one-or-more not-newline)) "."
+                      (group
+                       (or "address" "coderepo" "listid" "maildir" "url"))
+                      string-end)
+                  key)
+             (let* ((inbox-name (match-string 1 key))
+                    (inbox-item (assoc inbox-name cfg-inboxes))
+                    (prop-name (intern (concat ":" (match-string 2 key))))
+                    (prop-pair (list prop-name (car val))))
+               (when-let ((coderepo
+                           (and (eq prop-name :coderepo)
+                                (car (gethash
+                                      (format "coderepo.%s.dir" (car val))
+                                      pi-cfg)))))
+                 (setq prop-pair
+                       (list :coderepo
+                             (replace-regexp-in-string
+                              "/\\.git/?\\'" "" coderepo))))
+               (if inbox-item
+                   (setcdr inbox-item (nconc prop-pair (cdr inbox-item)))
+                 (push (cons inbox-name prop-pair) cfg-inboxes)))))
+         pi-cfg)
+        (let (merged)
+          (dolist (name (delete-dups
+                         (mapcar #'car (append cfg-inboxes piem-inboxes))))
+            (push (append (list name)
+                          (alist-get name piem-inboxes nil nil #'equal)
+                          (alist-get name cfg-inboxes nil nil #'equal))
+                  merged))
+          (setq piem--inboxes merged))))))
+
+(defun piem-merged-inboxes ()
+  "Return list of inboxes.
+
+This list has the same form as described in the option
+`piem-inboxes'.
+
+If `piem-get-inboxes-from-config' is non-nil, the return value is
+constructed by merging inboxes defined in public-inbox's
+configuration with the inboxes from `piem-inboxes', with the
+values in the latter taking precedence.  If
+`piem-get-inboxes-from-config' is nil, this value matches
+`piem-inboxes'."
+  (if (not piem-get-inboxes-from-config)
+      piem-inboxes
+    (when (eq piem--inboxes 'unset)
+      (piem--merge-config-inboxes))
+    piem--inboxes))
+
+(defun piem-clear-merged-inboxes ()
+  "Clear inboxes cached by `piem-merged-inboxes'.
+When `piem-get-inboxes-from-config' is set to a non-nil value,
+`piem-merged-inboxes' constructs a set of inboxes by merging
+`piem-inboxes' and public-inbox's configuration and then caches
+the result.  If you change `piem-inboxes' outside of the
+customize interface or change public-inbox's configuration, call
+this command to clear the cached value."
+  (interactive)
+  (setq piem--inboxes 'unset))
+
+
 ;;;; Extractors
 
 (defun piem--ensure-trailing-slash (s)
@@ -353,7 +483,7 @@ intended to be used by libraries implementing a function for
   (pcase-let ((`(,listid ,to ,cc)
                (piem--message-fetch-decoded-fields '("list-id" "to" "cc"))))
     (catch 'hit
-      (dolist (inbox piem-inboxes)
+      (dolist (inbox (piem-merged-inboxes))
         (let* ((info (cdr inbox))
                (p-listid (plist-get info :listid)))
           (when (and listid
@@ -372,10 +502,12 @@ intended to be used by libraries implementing a function for
   (run-hook-with-args-until-success 'piem-get-inbox-functions))
 
 (defun piem-inbox-get (key &optional inbox)
-  "Get info KEY for INBOX's entry in `piem-inboxes'.
-If INBOX is nil, use the inbox returned by `piem-inbox'."
+  "Return value of KEY associated with INBOX.
+The key-value pair may be defined in `piem-inboxes' or
+public-inbox's configuration.  If INBOX is nil, use the inbox
+returned by `piem-inbox'."
   (when-let ((p (or inbox (piem-inbox))))
-    (plist-get (cdr (assoc p piem-inboxes)) key)))
+    (plist-get (cdr (assoc p (piem-merged-inboxes))) key)))
 
 (defun piem-inbox-coderepo (&optional inbox)
   "Return the code repository of current buffer's inbox."
@@ -383,10 +515,11 @@ If INBOX is nil, use the inbox returned by `piem-inbox'."
     (file-name-as-directory (expand-file-name repo))))
 
 (defun piem-inbox-maildir-directory (&optional inbox)
-  "Return the maildir for INBOX's entry in `piem-inboxes'.
+  "Return the maildir for INBOX.
 
 If INBOX is nil, use the inbox returned by `piem-inbox'.  If the
-INBOX doesn't have a maildir configured, return the value of
+INBOX doesn't have a maildir configured (via `piem-inboxes' or
+public-inbox's configuration), return the value of
 `piem-maildir-directory'."
   (or (piem-inbox-get :maildir inbox)
       piem-maildir-directory))
@@ -395,7 +528,7 @@ INBOX doesn't have a maildir configured, return the value of
   "Return inbox based on matching URL against `:url'."
   (setq url (piem--ensure-trailing-slash url))
   (catch 'hit
-    (dolist (inbox piem-inboxes)
+    (dolist (inbox (piem-merged-inboxes))
       (when-let ((info (cdr inbox))
                  (p-url (plist-get info :url)))
         (setq p-url (piem--ensure-trailing-slash p-url))
@@ -500,8 +633,9 @@ buffer."
 
 (defun piem-mid-url (mid &optional inbox)
   "Return a public-inbox URL for MID.
-The URL is determined by INBOX's entry in `piem-inboxes'.  If
-INBOX is nil, use the inbox returned by `piem-inbox'."
+The URL for INBOX may be defined in `piem-inboxes' or
+public-inbox's configuration.  If INBOX is nil, use the inbox
+returned by `piem-inbox'."
   (concat
    (piem--ensure-trailing-slash
     (or (piem-inbox-get :url inbox)

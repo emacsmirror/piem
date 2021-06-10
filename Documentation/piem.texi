@@ -165,6 +165,52 @@ local clone of @url{https://git.kernel.org/pub/scm/git/git.git/}).  This
 information is required to apply patches from an archive to a local code
 repository (@pxref{Applying patches}).
 
+@findex piem-merged-inboxes
+@vindex piem-get-inboxes-from-config
+If you mirror some inboxes locally (e.g., for fast local access or for
+use with lei), you don't need to duplicate the information from your
+public-inbox configuration
+(@url{https://public-inbox.org/public-inbox-config.txt,public-inbox-config(5)}).
+When the option @code{piem-get-inboxes-from-config} is non-nil, the
+function @code{piem-merged-inboxes}, which all code should use for
+accessing the registered inboxes, returns a combined set of inboxes
+derived from @code{piem-inboxes} and public-inbox's configuration.
+Merging is done at the level of inbox properties (e.g., an inbox's URL
+may be defined in @code{piem-inboxes} and the inbox's address in
+public-inbox's configuration).  When a value is defined in both sources,
+the one in @code{piem-inboxes} takes precedence.
+
+Properties described for @code{piem-inboxes} are constructed by mapping
+
+@example
+[publicinbox $inbox]
+$name = $value
+@end example
+
+@noindent
+to
+
+@example
+  ($inbox :$name $value ...)
+@end example
+
+@noindent
+The one exception is @code{:coderepo}.  In public-inbox's configuration,
+the value of @code{publicinbox.$inbox.coderepo} points to another
+configuration option, @code{coderepo.$value.dir}, which in turn points
+to a repository's git directory.  The @code{:coderepo} of
+@code{piem-inboxes}, however, should be set to the @emph{working tree},
+so @code{:coderepo} is derived from the value of
+@code{coderepo.$value.dir}, stripping a trailing @file{/.git} if
+present.
+
+@findex piem-clear-merged-inboxes
+Note that @code{piem-merged-inboxes} reads from the public-inbox
+configuration once, generates the merged set of inboxes, and then caches
+the result.  If you change @code{piem-inboxes} outside the customize
+interface or change public-inbox's configuration, you need to call the
+command @code{piem-clear-merged-inboxes} to clear the cache.
+
 @node Enabling integration libraries
 @section Enabling integration libraries
 @findex piem-elfeed-mode

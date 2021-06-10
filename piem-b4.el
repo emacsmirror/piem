@@ -69,8 +69,8 @@ This is intended to be used for debugging purposes.")
         (unless (= (point-max) 1)
           (setq local-mbox-p t))))
     ;; `piem-mid-to-thread-functions' didn't generate an mbox.  Next
-    ;; try to download it from a URL at `piem-inboxes'.  Finally, fall
-    ;; back to b4's configuration.
+    ;; try to download it from an inbox's URL.  Finally, fall back to
+    ;; b4's configuration.
     (unless local-mbox-p
       (when-let ((url (and (equal mid (piem-mid))
                            (piem-inbox-get :url))))
@@ -133,10 +133,10 @@ list of arguments specified via ARGS."
 
 Try to generate a thread for the Message-Id MID with
 `piem-mid-to-thread-functions'.  If that fails, try to download
-the thread from the `piem-inboxes' URL associated with the
-current buffer, provided that the current buffer's message ID
-matches MID.  And if that doesn't work, let `b4 am' download the
-thread according to its own configuration.
+the thread from an inbox URL associated with the current buffer,
+provided that the current buffer's message ID matches MID.  And
+if that doesn't work, let `b4 am' download the thread according
+to its own configuration.
 
 After calling `b4 am' with ARGS to prepare an am-ready mbox, feed
 the result to `git am'.

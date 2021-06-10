@@ -108,7 +108,8 @@ message itself if it looks like a patch."
 
 (defun piem-notmuch-show-get-public-inbox-link (mid)
   "Given the message-id MID, return the public-inbox url.
-This will lookup the url in the `piem-inboxes' variable."
+This will lookup the url in the inboxes returned by
+`piem-merged-inboxes'."
   (piem-mid-url mid
                 (or (piem-notmuch-get-inbox)
                     (user-error "No inbox associated with current buffer"))))
@@ -123,9 +124,10 @@ the mode if ARG is omitted or nil.
 
 This will add a new entry to
 `notmuch-show-stash-mlarchive-link-alist' which will determine
-the archive url by reading the `piem-inboxes' variable.  You can
-also set `notmuch-show-stash-mlarchive-link-default' to \"piem\"
-to make this the default behavior when calling
+the archive url by searching the inboxes returned by
+`piem-merged-inboxes'.  You can also set
+`notmuch-show-stash-mlarchive-link-default' to \"piem\" to make
+this the default behavior when calling
 `notmuch-show-stash-mlarchive-link'."
   :global t
   :init-value nil

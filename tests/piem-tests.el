@@ -19,10 +19,74 @@
 
 ;;; Code:
 
+(require 'cl-lib)
 (require 'ert)
 (require 'piem)
 (require 'piem-lei-tests)
 (require 'piem-rmail-tests)
+
+(defmacro piem-tests-with-pi-config (content &rest body)
+  "Point public-inbox's configuration to CONTENT and evaluate BODY."
+  (declare (indent 1) (debug t))
+  (let ((temp-file (cl-gensym "temp-file"))
+        (pi-config-orig (cl-gensym "pi-config-org")))
+    `(let ((,temp-file (make-temp-file "piem-tests-" nil nil ,content))
+           (,pi-config-orig (getenv "PI_CONFIG")))
+       (unwind-protect
+           (progn (setenv "PI_CONFIG" ,temp-file)
+                  ,@body)
+         (setenv "PI_CONFIG" ,pi-config-orig)
+         (delete-file ,temp-file)))))
+
+(defvar piem-tests-sample-pi-config "
+[publicinbox \"foo\"]
+        address = foo@example.com
+        url = https://example.com/foo
+        inboxdir = /inboxes/foo
+        coderepo = foo.git
+
+[coderepo \"foo.git\"]
+          dir = /code/foo/.git
+")
+
+(ert-deftest piem-merged-inboxes:from-config-disabled ()
+  (let ((piem-get-inboxes-from-config nil)
+        (piem-inboxes nil))
+    (should-not (piem-merged-inboxes))
+    (should-not (piem-tests-with-pi-config ""
+                  (piem-merged-inboxes)))
+    (should-not (piem-tests-with-pi-config piem-tests-sample-pi-config
+                  (piem-merged-inboxes))))
+  (let ((piem-get-inboxes-from-config nil)
+        (piem-inboxes '(("inbox" :url "inbox-url"))))
+    (should (equal (piem-inbox-get :url "inbox") "inbox-url"))))
+
+(ert-deftest piem-merged-inboxes:from-config ()
+  (piem-clear-merged-inboxes)
+  (let ((piem-get-inboxes-from-config t)
+        (piem-inboxes nil))
+    (piem-tests-with-pi-config piem-tests-sample-pi-config
+      (should (equal (piem-inbox-get :address "foo")
+                     "foo@example.com"))
+      (should (equal (piem-inbox-get :url "foo")
+                     "https://example.com/foo"))
+      (should (equal (piem-inbox-coderepo "foo")
+                     "/code/foo/")))
+    (piem-tests-with-pi-config ""
+      (should (equal (piem-inbox-get :address "foo")
+                     "foo@example.com"))
+      (piem-clear-merged-inboxes)
+      (should-not (piem-inbox-get :address "foo")))))
+
+(ert-deftest piem-merged-inboxes:override-config ()
+  (piem-clear-merged-inboxes)
+  (let ((piem-get-inboxes-from-config t)
+        (piem-inboxes '(("foo" :coderepo "/tmp/override/"))))
+    (piem-tests-with-pi-config piem-tests-sample-pi-config
+      (should (equal (piem-inbox-coderepo "foo")
+                     "/tmp/override/"))
+      (should (equal (piem-inbox-get :address "foo")
+                     "foo@example.com")))))
 
 (ert-deftest piem-message-link-re ()
   (should-not (string-match-p
@@ -52,7 +116,8 @@
   (should (equal (piem-escape-mid "m/g@id") "m%2Fg@id")))
 
 (ert-deftest piem-mid-url ()
-  (let ((piem-inboxes '(("inbox-a" :url "https://example.com/a/")
+  (let ((piem-get-inboxes-from-config nil)
+        (piem-inboxes '(("inbox-a" :url "https://example.com/a/")
                         ("inbox-b" :url "https://example.com/b/"))))
     (should (equal (piem-mid-url "msg@id" "inbox-a")
                    "https://example.com/a/msg@id"))
@@ -60,7 +125,8 @@
                    "https://example.com/b/m%2Fsg@id"))
     (should-error (piem-mid-url "msg@id")
                   :type 'user-error))
-  (let ((piem-inboxes '(("inbox-a"))))
+  (let ((piem-get-inboxes-from-config nil)
+        (piem-inboxes '(("inbox-a"))))
     (should-error (piem-mid-url "msg@id" "inbox-a")
                   :type 'user-error)))
 

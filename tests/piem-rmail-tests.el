@@ -53,7 +53,8 @@ no thanks
           (with-temp-buffer
             (insert piem-rmail-tests-mbox-text)
             (rmail-mode)
-            (let ((piem-inboxes '(("foo" :address "i@inbox.example.com"))))
+            (let ((piem-get-inboxes-from-config nil)
+                  (piem-inboxes '(("foo" :address "i@inbox.example.com"))))
               (piem-rmail-get-inbox))))))
 
 (ert-deftest piem-rmail-get-mid ()
@@ -63,7 +64,8 @@ no thanks
             (insert piem-rmail-tests-mbox-text)
             (rmail-mode)
             (rmail-first-message)
-            (let ((piem-inboxes '(("foo" :address "i@inbox.example.com"))))
+            (let ((piem-get-inboxes-from-config nil)
+                  (piem-inboxes '(("foo" :address "i@inbox.example.com"))))
               (list (piem-rmail-get-mid)
                     (progn
                       (rmail-next-message 1)
