@@ -159,11 +159,11 @@ name at the end of the @code{:url} value.  Specifying either
 @code{:listid} or @code{:address} is important so that a message in a
 buffer can be mapped to an inbox in @code{piem-inboxes}.
 
-@code{:coderepo} points to a local Git repository that contains code
-related to that archive (in the example above, a local clone of
-@url{https://git.kernel.org/pub/scm/git/git.git/}).  This information is
-required to apply patches from an archive to a local code repository
-(@pxref{Applying patches}).
+@code{:coderepo} points to the working tree of a local Git repository
+that contains code related to that archive (in the example above, a
+local clone of @url{https://git.kernel.org/pub/scm/git/git.git/}).  This
+information is required to apply patches from an archive to a local code
+repository (@pxref{Applying patches}).
 
 @node Enabling integration libraries
 @section Enabling integration libraries

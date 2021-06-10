@@ -76,7 +76,11 @@ list that supports the following properties:
   :listid
       The email address and List-ID for the inbox.
   :coderepo
-      Local path of the code repository associated with the inbox.
+      Local path to the code repository associated with the inbox.
+      This value should point to the working tree.  Note that this
+      differs from public-inbox-config's coderepo, which is a link to
+      another section that must point to the repository's git
+      directory.
   :url
       A URL hosting HTTPS archives.  This value must end with a slash.
   :maildir
