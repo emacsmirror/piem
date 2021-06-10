@@ -376,7 +376,7 @@ If INBOX is nil, use the inbox returned by `piem-inbox'."
 (defun piem-inbox-coderepo (&optional inbox)
   "Return the code repository of current buffer's inbox."
   (when-let ((repo (piem-inbox-get :coderepo inbox)))
-    (expand-file-name repo)))
+    (file-name-as-directory (expand-file-name repo))))
 
 (defun piem-inbox-maildir-directory (&optional inbox)
   "Return the maildir for INBOX's entry in `piem-inboxes'.
@@ -421,7 +421,7 @@ INBOX doesn't have a maildir configured, return the value of
              (read-directory-name "Git repository: "))))
     (if (equal repo "")
         (user-error "No code repository specified")
-      repo)))
+      (file-name-as-directory repo))))
 
 (defun piem-mid ()
   "Return the current buffer's message ID."
