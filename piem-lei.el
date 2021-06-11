@@ -343,6 +343,7 @@ line's message, scroll its text downward, passing ARG to
   "Major mode for displaying overview of `lei q' results."
   :group 'piem-lei
   (buffer-disable-undo)
+  (hl-line-mode)
   (setq truncate-lines t)
   (setq buffer-read-only t)
   (setq-local line-move-visual t))
