@@ -1,0 +1,44 @@
+A (sparse and likely stale) to-do list for piem                   -*-outline-*-
+
+* general
+
+** piem-inboxes: support mapping inbox to multiple coderepos
+A catchall inbox may be used for small projects without a dedicated
+address.
+
+** "report inbox" command for debugging
+
+** "show message ID at point" command
+Should have ability to extract message ID from link (like lei-lcat)
+and give priority to local sources.
+
+* b4
+
+** add transients for other b4 subcommands?
+Only `mbox' and `am' are supported at the moment.
+
+** piem-b4-am-from-mid: option for local-only operation
+A caller that relies on piem-mid-to-thread-functions to produce a
+thread may not have the URL in piem-inboxes set or b4 configured.
+
+* lei
+
+** history and locking for query and show buffers
+
+** label/keyword support
+See <https://public-inbox.org/meta/20210224204950.GA2076@dcvr> and
+<https://public-inbox.org/meta/20210326103103.GA561@dcvr>.
+
+** more efficient handling of remote operations
+
+** saved searches
+
+** show: attachment handling
+
+** show: highlight diffs
+
+** show: support replying
+
+** transients for some other lei commands
+
+** transient wrapper around piem-lei-query
