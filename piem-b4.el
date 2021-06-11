@@ -203,6 +203,7 @@ this triggers the creation of a new worktree."
 ;;;###autoload (autoload 'piem-b4-am "piem-b4" nil t)
 (transient-define-prefix piem-b4-am ()
   "Filter mbox to patches and feed to git-am"
+  :man-page "b4"
   ["General options"
    ("-c" "Check newer versions" "--check-newer-revisions")
    ("-C" "Don't use local cache" "--no-cache")
