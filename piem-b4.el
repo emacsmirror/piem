@@ -200,6 +200,29 @@ this triggers the creation of a new worktree."
   :argument "--cherry-pick="
   :reader #'read-string)
 
+(transient-define-argument piem-b4-am:--use-project ()
+  :description "Use a specific lore project instead of guessing"
+  :class 'transient-option
+  :shortarg "-p"
+  :argument "--use-project="
+  :level 7
+  :reader #'read-string)
+
+(transient-define-argument piem-b4-am:--guess-branch ()
+  :description "Restrict base guess to this branch"
+  :class 'transient-option
+  :shortarg "-b"
+  :argument "--guess-branch="
+  ;; TODO: Optionally support `magit-read-branch'.
+  :reader #'read-string)
+
+(transient-define-argument piem-b4-am:--guess-lookback ()
+  :description "How many days to go back when guessing base"
+  :class 'transient-option
+  :shortarg "-G"
+  :argument "--guess-lookback="
+  :reader #'transient-read-number-N+)
+
 ;;;###autoload (autoload 'piem-b4-am "piem-b4" nil t)
 (transient-define-prefix piem-b4-am ()
   "Filter mbox to patches and feed to git-am"
@@ -207,6 +230,9 @@ this triggers the creation of a new worktree."
   ["General options"
    ("-c" "Check newer versions" "--check-newer-revisions")
    ("-C" "Don't use local cache" "--no-cache")
+   ;; Hide by default because it hard codes the URL.
+   (7 "-l" "Add a lore.kernel.org/r/ to patches" "--add-link")
+   ("-L" "Do not reroll partial series" "--no-partial-reroll")
    ("-s" "Add my signed-off-by" "--add-my-sob")
    ("-S" "Apply trailers without checking email addresses" "--sloppy-trailers")
    ("-t" "Apply cover letter trailers" "--apply-cover-trailers")
@@ -214,8 +240,18 @@ this triggers the creation of a new worktree."
    (piem-b4-am:--use-version)
    (piem-b4-am:--cherry-pick)]
   ["Options for creating am-ready mboxes"
+   ("-3" "Prepare for 3-way merge" "--prep-3way")
+   ("-g" "Try to guess base" "--guess-base")
+   (piem-b4-am:--guess-branch)
+   (piem-b4-am:--guess-lookback)
+   (piem-b4-am:--use-project)
    (piem-b4-am:--outdir)
-   (piem-b4-am:--mbox-name)]
+   (piem-b4-am:--mbox-name)
+   ("-M" "Save as maildir" "--save-as-maildir")
+   (7 "-Q" "Save as quilt-read folder" "--quilt-ready")
+   ;; Hide because this is unlikely to be useful outside of
+   ;; command-line piping to `git am'.
+   (5 "-V" "Do not save cover letter" "--no-cover")]
   ["Actions"
    [("a" "Message ID -> mbox -> git-am" piem-b4-am-from-mid)]
    [("b" "Local mbox -> am-ready mbox" piem-b4-am-ready-from-mbox)
