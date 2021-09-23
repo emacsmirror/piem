@@ -30,9 +30,9 @@
 (require 'gnus)
 (require 'gnus-art)
 (require 'gnus-sum)
+(require 'mail-parse)
 (require 'message)
 (require 'piem)
-(require 'rfc2047)
 
 (defgroup piem-gnus nil
   "Gnus integration for piem."
@@ -109,7 +109,7 @@ message itself if it looks like a patch."
                             (widen)
                             (and (string-match-p
                                   piem-patch-subject-re
-                                  (rfc2047-decode-string
+                                  (mail-decode-encoded-word-string
                                    (message-field-value "subject")))
                                  (buffer-substring-no-properties
                                   (point-min) (point-max)))))))
