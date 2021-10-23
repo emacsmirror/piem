@@ -121,7 +121,7 @@ unless DISPLAY is non-nil."
     (let ((inhibit-read-only t))
       (erase-buffer)
       (call-process "lei" nil '(t nil) nil
-                    "q" "--format=text" (concat "m:" mid))
+                    "q" "--format=text" (concat "mid:" mid))
       (goto-char (point-min))
       (when (looking-at-p "# blob:")
         (delete-region (line-beginning-position)
@@ -502,7 +502,7 @@ Return a list with a `piem-lei-msg' object for each root."
    (list (or (piem-lei-get-mid)
              (read-string "Message ID: " nil nil (piem-mid)))))
   (let* ((records (piem-lei-query--slurp
-                   (list "--threads" (concat "m:" mid))))
+                   (list "--threads" (concat "mid:" mid))))
          (msgs (piem-lei-query--thread records))
          depths pt-final subject-prev)
     (with-current-buffer (get-buffer-create "*lei-thread*")
@@ -571,7 +571,7 @@ Return a list with a `piem-lei-msg' object for each root."
   (when-let ((mid (piem-lei-get-mid)))
     (with-temp-buffer
       (call-process "lei" nil '(t nil) nil
-                    "q" "--format=mboxrd" (concat "m:" mid))
+                    "q" "--format=mboxrd" (concat "mid:" mid))
       (goto-char (point-min))
       (piem-inbox-by-header-match))))
 
@@ -581,7 +581,7 @@ The message ID should not include have surrounding brackets."
   (not (string-empty-p
         (with-temp-buffer
           (call-process "lei" nil '(t nil) nil
-                        "q" "--format=ldjson" (concat "m:" mid))
+                        "q" "--format=ldjson" (concat "mid:" mid))
           (buffer-string)))))
 
 (defun piem-lei-mid-to-thread (mid)
@@ -590,7 +590,7 @@ The message ID should not include have surrounding brackets."
     (lambda ()
       (call-process "lei" nil '(t nil) nil
                     "q" "--format=mboxrd" "--threads"
-                    (concat "m:" mid)))))
+                    (concat "mid:" mid)))))
 
 ;;;###autoload
 (define-minor-mode piem-lei-mode
