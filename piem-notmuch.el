@@ -55,6 +55,7 @@
   "Return the message ID of a `notmuch-show-mode' buffer."
   (notmuch-show-get-message-id 'bare))
 
+;;;###autoload
 (defun piem-notmuch-known-mid-p (mid)
   "Return non-nil if MID is known to Notmuch.
 The message ID should not include Notmuch's \"id:\" prefix or
