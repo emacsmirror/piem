@@ -43,8 +43,10 @@
 (defun piem-lei-insert-output (args &optional buffer)
   "Call lei with ARGS and insert standard output in BUFFER.
 If BUFFER is nil, the current buffer is used."
-  (apply #'call-process piem-lei-lei-executable nil
-         (list (or buffer t) nil) nil args))
+  (unless (= 0 (apply #'call-process piem-lei-lei-executable nil
+                      (list (or buffer t) nil) nil args))
+    ;; TODO: Add debugging option for capturing stderr.
+    (error "Calling %s with %S failed" piem-lei-lei-executable args)))
 
 
 ;;;; Message display
