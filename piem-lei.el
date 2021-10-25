@@ -382,6 +382,71 @@ line's message, scroll its text downward, passing ARG to
 
 ;;;;; lei-q transient
 
+(defun piem-lei-externals ()
+  "Return configured externals."
+  (seq-remove
+   (lambda (e) (string-prefix-p "boost=" e))
+   (split-string
+    (with-output-to-string
+      (piem-lei-insert-output
+       (list "ls-external" "-z") standard-output))
+    "\0" t)))
+
+(defun piem-lei-inboxdir-urls ()
+  "Return hash table mapping each inboxdir to its URL.
+These values correspond to local inboxes that are configured via
+public-inbox's configuration."
+  (let ((case-fold-search t)
+        (pi-cfg (piem--git-config-list (piem-public-inbox-config-file)))
+        inboxdir-urls)
+    (maphash
+     (lambda (key val)
+       (when (string-match
+              (rx string-start "publicinbox."
+                  (group (one-or-more not-newline)) "."
+                  (or "inboxdir" "mainrepo")
+                  string-end)
+              key)
+         (push (cons (car val)
+                     (when-let ((url (car (gethash
+                                           (format "publicinbox.%s.url"
+                                                   (match-string 1 key))
+                                           pi-cfg))))
+                       (piem--ensure-trailing-slash url)))
+               inboxdir-urls)))
+     pi-cfg)
+    inboxdir-urls))
+
+(defun piem-lei-external-sources (&optional include-registered)
+  "Return a list of known external sources.
+Unless INCLUDE-REGISTERED is non-nil, the result does not include
+sources that have already been registered with lei as an
+external (via `lei add-external')."
+  (let ((inboxdir-urls (piem-lei-inboxdir-urls)))
+    (nconc
+     (let ((inboxdirs (mapcar #'car inboxdir-urls)))
+       (if include-registered
+           inboxdirs
+         (cl-set-difference inboxdirs (piem-lei-externals) :test #'equal)))
+     (cl-set-difference
+      (delq nil
+            (mapcar (lambda (x)
+                      (when-let ((url (plist-get (cdr x) :url)))
+                        ;; lei-add-external normalizes URLs to
+                        ;; have a trailing slash.
+                        (piem--ensure-trailing-slash url)))
+                    (piem-merged-inboxes)))
+      (delq nil (mapcar #'cdr inboxdir-urls))
+      :test #'equal))))
+
+(defun piem-lei-read-external-source (prompt &optional default history)
+  (completing-read prompt (piem-lei-external-sources)
+                   nil nil nil history default))
+
+(defun piem-lei-read-external-source-all (prompt &optional default history)
+  (completing-read prompt (piem-lei-external-sources t)
+                   nil nil nil history default))
+
 (defun piem-lei-q-read-sort-key (&rest _ignore)
   (pcase (read-char-choice "re[c]eived re[l]evance [d]ocid "
                            (list ?c ?l ?d))
@@ -389,17 +454,22 @@ line's message, scroll its text downward, passing ARG to
     (?l "relevance")
     (?d "docid")))
 
+;; TODO: Support reading multiple values.
 (transient-define-argument piem-lei-q:--include ()
   :description "Include external in search"
   :class 'transient-option
   :shortarg "-I"
-  :argument "--include=")
+  :argument "--include="
+  :reader #'piem-lei-read-external-source)
 
+
+;; TODO: Support reading multiple values.
 (transient-define-argument piem-lei-q:--only ()
   :description "Search only this location"
   :class 'transient-option
   :shortarg "-O"
-  :argument "--only=")
+  :argument "--only="
+  :reader #'piem-lei-read-external-source-all)
 
 (transient-define-argument piem-lei-q:--sort ()
   :description "Sort key for results"
