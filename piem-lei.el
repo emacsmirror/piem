@@ -38,6 +38,15 @@
   :type 'string)
 
 
+;;;; Helpers
+
+(defun piem-lei-insert-output (args &optional buffer)
+  "Call lei with ARGS and insert standard output in BUFFER.
+If BUFFER is nil, the current buffer is used."
+  (apply #'call-process piem-lei-lei-executable nil
+         (list (or buffer t) nil) nil args))
+
+
 ;;;; Message display
 
 (defface piem-lei-show-header-name
@@ -124,8 +133,8 @@ unless DISPLAY is non-nil."
   (with-current-buffer (get-buffer-create "*lei-show*")
     (let ((inhibit-read-only t))
       (erase-buffer)
-      (call-process piem-lei-lei-executable nil '(t nil) nil
-                    "q" "--format=text" (concat "mid:" mid))
+      (piem-lei-insert-output
+       (list "q" "--format=text" (concat "mid:" mid)))
       (goto-char (point-min))
       (when (looking-at-p "# blob:")
         (delete-region (line-beginning-position)
@@ -214,8 +223,8 @@ QUERY is split according to `split-string-and-unquote'."
   (with-current-buffer (get-buffer-create "*lei-query*")
     (let ((inhibit-read-only t))
       (erase-buffer)
-      (apply #'call-process piem-lei-lei-executable nil '(t nil) nil
-             "q" "--format=ldjson" query)
+      (piem-lei-insert-output
+       (list "q" "--format=ldjson" query))
       (goto-char (point-min))
       (while (not (eobp))
         (let ((data (piem-lei-query--read-json-item)))
@@ -487,8 +496,8 @@ Return a list with a `piem-lei-msg' object for each root."
 
 (defun piem-lei-query--slurp (args)
   (with-temp-buffer
-    (apply #'call-process piem-lei-lei-executable nil '(t nil) nil
-           "q" "--format=ldjson" args)
+    (piem-lei-insert-output
+     (append (list "q" "--format=ldjson") args))
     (goto-char (point-min))
     (let (items)
       (while (not (eobp))
@@ -574,8 +583,8 @@ Return a list with a `piem-lei-msg' object for each root."
   "Return inbox name from a lei buffer."
   (when-let ((mid (piem-lei-get-mid)))
     (with-temp-buffer
-      (call-process piem-lei-lei-executable nil '(t nil) nil
-                    "q" "--format=mboxrd" (concat "mid:" mid))
+      (piem-lei-insert-output
+       (list "q" "--format=mboxrd" (concat "mid:" mid)))
       (goto-char (point-min))
       (piem-inbox-by-header-match))))
 
@@ -584,17 +593,16 @@ Return a list with a `piem-lei-msg' object for each root."
 The message ID should not include have surrounding brackets."
   (not (string-empty-p
         (with-output-to-string
-          (call-process piem-lei-lei-executable
-                        nil (list standard-output nil) nil
-                        "q" "--format=ldjson" (concat "mid:" mid))))))
+          (piem-lei-insert-output
+           (list "q" "--format=ldjson" (concat "mid:" mid))
+           standard-output)))))
 
 (defun piem-lei-mid-to-thread (mid)
   "Return a function that inserts an mbox for MID's thread."
   (when (piem-lei-known-mid-p mid)
     (lambda ()
-      (call-process piem-lei-lei-executable nil '(t nil) nil
-                    "q" "--format=mboxrd" "--threads"
-                    (concat "mid:" mid)))))
+      (piem-lei-insert-output
+       (list "q" "--format=mboxrd" "--threads" (concat "mid:" mid))))))
 
 ;;;###autoload
 (define-minor-mode piem-lei-mode
