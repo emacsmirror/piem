@@ -64,10 +64,9 @@ have surrounding brackets."
     (equal query
            (string-trim-right
             (with-output-to-string
-              (with-current-buffer standard-output
-                (call-process notmuch-command
-                              nil '(t nil) nil
-                              "search" "--output=messages" query)))))))
+              (call-process notmuch-command
+                            nil (list standard-output nil) nil
+                            "search" "--output=messages" query))))))
 
 (defun piem-notmuch-mid-to-thread (mid)
   "Return a function that inserts an mbox for MID's thread."
