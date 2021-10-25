@@ -142,10 +142,11 @@ unless DISPLAY is non-nil."
    (list (read-string "Message ID: " nil nil (piem-mid))
          'display))
   (with-current-buffer (get-buffer-create "*lei-show*")
-    (let ((inhibit-read-only t))
+    (let ((inhibit-read-only t)
+          (query (list (concat "mid:" mid))))
       (erase-buffer)
       (piem-lei-insert-output
-       (append (list "q" "--format=text") args (list (concat "mid:" mid))))
+       (append (list "q" "--format=text") args query))
       (goto-char (point-min))
       (when (looking-at-p "# blob:")
         (delete-region (line-beginning-position)
@@ -153,6 +154,7 @@ unless DISPLAY is non-nil."
       (piem-lei-show-mode)
       (setq piem-lei-buffer-args args)
       (setq piem-lei-show-mid mid)
+      (setq  piem-lei-buffer-query query)
       (piem-lei-show--fontify-headers))
     (if display
         (pop-to-buffer (current-buffer))
@@ -596,8 +598,9 @@ ARGS is passed to the underlying `lei q' call."
    (if-let ((mid (piem-lei-get-mid)))
        (list mid piem-lei-buffer-args)
      (list (read-string "Message ID: " nil nil (piem-mid)) nil)))
-  (let* ((records (piem-lei-query--slurp
-                   (append args (list "--threads") (list (concat "mid:" mid)))))
+  (let* ((query (list (concat "mid:" mid)))
+         (records (piem-lei-query--slurp
+                   (append args (list "--threads") query)))
          (msgs (piem-lei-query--thread records))
          depths pt-final subject-prev)
     (with-current-buffer (get-buffer-create "*lei-thread*")
@@ -651,6 +654,7 @@ ARGS is passed to the underlying `lei q' call."
       (piem-lei-query-mode)
       (setq piem-lei-buffer-args args)
       (setq piem-lei-show-mid mid)
+      (setq  piem-lei-buffer-query query)
       (pop-to-buffer-same-window (current-buffer)))))
 
 
