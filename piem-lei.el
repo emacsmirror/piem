@@ -93,7 +93,7 @@ If BUFFER is nil, the current buffer is used."
   '((t :inherit message-cited-text-4))
   "Face for 4th-level cited text in `piem-lei-show-mode' buffers.")
 
-(defvar-local piem-lei-show-mid nil
+(defvar-local piem-lei-buffer-mid nil
   "Message ID shown in current buffer.")
 
 (defvar-local piem-lei-buffer-args nil
@@ -153,7 +153,7 @@ unless DISPLAY is non-nil."
                        (1+ (line-end-position))))
       (piem-lei-show-mode)
       (setq piem-lei-buffer-args args)
-      (setq piem-lei-show-mid mid)
+      (setq piem-lei-buffer-mid mid)
       (setq  piem-lei-buffer-query query)
       (piem-lei-show--fontify-headers))
     (if display
@@ -339,7 +339,7 @@ line's message, scroll its text upward, passing ARG to
       (let ((w (piem-lei-query--get-visible-message-window)))
         (if (and w
                  (equal (with-current-buffer (window-buffer w)
-                          piem-lei-show-mid)
+                          piem-lei-buffer-mid)
                         mid))
             (with-selected-window w
               (scroll-up-command arg))
@@ -723,7 +723,7 @@ ARGS is passed to the underlying `lei q' call."
       (goto-char (or pt-final (point-min)))
       (piem-lei-query-mode)
       (setq piem-lei-buffer-args args)
-      (setq piem-lei-show-mid mid)
+      (setq piem-lei-buffer-mid mid)
       (setq  piem-lei-buffer-query query)
       (pop-to-buffer-same-window (current-buffer)))))
 
@@ -733,7 +733,7 @@ ARGS is passed to the underlying `lei q' call."
 (defun piem-lei-get-mid ()
   "Return the message ID of a lei buffer."
   (cond ((derived-mode-p 'piem-lei-show-mode)
-         piem-lei-show-mid)
+         piem-lei-buffer-mid)
         ((derived-mode-p 'piem-lei-query-mode)
          (piem-lei-query-get-mid))))
 
