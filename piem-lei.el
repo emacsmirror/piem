@@ -251,7 +251,7 @@ line."
   (display-buffer
    (piem-lei-show
     (or (piem-lei-query-get-mid)
-        (user-error "No Message ID associated with current line")))
+        (user-error "No message ID associated with current line")))
    '(display-buffer-below-selected
      (inhibit-same-window . t)
      (window-height . 0.8))))
