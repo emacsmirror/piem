@@ -373,9 +373,13 @@ files."
 
 (defvar piem--inboxes 'unset)
 
+(defun piem-public-inbox-config-file ()
+  "Return public-inbox's configuration file."
+  (or (getenv "PI_CONFIG")
+      (expand-file-name "~/.public-inbox/config")))
+
 (defun piem--merge-config-inboxes ()
-  (let ((cfg-file (or (getenv "PI_CONFIG")
-                      (expand-file-name "~/.public-inbox/config"))))
+  (let ((cfg-file (piem-public-inbox-config-file)))
     (if (not (file-readable-p cfg-file))
         (setq piem--inboxes piem-inboxes)
       (let ((case-fold-search t)
