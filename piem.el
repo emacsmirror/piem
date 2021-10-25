@@ -986,7 +986,8 @@ this triggers the creation of a new worktree."
   [[("a" "apply patch" piem-am)
     ("b" "call b4-am" piem-b4-am)]
    [("i" "inject thread into maildir" piem-inject-thread-into-maildir)
-    ("l" "copy public-inbox link" piem-copy-mid-url)]])
+    ("l" "copy public-inbox link" piem-copy-mid-url)]
+   [("s" "search with lei" piem-lei-q)]])
 
 
 

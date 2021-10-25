@@ -40,5 +40,3 @@ See <https://public-inbox.org/meta/20210224204950.GA2076@dcvr> and
 ** show: support replying
 
 ** transients for some other lei commands
-
-** transient wrapper around piem-lei-query

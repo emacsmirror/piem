@@ -96,6 +96,12 @@ If BUFFER is nil, the current buffer is used."
 (defvar-local piem-lei-show-mid nil
   "Message ID shown in current buffer.")
 
+(defvar-local piem-lei-buffer-args nil
+  "Non-query arguments that lei was called with.")
+
+(defvar-local piem-lei-buffer-query nil
+  "Query arguments that `lei q' was called with.")
+
 (defun piem-lei-show--fontify-headers ()
   (save-excursion
     (let (last-value-face)
@@ -125,8 +131,11 @@ If BUFFER is nil, the current buffer is used."
                                'font-lock-face last-value-face))
           (forward-line))))))
 
-(defun piem-lei-show (mid &optional display)
+(defun piem-lei-show (mid &optional args display)
   "Show message for MID.
+
+ARGS is passed to the underlying `lei q' call.
+
 When called non-interactively, return the buffer but do not display it
 unless DISPLAY is non-nil."
   (interactive
@@ -136,12 +145,13 @@ unless DISPLAY is non-nil."
     (let ((inhibit-read-only t))
       (erase-buffer)
       (piem-lei-insert-output
-       (list "q" "--format=text" (concat "mid:" mid)))
+       (append (list "q" "--format=text") args (list (concat "mid:" mid))))
       (goto-char (point-min))
       (when (looking-at-p "# blob:")
         (delete-region (line-beginning-position)
                        (1+ (line-end-position))))
       (piem-lei-show-mode)
+      (setq piem-lei-buffer-args args)
       (setq piem-lei-show-mid mid)
       (piem-lei-show--fontify-headers))
     (if display
@@ -157,7 +167,7 @@ unless DISPLAY is non-nil."
 
 (defvar piem-lei-show-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map "s" #'piem-lei-query)
+    (define-key map "s" #'piem-lei-q)
     (define-key map "t" #'piem-lei-query-thread)
     map)
   "Keymap for `piem-lei-show-mode'.")
@@ -216,17 +226,18 @@ unless DISPLAY is non-nil."
      'font-lock-face 'piem-lei-query-date)))
 
 ;;;###autoload
-(defun piem-lei-query (query)
-  "Call `lei q' with QUERY.
+(defun piem-lei-query (query &optional args)
+  "Call `lei q' with QUERY and ARGS.
 QUERY is split according to `split-string-and-unquote'."
   (interactive
    (list (split-string-and-unquote
-          (read-string "Query: " "d:20.days.ago.. " 'piem-lei-query-history))))
+          (read-string "Query: " "d:20.days.ago.. " 'piem-lei-query-history))
+         (transient-args 'piem-lei-q)))
   (with-current-buffer (get-buffer-create "*lei-query*")
     (let ((inhibit-read-only t))
       (erase-buffer)
       (piem-lei-insert-output
-       (list "q" "--format=ldjson" query))
+       (append (list "q" "--format=ldjson") args query))
       (goto-char (point-min))
       (while (not (eobp))
         (let ((data (piem-lei-query--read-json-item)))
@@ -251,6 +262,8 @@ QUERY is split according to `split-string-and-unquote'."
       (insert "End of lei-q results"))
     (goto-char (point-min))
     (piem-lei-query-mode)
+    (setq piem-lei-buffer-args args)
+    (setq piem-lei-buffer-query query)
     (pop-to-buffer-same-window (current-buffer))))
 
 (defun piem-lei-query-get-mid (&optional pos)
@@ -266,7 +279,8 @@ line."
   (display-buffer
    (piem-lei-show
     (or (piem-lei-query-get-mid)
-        (user-error "No message ID associated with current line")))
+        (user-error "No message ID associated with current line"))
+    piem-lei-buffer-args)
    '(display-buffer-below-selected
      (inhibit-same-window . t)
      (window-height . 0.8))))
@@ -349,7 +363,7 @@ line's message, scroll its text downward, passing ARG to
     (define-key map (kbd "SPC") #'piem-lei-query-show-or-scroll-up)
     (define-key map "n" #'piem-lei-query-next-line)
     (define-key map "p" #'piem-lei-query-previous-line)
-    (define-key map "s" #'piem-lei-query)
+    (define-key map "s" #'piem-lei-q)
     (define-key map "t" #'piem-lei-query-thread)
     map)
   "Keymap for `piem-lei-query-mode'.")
@@ -362,6 +376,70 @@ line's message, scroll its text downward, passing ARG to
   (setq truncate-lines t)
   (setq buffer-read-only t)
   (setq-local line-move-visual t))
+
+
+;;;;; lei-q transient
+
+(defun piem-lei-q-read-sort-key (&rest _ignore)
+  (pcase (read-char-choice "re[c]eived re[l]evance [d]ocid "
+                           (list ?c ?l ?d))
+    (?c "received")
+    (?l "relevance")
+    (?d "docid")))
+
+(transient-define-argument piem-lei-q:--include ()
+  :description "Include external in search"
+  :class 'transient-option
+  :shortarg "-I"
+  :argument "--include=")
+
+(transient-define-argument piem-lei-q:--only ()
+  :description "Search only this location"
+  :class 'transient-option
+  :shortarg "-O"
+  :argument "--only=")
+
+(transient-define-argument piem-lei-q:--sort ()
+  :description "Sort key for results"
+  :class 'transient-option
+  :shortarg "-s"
+  :argument "--sort="
+  :reader #'piem-lei-q-read-sort-key)
+
+(transient-define-argument piem-lei-q:--limit ()
+  :description "Limit number of matches (default: 10000)"
+  :class 'transient-option
+  :shortarg "-n"
+  :argument "--limit="
+  :reader #'transient-read-number-N+)
+
+(transient-define-argument piem-lei-q:--offset ()
+  :description "Shift start of results (default: 0)"
+  :class 'transient-option
+  :shortarg "-N"
+  :argument "--offset="
+  :reader #'transient-read-number-N0)
+
+;;;###autoload (autoload 'piem-lei-q "piem-lei" nil t)
+(transient-define-prefix piem-lei-q ()
+  "Search for messages with `lei q'."
+  :man-page "lei-q"
+  :incompatible '(("--remote" "--no-remote")
+                  ("--no-externals" "--no-local"))
+  ["Arguments"
+   (piem-lei-q:--include)
+   (piem-lei-q:--only)
+   ("-g" "Match locations literally" "--globoff")
+   ("xe" "Exclude results from externals" "--no-externals")
+   ("xl" "Exclude results from local sources" "--no-local")
+   ("xr" "Exclude results from remote sources" "--no-remote")
+   ("+r" "Include results from remote sources" "--remote")
+   (piem-lei-q:--sort)
+   ("-r" "Reverse search results" "--reverse")
+   (piem-lei-q:--limit)
+   (piem-lei-q:--offset)]
+  ["Actions"
+   ("s" "Search with lei" piem-lei-query)])
 
 
 ;;;;; Threading
@@ -511,13 +589,15 @@ Return a list with a `piem-lei-msg' object for each root."
         (forward-line))
       (nreverse items))))
 
-(defun piem-lei-query-thread (mid)
-  "Show thread containing message MID."
+(defun piem-lei-query-thread (mid &optional args)
+  "Show thread containing message MID.
+ARGS is passed to the underlying `lei q' call."
   (interactive
-   (list (or (piem-lei-get-mid)
-             (read-string "Message ID: " nil nil (piem-mid)))))
+   (if-let ((mid (piem-lei-get-mid)))
+       (list mid piem-lei-buffer-args)
+     (list (read-string "Message ID: " nil nil (piem-mid)) nil)))
   (let* ((records (piem-lei-query--slurp
-                   (list "--threads" (concat "mid:" mid))))
+                   (append args (list "--threads") (list (concat "mid:" mid)))))
          (msgs (piem-lei-query--thread records))
          depths pt-final subject-prev)
     (with-current-buffer (get-buffer-create "*lei-thread*")
@@ -569,6 +649,8 @@ Return a list with a `piem-lei-msg' object for each root."
         (insert "End of lei-q results"))
       (goto-char (or pt-final (point-min)))
       (piem-lei-query-mode)
+      (setq piem-lei-buffer-args args)
+      (setq piem-lei-show-mid mid)
       (pop-to-buffer-same-window (current-buffer)))))
 
 
