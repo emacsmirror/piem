@@ -33,6 +33,10 @@
   "lei integration for piem."
   :group 'piem)
 
+(defcustom piem-lei-lei-executable "lei"
+  "Which lei executable to use."
+  :type 'string)
+
 
 ;;;; Message display
 
@@ -120,7 +124,7 @@ unless DISPLAY is non-nil."
   (with-current-buffer (get-buffer-create "*lei-show*")
     (let ((inhibit-read-only t))
       (erase-buffer)
-      (call-process "lei" nil '(t nil) nil
+      (call-process piem-lei-lei-executable nil '(t nil) nil
                     "q" "--format=text" (concat "mid:" mid))
       (goto-char (point-min))
       (when (looking-at-p "# blob:")
@@ -210,7 +214,7 @@ QUERY is split according to `split-string-and-unquote'."
   (with-current-buffer (get-buffer-create "*lei-query*")
     (let ((inhibit-read-only t))
       (erase-buffer)
-      (apply #'call-process "lei" nil '(t nil) nil
+      (apply #'call-process piem-lei-lei-executable nil '(t nil) nil
              "q" "--format=ldjson" query)
       (goto-char (point-min))
       (while (not (eobp))
@@ -483,7 +487,7 @@ Return a list with a `piem-lei-msg' object for each root."
 
 (defun piem-lei-query--slurp (args)
   (with-temp-buffer
-    (apply #'call-process "lei" nil '(t nil) nil
+    (apply #'call-process piem-lei-lei-executable nil '(t nil) nil
            "q" "--format=ldjson" args)
     (goto-char (point-min))
     (let (items)
@@ -570,7 +574,7 @@ Return a list with a `piem-lei-msg' object for each root."
   "Return inbox name from a lei buffer."
   (when-let ((mid (piem-lei-get-mid)))
     (with-temp-buffer
-      (call-process "lei" nil '(t nil) nil
+      (call-process piem-lei-lei-executable nil '(t nil) nil
                     "q" "--format=mboxrd" (concat "mid:" mid))
       (goto-char (point-min))
       (piem-inbox-by-header-match))))
@@ -580,7 +584,7 @@ Return a list with a `piem-lei-msg' object for each root."
 The message ID should not include have surrounding brackets."
   (not (string-empty-p
         (with-output-to-string
-          (call-process "lei"
+          (call-process piem-lei-lei-executable
                         nil (list standard-output nil) nil
                         "q" "--format=ldjson" (concat "mid:" mid))))))
 
@@ -588,7 +592,7 @@ The message ID should not include have surrounding brackets."
   "Return a function that inserts an mbox for MID's thread."
   (when (piem-lei-known-mid-p mid)
     (lambda ()
-      (call-process "lei" nil '(t nil) nil
+      (call-process piem-lei-lei-executable nil '(t nil) nil
                     "q" "--format=mboxrd" "--threads"
                     (concat "mid:" mid)))))
 
