@@ -579,10 +579,10 @@ Return a list with a `piem-lei-msg' object for each root."
   "Return non-nil if MID is known to lei.
 The message ID should not include have surrounding brackets."
   (not (string-empty-p
-        (with-temp-buffer
-          (call-process "lei" nil '(t nil) nil
-                        "q" "--format=ldjson" (concat "mid:" mid))
-          (buffer-string)))))
+        (with-output-to-string
+          (call-process "lei"
+                        nil (list standard-output nil) nil
+                        "q" "--format=ldjson" (concat "mid:" mid))))))
 
 (defun piem-lei-mid-to-thread (mid)
   "Return a function that inserts an mbox for MID's thread."
