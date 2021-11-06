@@ -1,0 +1,43 @@
+piem v0.3.0 release notes
+=========================
+
+Changes since v0.2.0
+--------------------
+
+ * Which directory piem-inject-thread-into-maildir uses can now be
+   configured per-project via the :maildir keyword in a project's
+   piem-inboxes entry.
+
+ * piem-inboxes can be populated from ~/.public-inbox/config, which is
+   useful for those that mirror inboxes locally (e.g., for fast
+   public-inbox-httpd or public-inbox-nttpd access or for use with
+   public-inbox's new lei command).
+
+ * The b4-am transient learned some new options, keeping up with
+   upstream changes in b4.
+
+ * piem-use-magit is no longer set to nil when piem is loaded before
+   Magit.  Users that want to disable Magit support even though it's
+   available and loaded on their system must explicitly set
+   piem-use-magit to nil.
+
+ * New library piem-lei.el provides undocumented, incomplete, and
+   experimental support for public-inbox's 'lei q' command (added in
+   public-inbox v1.7).
+
+ * New library piem-rmail.el provides basic Rmail integration.
+
+ * The documentation describing how piem-b4-am-ready-from-mid gets a
+   message ID's thread has been improved.
+
+ * The documentation now specifies that the :coderepo keyword of
+   piem-inboxes should point to a working tree, unlike public-inbox's
+   publicinbox.$inbox.coderepo.
+
+
+Fixes since v0.2.0
+------------------
+
+ * piem-b4-am-from-mid assumed that, if the buffer at point is
+   associated with an inbox, its message ID matches the target message
+   ID, which may not be the case for non-interactive calls.
