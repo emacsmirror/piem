@@ -5,9 +5,15 @@ piem --- Emacs tools and glue for working with public-inbox archives
 This project is currently in the early stages of development.  In
 general, anything that relates to interacting with public-inbox
 (https://public-inbox.org/README) archives from Emacs is worth
-considering, at least at this point.  Much of the current
-functionality focuses on mapping public-inbox endpoints (email, nntp,
-http, rss) to associated code repositories in order to apply patches.
+considering, at least at this point.
+
+Much of the current functionality focuses on mapping public-inbox
+endpoints (email, nntp, http, rss) to associated code repositories in
+order to apply patches, including integration with b4-am to extract
+and process patches (https://git.kernel.org/pub/scm/utils/b4/b4.git).
+Upcoming development will largely focus on extending the very basic
+support public-inbox's local email interface (lei).
+
 Documentation is available online at
 
     https://docs.kyleam.com/piem/
