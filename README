@@ -27,3 +27,18 @@ Messages that include this address are public and available as
 public-inbox archives at
 
     https://inbox.kyleam.com/piem/
+
+
+Related projects
+----------------
+
+If you're interested in applying patches but aren't working with a
+public-inbox instance, it's still possible to use piem (see the
+documentation).  However, in this case, you may want to consider
+mailscripts (https://git.spwhitton.name/mailscripts/), a "collection
+of scripts for manipulating e-mail on Debian".  Its
+notmuch-extract-patch script (accessible via Emacs commands) provides
+an alternative to b4 for extracting a patch series from a thread.
+
+And if you're searching for an Emacs interface for *sending* patches,
+take a look at git-email (https://sr.ht/~yoctocell/git-email/).
