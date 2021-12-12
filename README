@@ -6,7 +6,7 @@ This project is currently in the early stages of development.  In
 general, anything that relates to interacting with public-inbox
 (https://public-inbox.org/README) archives from Emacs is worth
 considering, at least at this point.  Much of the current
-functionality focuses on mapping public inbox endpoints (email, nntp,
+functionality focuses on mapping public-inbox endpoints (email, nntp,
 http, rss) to associated code repositories in order to apply patches.
 Documentation is available online at
 
