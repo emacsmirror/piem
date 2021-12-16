@@ -1,6 +1,7 @@
 ;;; piem-notmuch.el --- Notmuch integration for piem  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2020-2021  all contributors <piem@inbox.kyleam.com>
+;; Copyright (C) 2019 Sean Whitton <spwhitton@spwhitton.name>
 
 ;; Author: Kyle Meyer <kyle@kyleam.com>
 ;; Keywords: vc, tools
@@ -105,6 +106,37 @@ message itself if it looks like a patch."
                   (dolist (patch patches)
                     (insert patch)))
                 "mbox"))))))
+
+(defun piem-notmuch-extract-patch-am-ready-mbox ()
+  "Return a function that inserts an am-ready mbox.
+Use the message itself if it looks like a patch using
+notmuch-extract-patch to get the latest patch series from the
+notmuch thread."
+  (when (and (derived-mode-p 'notmuch-show-mode)
+             (string-match-p piem-patch-subject-re
+                             (notmuch-show-get-subject))
+             (= (notmuch-count-attachments
+                 (piem-notmuch--with-current-message
+                  (mm-dissect-buffer))) 0))
+    (let ((thread-id notmuch-show-thread-id))
+      (lambda ()
+        (if-let ((cmd (executable-find "notmuch-extract-patch"))
+                 (tid
+                  ;; Copied from mailscripts.el
+                  ;;
+                  ;; If `notmuch-show' was called with a notmuch query rather
+                  ;; than a thread ID, as `org-notmuch-follow-link' in
+                  ;; org-notmuch.el does, then `notmuch-show-thread-id' might
+                  ;; be an arbitrary notmuch query instead of a thread ID.  We
+                  ;; need to wrap such a query in thread:{} before passing it
+                  ;; to notmuch-extract-patch(1), or we might not get a whole
+                  ;; thread extracted (e.g. if the query is just id:foo)
+                  (if (string= (substring thread-id 0 7) "thread:")
+                      thread-id
+                    (concat "thread:{" thread-id "}"))))
+            (call-process cmd nil t nil
+                          tid)
+          (user-error "The executable notmuch-extract-patch was not found"))))))
 
 (defun piem-notmuch-show-get-public-inbox-link (mid)
   "Given the message-id MID, return the public-inbox url.
