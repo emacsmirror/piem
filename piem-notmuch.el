@@ -38,6 +38,11 @@
   "Notmuch integration for piem."
   :group 'piem)
 
+(defcustom piem-notmuch-extract-patch-executable "notmuch-extract-patch"
+  "Which notmuch-extract-patch executable to use."
+  :package-version '(piem . "0.4.0")
+  :type 'string)
+
 (defmacro piem-notmuch--with-current-message (&rest body)
   (declare (indent 0) (debug (body)))
   (let ((rv (make-symbol "rv")))
@@ -118,25 +123,25 @@ notmuch thread."
              (= (notmuch-count-attachments
                  (piem-notmuch--with-current-message
                   (mm-dissect-buffer))) 0))
-    (let ((thread-id notmuch-show-thread-id))
+    (let* ((thread-id
+            (or notmuch-show-thread-id
+                (error "bug: notmuch-show-thread-id unexpectedly nil")))
+           (tid
+            ;; Copied from mailscripts.el
+            ;;
+            ;; If `notmuch-show' was called with a notmuch query rather
+            ;; than a thread ID, as `org-notmuch-follow-link' in
+            ;; org-notmuch.el does, then `notmuch-show-thread-id' might
+            ;; be an arbitrary notmuch query instead of a thread ID.  We
+            ;; need to wrap such a query in thread:{} before passing it
+            ;; to notmuch-extract-patch(1), or we might not get a whole
+            ;; thread extracted (e.g. if the query is just id:foo)
+            (if (string= (substring thread-id 0 7) "thread:")
+                thread-id
+              (concat "thread:{" thread-id "}"))))
       (lambda ()
-        (if-let ((cmd (executable-find "notmuch-extract-patch"))
-                 (tid
-                  ;; Copied from mailscripts.el
-                  ;;
-                  ;; If `notmuch-show' was called with a notmuch query rather
-                  ;; than a thread ID, as `org-notmuch-follow-link' in
-                  ;; org-notmuch.el does, then `notmuch-show-thread-id' might
-                  ;; be an arbitrary notmuch query instead of a thread ID.  We
-                  ;; need to wrap such a query in thread:{} before passing it
-                  ;; to notmuch-extract-patch(1), or we might not get a whole
-                  ;; thread extracted (e.g. if the query is just id:foo)
-                  (if (string= (substring thread-id 0 7) "thread:")
-                      thread-id
-                    (concat "thread:{" thread-id "}"))))
-            (call-process cmd nil t nil
-                          tid)
-          (user-error "The executable notmuch-extract-patch was not found"))))))
+        (call-process piem-notmuch-extract-patch-executable nil t nil
+                      tid)))))
 
 (defun piem-notmuch-show-get-public-inbox-link (mid)
   "Given the message-id MID, return the public-inbox url.
