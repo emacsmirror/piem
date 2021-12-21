@@ -597,14 +597,18 @@ public-inbox's configuration), return the value of
             ;; blank line.  Assume we're in a header.
             (insert (format "Message-Id: <%s>\n" mid))))))))
 
-(defun piem-am-ready-mbox ()
+(defun piem-am-ready-mbox (&optional buffer-name)
   "Generate a buffer containing an am-ready mbox.
 The return value is (BUFFER . FORMAT), where FORMAT is either
 \"mbox\" or \"mboxrd\".  Callers are responsible for killing the
-buffer."
+buffer.
+
+By default the buffer name is hidden, but when BUFFER-NAME is
+non-nil, use that name instead."
   (when-let ((res (run-hook-with-args-until-success
                    'piem-am-ready-mbox-functions)))
-    (pcase-let ((buffer (generate-new-buffer " *piem am-ready mbox*"))
+    (pcase-let ((buffer (generate-new-buffer
+                         (or buffer-name " *piem am-ready mbox*")))
                 (`(,fn . ,format)
                  (if (member (cdr-safe res) '("mbox" "mboxrd"))
                      res
@@ -980,6 +984,43 @@ this triggers the creation of a new worktree."
              (fboundp 'magit-status-setup-buffer))
         (magit-status-setup-buffer am-directory)
       (dired am-directory))))
+
+(defvar-local piem-edit-patch--coderepo nil)
+(defvar-local piem-edit-patch--format nil)
+
+(defun piem-edit ()
+  "Edit an am-ready mbox before feeding it to `git am'."
+  (interactive)
+  (pcase-let ((`(,mbox . ,format)
+               (or (piem-am-ready-mbox "*piem-edit-patch*")
+                   (user-error
+                    "Could not find am-ready mbox for current buffer")))
+              (coderepo (piem-inbox-coderepo)))
+    (pop-to-buffer mbox)
+    (piem-edit-patch-mode)
+    (setq piem-edit-patch--coderepo coderepo)
+    (setq piem-edit-patch--format format)))
+
+(defun piem-edit-patch-am ()
+  "Apply the patch that is currently edited."
+  (interactive)
+  (let ((buf (current-buffer)))
+    (piem-am buf
+             "mbox"
+             (piem-extract-mbox-info (current-buffer))
+             piem-edit-patch--coderepo)
+    (kill-buffer buf)))
+
+(defvar piem-edit-patch-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "C-c C-c") #'piem-edit-patch-am)
+    map)
+  "Keymap for editing patches with piem.")
+
+(define-derived-mode piem-edit-patch-mode text-mode "piem-edit-patch"
+  "Major mode for editing patches with piem."
+  :group 'piem
+  (buffer-enable-undo))
 
 
 ;;;; Dispatch
