@@ -122,7 +122,8 @@ notmuch thread."
                              (notmuch-show-get-subject))
              (= (notmuch-count-attachments
                  (piem-notmuch--with-current-message
-                  (mm-dissect-buffer))) 0))
+                   (mm-dissect-buffer)))
+                0))
     (let* ((thread-id
             (or notmuch-show-thread-id
                 (error "bug: notmuch-show-thread-id unexpectedly nil")))
