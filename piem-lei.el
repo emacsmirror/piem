@@ -699,6 +699,11 @@ that line."
                  (children (piem-lei-msg-children msg))
                  (depth (1+ (or (cdr (assoc (piem-lei-msg-parent msg) depths))
                                 -1))))
+            (when (and (equal depth 0)
+                       (not (bobp)))
+              ;; Add newline between threads to make different threads
+              ;; easier to distinguish.
+              (insert ?\n))
             (when children
               (setq msgs (append children msgs)))
             (push (cons msg depth) depths)
