@@ -727,11 +727,12 @@ that line."
                                        (line-end-position)
                                        (list 'piem-lei-query-result data))
                   (setq subject-prev subject))
-              (insert (make-string 17 ?\s) ; Date alignment.
-                      (piem-lei-query--format-thread-marker depth)
-                      (propertize (concat " <" mid-msg ">")
-                                  'font-lock-face
-                                  'piem-lei-query-thread-ghost))
+              (insert (propertize
+                       (concat "0000-00-00 00:00 "
+                               (piem-lei-query--format-thread-marker depth)
+                               " <" mid-msg ">")
+                       'font-lock-face
+                       'piem-lei-query-thread-ghost))
               (setq subject-prev nil))
             (when (equal mid-msg pt-mid)
               (setq pt-final (line-beginning-position)))
