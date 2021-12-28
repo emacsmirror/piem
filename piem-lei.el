@@ -233,6 +233,8 @@ unless DISPLAY is non-nil."
        (error "Date did not match expected format: %S" date))
      'font-lock-face 'piem-lei-query-date)))
 
+(defvar piem-lei-query--buffer-name "*lei-query*")
+
 ;;;###autoload
 (defun piem-lei-query (query &optional args)
   "Call `lei q' with QUERY and ARGS.
@@ -243,7 +245,7 @@ QUERY is split according to `split-string-and-unquote'."
                        piem-lei-query-initial-input
                        'piem-lei-query-history))
          (transient-args 'piem-lei-q)))
-  (with-current-buffer (get-buffer-create "*lei-query*")
+  (with-current-buffer (get-buffer-create piem-lei-query--buffer-name)
     (let ((inhibit-read-only t))
       (erase-buffer)
       (piem-lei-insert-output
@@ -669,6 +671,8 @@ Return a list with a `piem-lei-msg' object for each root."
         (forward-line))
       (nreverse items))))
 
+(defvar piem-lei-query-threads--buffer-name "*lei-thread*")
+
 (defun piem-lei-query-thread (mid &optional args)
   "Show thread containing message MID.
 ARGS is passed to the underlying `lei q' call."
@@ -681,7 +685,8 @@ ARGS is passed to the underlying `lei q' call."
                    (append args (list "--threads") query)))
          (msgs (piem-lei-query--thread records))
          depths pt-final subject-prev)
-    (with-current-buffer (get-buffer-create "*lei-thread*")
+    (with-current-buffer
+        (get-buffer-create piem-lei-query-threads--buffer-name)
       (let ((inhibit-read-only t))
         (erase-buffer)
         (while msgs
