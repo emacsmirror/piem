@@ -37,6 +37,19 @@
   "Which lei executable to use."
   :type 'string)
 
+(defcustom piem-lei-query-initial-input "d:20.days.ago.. "
+  "Initial input when reading `lei q' queries."
+  :package-version '(piem . "0.4.0")
+  :type '(choice (const :tag "None" nil)
+                 (string :tag "Query")))
+
+(defcustom piem-lei-query-oldest-thread-first nil
+  "Whether to display older threads before newer ones.
+The date and time of the initial message is taken as the age of
+the thread."
+  :package-version '(piem . "0.4.0")
+  :type 'boolean)
+
 
 ;;;; Helpers
 
@@ -170,7 +183,7 @@ unless DISPLAY is non-nil."
 (defvar piem-lei-show-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map "s" #'piem-lei-q)
-    (define-key map "t" #'piem-lei-query-thread)
+    (define-key map "t" #'piem-lei-mid-thread)
     map)
   "Keymap for `piem-lei-show-mode'.")
 
@@ -227,15 +240,19 @@ unless DISPLAY is non-nil."
        (error "Date did not match expected format: %S" date))
      'font-lock-face 'piem-lei-query-date)))
 
+(defvar piem-lei-query--buffer-name "*lei-query*")
+
 ;;;###autoload
 (defun piem-lei-query (query &optional args)
   "Call `lei q' with QUERY and ARGS.
 QUERY is split according to `split-string-and-unquote'."
   (interactive
    (list (split-string-and-unquote
-          (read-string "Query: " "d:20.days.ago.. " 'piem-lei-query-history))
+          (read-string "Query: "
+                       piem-lei-query-initial-input
+                       'piem-lei-query-history))
          (transient-args 'piem-lei-q)))
-  (with-current-buffer (get-buffer-create "*lei-query*")
+  (with-current-buffer (get-buffer-create piem-lei-query--buffer-name)
     (let ((inhibit-read-only t))
       (erase-buffer)
       (piem-lei-insert-output
@@ -366,7 +383,7 @@ line's message, scroll its text downward, passing ARG to
     (define-key map "n" #'piem-lei-query-next-line)
     (define-key map "p" #'piem-lei-query-previous-line)
     (define-key map "s" #'piem-lei-q)
-    (define-key map "t" #'piem-lei-query-thread)
+    (define-key map "t" #'piem-lei-mid-thread)
     map)
   "Keymap for `piem-lei-query-mode'.")
 
@@ -511,7 +528,8 @@ external (via `lei add-external')."
    (piem-lei-q:--limit)
    (piem-lei-q:--offset)]
   ["Actions"
-   ("s" "Search with lei" piem-lei-query)])
+   ("s" "Search" piem-lei-query)
+   ("t" "Search, threaded output" piem-lei-query-threads)])
 
 
 ;;;;; Threading
@@ -555,6 +573,20 @@ external (via `lei add-external')."
           (push msg2-mid seen))
         (setq msg2 (piem-lei-msg-parent msg2)))
       nil)))
+
+(defun piem-lei--msg-time-with-fallback (msg)
+  (or (piem-lei-msg-time msg)
+      ;; The initial message is a ghost.  Use the time from the first
+      ;; child encountered, without making any effort to ensure that
+      ;; it's the sibling with the earliest time.
+      (catch 'stop
+        (let ((children (piem-lei-msg-children msg)))
+          (while children
+            (let ((child (pop children)))
+              (if-let ((time (piem-lei-msg-time child)))
+                  (throw 'stop time)
+                (setq children
+                      (append children (piem-lei-msg-children child))))))))))
 
 (defun piem-lei-query--thread (records)
   "Thread messages in RECORDS.
@@ -601,7 +633,13 @@ Return a list with a `piem-lei-msg' object for each root."
          (unless (piem-lei-msg-parent v)
            (push v roots)))
        thread)
-      (nreverse roots))))
+      (let* ((fn (if piem-lei-query-oldest-thread-first #'not #'identity))
+             (sort-fn
+              (lambda (a b)
+                (funcall fn
+                         (time-less-p (piem-lei--msg-time-with-fallback b)
+                                      (piem-lei--msg-time-with-fallback a))))))
+        (sort roots sort-fn)))))
 
 (defvar piem-lei-query--subject-split-re
   (rx string-start
@@ -661,19 +699,25 @@ Return a list with a `piem-lei-msg' object for each root."
         (forward-line))
       (nreverse items))))
 
-(defun piem-lei-query-thread (mid &optional args)
-  "Show thread containing message MID.
-ARGS is passed to the underlying `lei q' call."
+(defvar piem-lei-query-threads--buffer-name piem-lei-query--buffer-name)
+
+(defun piem-lei-query-threads (query &optional args pt-mid)
+  "Show threads containing matches for QUERY.
+ARGS is passed to the underlying `lei q' call.  If PT-MID is
+non-nil and matches the message ID of a result, move point to
+that line."
   (interactive
-   (if-let ((mid (piem-lei-get-mid)))
-       (list mid piem-lei-buffer-args)
-     (list (read-string "Message ID: " nil nil (piem-mid)) nil)))
-  (let* ((query (list (concat "mid:" mid)))
-         (records (piem-lei-query--slurp
+   (list (split-string-and-unquote
+          (read-string "Query: "
+                       piem-lei-query-initial-input
+                       'piem-lei-query-history))
+         (transient-args 'piem-lei-q)))
+  (let* ((records (piem-lei-query--slurp
                    (append args (list "--threads") query)))
          (msgs (piem-lei-query--thread records))
          depths pt-final subject-prev)
-    (with-current-buffer (get-buffer-create "*lei-thread*")
+    (with-current-buffer
+        (get-buffer-create piem-lei-query-threads--buffer-name)
       (let ((inhibit-read-only t))
         (erase-buffer)
         (while msgs
@@ -682,6 +726,11 @@ ARGS is passed to the underlying `lei q' call."
                  (children (piem-lei-msg-children msg))
                  (depth (1+ (or (cdr (assoc (piem-lei-msg-parent msg) depths))
                                 -1))))
+            (when (and (equal depth 0)
+                       (not (bobp)))
+              ;; Add newline between threads to make different threads
+              ;; easier to distinguish.
+              (insert ?\n))
             (when children
               (setq msgs (append children msgs)))
             (push (cons msg depth) depths)
@@ -710,22 +759,32 @@ ARGS is passed to the underlying `lei q' call."
                                        (line-end-position)
                                        (list 'piem-lei-query-result data))
                   (setq subject-prev subject))
-              (insert (make-string 17 ?\s) ; Date alignment.
-                      (piem-lei-query--format-thread-marker depth)
-                      (propertize (concat " <" mid-msg ">")
-                                  'font-lock-face
-                                  'piem-lei-query-thread-ghost))
+              (insert (propertize
+                       (concat "0000-00-00 00:00 "
+                               (piem-lei-query--format-thread-marker depth)
+                               " <" mid-msg ">")
+                       'font-lock-face
+                       'piem-lei-query-thread-ghost))
               (setq subject-prev nil))
-            (when (equal mid-msg mid)
+            (when (equal mid-msg pt-mid)
               (setq pt-final (line-beginning-position)))
             (insert ?\n)))
         (insert "End of lei-q results"))
       (goto-char (or pt-final (point-min)))
       (piem-lei-query-mode)
       (setq piem-lei-buffer-args args)
-      (setq piem-lei-buffer-mid mid)
       (setq  piem-lei-buffer-query query)
       (pop-to-buffer-same-window (current-buffer)))))
+
+(defun piem-lei-mid-thread (mid &optional args)
+  "Show thread containing message MID.
+ARGS is passed to the underlying `lei q' call."
+  (interactive
+   (if-let ((mid (piem-lei-get-mid)))
+       (list mid piem-lei-buffer-args)
+     (list (read-string "Message ID: " nil nil (piem-mid)) nil)))
+  (let ((piem-lei-query-threads--buffer-name "*lei-thread*"))
+    (piem-lei-query-threads (list (concat "mid:" mid)) args mid)))
 
 
 ;;;; piem integration
