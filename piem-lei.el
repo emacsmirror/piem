@@ -43,6 +43,13 @@
   :type '(choice (const :tag "None" nil)
                  (string :tag "Query")))
 
+(defcustom piem-lei-query-oldest-thread-first nil
+  "Whether to display older threads before newer ones.
+The date and time of the initial message is taken as the age of
+the thread."
+  :package-version '(piem . "0.4.0")
+  :type 'boolean)
+
 
 ;;;; Helpers
 
@@ -567,6 +574,20 @@ external (via `lei add-external')."
         (setq msg2 (piem-lei-msg-parent msg2)))
       nil)))
 
+(defun piem-lei--msg-time-with-fallback (msg)
+  (or (piem-lei-msg-time msg)
+      ;; The initial message is a ghost.  Use the time from the first
+      ;; child encountered, without making any effort to ensure that
+      ;; it's the sibling with the earliest time.
+      (catch 'stop
+        (let ((children (piem-lei-msg-children msg)))
+          (while children
+            (let ((child (pop children)))
+              (if-let ((time (piem-lei-msg-time child)))
+                  (throw 'stop time)
+                (setq children
+                      (append children (piem-lei-msg-children child))))))))))
+
 (defun piem-lei-query--thread (records)
   "Thread messages in RECORDS.
 
@@ -612,7 +633,13 @@ Return a list with a `piem-lei-msg' object for each root."
          (unless (piem-lei-msg-parent v)
            (push v roots)))
        thread)
-      (nreverse roots))))
+      (let* ((fn (if piem-lei-query-oldest-thread-first #'not #'identity))
+             (sort-fn
+              (lambda (a b)
+                (funcall fn
+                         (time-less-p (piem-lei--msg-time-with-fallback b)
+                                      (piem-lei--msg-time-with-fallback a))))))
+        (sort roots sort-fn)))))
 
 (defvar piem-lei-query--subject-split-re
   (rx string-start
