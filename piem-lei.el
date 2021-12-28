@@ -375,6 +375,16 @@ line's message, scroll its text downward, passing ARG to
          (arg (- arg))
          (t '-))))
 
+(defun piem-lei-query-quit-window (&optional kill)
+  "Call `quit-window' on the selected window.
+If there is a visible `piem-lei-show-mode' buffer, first call
+`quit-window' on its window.  The prefix argument KILL is passed
+to both underlying `quit-window' calls."
+  (interactive "P")
+  (when-let ((msg-win (piem-lei-query--get-visible-message-window)))
+    (quit-window kill msg-win))
+  (quit-window kill))
+
 (defvar piem-lei-query-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "RET") #'piem-lei-query-show)
@@ -384,6 +394,7 @@ line's message, scroll its text downward, passing ARG to
     (define-key map "p" #'piem-lei-query-previous-line)
     (define-key map "s" #'piem-lei-q)
     (define-key map "t" #'piem-lei-mid-thread)
+    (define-key map "q" #'piem-lei-query-quit-window)
     map)
   "Keymap for `piem-lei-query-mode'.")
 
