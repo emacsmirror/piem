@@ -37,6 +37,12 @@
   "Which lei executable to use."
   :type 'string)
 
+(defcustom piem-lei-query-initial-input "d:20.days.ago.. "
+  "Initial input when reading `lei q' queries."
+  :package-version '(piem . "0.4.0")
+  :type '(choice (const :tag "None" nil)
+                 (string :tag "Query")))
+
 
 ;;;; Helpers
 
@@ -233,7 +239,9 @@ unless DISPLAY is non-nil."
 QUERY is split according to `split-string-and-unquote'."
   (interactive
    (list (split-string-and-unquote
-          (read-string "Query: " "d:20.days.ago.. " 'piem-lei-query-history))
+          (read-string "Query: "
+                       piem-lei-query-initial-input
+                       'piem-lei-query-history))
          (transient-args 'piem-lei-q)))
   (with-current-buffer (get-buffer-create "*lei-query*")
     (let ((inhibit-read-only t))
