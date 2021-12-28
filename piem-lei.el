@@ -176,7 +176,7 @@ unless DISPLAY is non-nil."
 (defvar piem-lei-show-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map "s" #'piem-lei-q)
-    (define-key map "t" #'piem-lei-query-thread)
+    (define-key map "t" #'piem-lei-mid-thread)
     map)
   "Keymap for `piem-lei-show-mode'.")
 
@@ -376,7 +376,7 @@ line's message, scroll its text downward, passing ARG to
     (define-key map "n" #'piem-lei-query-next-line)
     (define-key map "p" #'piem-lei-query-previous-line)
     (define-key map "s" #'piem-lei-q)
-    (define-key map "t" #'piem-lei-query-thread)
+    (define-key map "t" #'piem-lei-mid-thread)
     map)
   "Keymap for `piem-lei-query-mode'.")
 
@@ -521,7 +521,8 @@ external (via `lei add-external')."
    (piem-lei-q:--limit)
    (piem-lei-q:--offset)]
   ["Actions"
-   ("s" "Search with lei" piem-lei-query)])
+   ("s" "Search" piem-lei-query)
+   ("t" "Search, threaded output" piem-lei-query-threads)])
 
 
 ;;;;; Threading
@@ -671,17 +672,20 @@ Return a list with a `piem-lei-msg' object for each root."
         (forward-line))
       (nreverse items))))
 
-(defvar piem-lei-query-threads--buffer-name "*lei-thread*")
+(defvar piem-lei-query-threads--buffer-name piem-lei-query--buffer-name)
 
-(defun piem-lei-query-thread (mid &optional args)
-  "Show thread containing message MID.
-ARGS is passed to the underlying `lei q' call."
+(defun piem-lei-query-threads (query &optional args pt-mid)
+  "Show threads containing matches for QUERY.
+ARGS is passed to the underlying `lei q' call.  If PT-MID is
+non-nil and matches the message ID of a result, move point to
+that line."
   (interactive
-   (if-let ((mid (piem-lei-get-mid)))
-       (list mid piem-lei-buffer-args)
-     (list (read-string "Message ID: " nil nil (piem-mid)) nil)))
-  (let* ((query (list (concat "mid:" mid)))
-         (records (piem-lei-query--slurp
+   (list (split-string-and-unquote
+          (read-string "Query: "
+                       piem-lei-query-initial-input
+                       'piem-lei-query-history))
+         (transient-args 'piem-lei-q)))
+  (let* ((records (piem-lei-query--slurp
                    (append args (list "--threads") query)))
          (msgs (piem-lei-query--thread records))
          depths pt-final subject-prev)
@@ -729,16 +733,25 @@ ARGS is passed to the underlying `lei q' call."
                                   'font-lock-face
                                   'piem-lei-query-thread-ghost))
               (setq subject-prev nil))
-            (when (equal mid-msg mid)
+            (when (equal mid-msg pt-mid)
               (setq pt-final (line-beginning-position)))
             (insert ?\n)))
         (insert "End of lei-q results"))
       (goto-char (or pt-final (point-min)))
       (piem-lei-query-mode)
       (setq piem-lei-buffer-args args)
-      (setq piem-lei-buffer-mid mid)
       (setq  piem-lei-buffer-query query)
       (pop-to-buffer-same-window (current-buffer)))))
+
+(defun piem-lei-mid-thread (mid &optional args)
+  "Show thread containing message MID.
+ARGS is passed to the underlying `lei q' call."
+  (interactive
+   (if-let ((mid (piem-lei-get-mid)))
+       (list mid piem-lei-buffer-args)
+     (list (read-string "Message ID: " nil nil (piem-mid)) nil)))
+  (let ((piem-lei-query-threads--buffer-name "*lei-thread*"))
+    (piem-lei-query-threads (list (concat "mid:" mid)) args mid)))
 
 
 ;;;; piem integration
