@@ -1006,7 +1006,7 @@ this triggers the creation of a new worktree."
   (interactive)
   (let ((buf (current-buffer)))
     (piem-am buf
-             "mbox"
+             piem-edit-patch--format
              (piem-extract-mbox-info (current-buffer))
              piem-edit-patch--coderepo)
     (kill-buffer buf)))
