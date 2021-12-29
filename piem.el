@@ -192,7 +192,8 @@ the following information about the patch series:
   "Whether to create a dedicated worktree for applying patches."
   :type 'boolean)
 
-(defcustom piem-am-read-worktree-function #'piem-am-read-worktree
+(defcustom piem-am-read-worktree-function
+  #'piem-am-read-worktree-sibling-named-by-branch
   "Function that reads a to-be-created worktree from the user.
 This function is called with two arguments, the directory of the
 code repository that the worktree will be created from and the
@@ -890,7 +891,7 @@ in `piem-default-branch-function'."
 
 (defvar piem-am-args (list "--scissors" "--3way"))
 
-(defun piem-am-read-worktree (coderepo branch)
+(defun piem-am-read-worktree-sibling-named-by-branch (coderepo branch)
   "Read a worktree to create for applying patches.
 This function is intended to be used as a value of
 `piem-am-read-worktree-function'.  The worktree directory is
