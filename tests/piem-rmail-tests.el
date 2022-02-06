@@ -1,6 +1,6 @@
 ;;; piem-rmail-tests.el --- tests for piem-rmail  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2021  all contributors <piem@inbox.kyleam.com>
+;; Copyright all piem contributors <piem@inbox.kyleam.com>
 
 ;; Author: Kyle Meyer <kyle@kyleam.com>
 

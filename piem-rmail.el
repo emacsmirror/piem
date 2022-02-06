@@ -1,6 +1,6 @@
 ;;; piem-rmail.el --- Rmail integration for piem  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2021  all contributors <piem@inbox.kyleam.com>
+;; Copyright all piem contributors <piem@inbox.kyleam.com>
 
 ;; Author: Kyle Meyer <kyle@kyleam.com>
 ;; Keywords: vc, tools

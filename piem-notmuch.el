@@ -1,6 +1,6 @@
 ;;; piem-notmuch.el --- Notmuch integration for piem  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2020-2021  all contributors <piem@inbox.kyleam.com>
+;; Copyright all piem contributors <piem@inbox.kyleam.com>
 ;; Copyright (C) 2019 Sean Whitton <spwhitton@spwhitton.name>
 
 ;; Author: Kyle Meyer <kyle@kyleam.com>
