@@ -429,6 +429,14 @@ a nice set of Debian-focused tools by Sean Whitton that provides, among
 other things, functionality for applying patch series, including
 b4-inspired patch extraction.
 
+@findex piem-notmuch-extract-patch-am-ready-mbox
+@vindex piem-am-ready-mbox-functions
+If you would like to use piem but prefer to use mailscripts'
+@code{notmuch-extract-patch} script rather than b4 to prepare an
+am-ready mbox, you can add the
+@code{piem-notmuch-extract-patch-am-ready-mbox} function to
+@code{piem-am-ready-mbox-functions}.
+
 
 @node Miscellaneous functionality
 @chapter Miscellaneous functionality
