@@ -281,7 +281,7 @@ am}.  It is only compatible with inline patches.
 @findex piem-am
 @item M-x piem-am @key{RET} @var{branch} @key{RET} @var{base}
 Apply the patch or patches in the current buffer to the associated code
-repository.  Before applying, checkout a new branch @var{branch}
+repository.  Before applying, check out a new branch @var{branch}
 starting at @var{base}.
 @end table
 
