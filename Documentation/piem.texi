@@ -279,10 +279,16 @@ am}.  It is only compatible with inline patches.
 
 @table @kbd
 @findex piem-am
+@findex piem-edit
+@findex piem-edit-patch-am
 @item M-x piem-am @key{RET} @var{branch} @key{RET} @var{base}
 Apply the patch or patches in the current buffer to the associated code
 repository.  Before applying, check out a new branch @var{branch}
 starting at @var{base}.
+
+Calling @code{piem-edit} instead of @code{piem-am} will pop up an
+am-ready mbox for editing. To feed the edited mbox to @code{piem-am},
+invoke @code{piem-edit-patch-am} (@kbd{C-c C-c}).
 @end table
 
 @findex piem-name-branch-who-what-v
