@@ -1,0 +1,18 @@
+piem v0.4.0 release notes
+=========================
+
+Changes since v0.3.0
+--------------------
+
+ * New function piem-notmuch-extract-patch-am-ready-mbox executes
+   mailscripts' (<https://git.spwhitton.name/mailscripts/>)
+   notmuch-extract-patch script to extract patches from a thread.  For
+   Notmuch users, this provides an alternative to extracting patches
+   with b4 via piem-b4-am-from-mid.
+
+ * New command piem-edit makes it possible to edit an am-ready mbox
+   before applying it.
+
+ * piem-lei-query-thread has been split into piem-lei-mid-thread and
+   piem-lei-query-threads.  The latter can be used display multiple
+   threads matching a query.

@@ -4,7 +4,7 @@
 
 ;; Author: Kyle Meyer <kyle@kyleam.com>
 ;; Keywords: vc, tools
-;; Version: 0.3.0
+;; Version: 0.4.0
 ;; Package-Requires: ((emacs "26.3") (transient "0.3.0"))
 ;; Homepage: https://git.kyleam.com/piem/about/
 

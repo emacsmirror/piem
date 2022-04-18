@@ -48,7 +48,7 @@
 (define-public piem
   (package
     (name "piem")
-    (version "0.3.0")
+    (version "0.4.0")
     (source
      (origin
        (method git-fetch)
