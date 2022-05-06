@@ -49,6 +49,21 @@
           dir = /code/foo/.git
 ")
 
+(defvar piem-tests-sample-pi-config-multiple-coderepos "
+[publicinbox \"foo\"]
+        address = foo@example.com
+        url = https://example.com/foo
+        inboxdir = /inboxes/foo
+        coderepo = foo.git
+        coderepo = bar.git
+
+[coderepo \"foo.git\"]
+          dir = /code/foo/.git
+
+[coderepo \"bar.git\"]
+          dir = /code/bar/.git
+")
+
 (ert-deftest piem-merged-inboxes:from-config-disabled ()
   (let ((piem-get-inboxes-from-config nil)
         (piem-inboxes nil))
@@ -77,6 +92,20 @@
                      "foo@example.com"))
       (piem-clear-merged-inboxes)
       (should-not (piem-inbox-get :address "foo")))))
+
+(ert-deftest piem-merged-inboxes:from-config-multiple-coderepos ()
+  (piem-clear-merged-inboxes)
+  (let ((piem-get-inboxes-from-config t)
+        (piem-inboxes nil))
+    (piem-tests-with-pi-config piem-tests-sample-pi-config-multiple-coderepos
+      (cl-letf (((symbol-function 'completing-read)
+                 (lambda (&rest _) "/code/foo")))
+        (should (equal (piem-inbox-coderepo "foo")
+                       "/code/foo/")))
+      (cl-letf (((symbol-function 'completing-read)
+                 (lambda (&rest _) "/code/bar")))
+        (should (equal (piem-inbox-coderepo "foo")
+                       "/code/bar/"))))))
 
 (ert-deftest piem-merged-inboxes:override-config ()
   (piem-clear-merged-inboxes)

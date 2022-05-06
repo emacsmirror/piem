@@ -2,10 +2,6 @@ A (sparse and likely stale) to-do list for piem                   -*-outline-*-
 
 * general
 
-** piem-inboxes: support mapping inbox to multiple coderepos
-A catchall inbox may be used for small projects without a dedicated
-address.
-
 ** "report inbox" command for debugging
 
 ** "show message ID at point" command

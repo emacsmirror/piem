@@ -58,10 +58,6 @@
   :link '(info-link "(piem)Top")
   :group 'tools)
 
-;; TODO: Decide how to deal with inboxes that map to more than one
-;; coderepo.  This is important to support for people that want to
-;; use a catchall inbox for small projects which they don't think
-;; (yet) need a dedicated address.
 (defcustom piem-inboxes nil
   "List of public-inbox-archived projects.
 
@@ -77,6 +73,12 @@ list that supports the following properties:
       differs from public-inbox-config's coderepo, which is a link to
       another section that must point to the repository's git
       directory.
+
+      To map an inbox to multiple repositories, you can set this
+      to a list of strings.  When a function (e.g., `piem-am')
+      needs a single coderepo, you will be prompted to select a
+      repository, with the first value in this list offered as
+      the default.
   :url
       A URL hosting HTTPS archives.  This value must end with a slash.
   :maildir
@@ -100,8 +102,7 @@ configuration are considered."
   ;; `piem--merge-config-inboxes' so that the value can also be set in
   ;; ~/.public-inbox/config.
   :type '(alist :key-type string
-                :value-type
-                (plist :value-type string))
+                :value-type plist)
   :set (lambda (var val)
          (set var val)
          (when (fboundp 'piem-clear-merged-inboxes)
@@ -398,16 +399,23 @@ files."
              (let* ((inbox-name (match-string 1 key))
                     (inbox-item (assoc inbox-name cfg-inboxes))
                     (prop-name (intern (concat ":" (match-string 2 key))))
-                    (prop-pair (list prop-name (car val))))
-               (when-let ((coderepo
+                    (prop-pair (list prop-name
+                                     (if (eq prop-name :coderepo)
+                                         val
+                                       (car val)))))
+               (when-let ((coderepos
                            (and (eq prop-name :coderepo)
-                                (car (gethash
-                                      (format "coderepo.%s.dir" (car val))
-                                      pi-cfg)))))
+                                (mapcar
+                                 (lambda (v)
+                                   (car (gethash (format "coderepo.%s.dir" v)
+                                                 pi-cfg)))
+                                 val))))
                  (setq prop-pair
                        (list :coderepo
-                             (replace-regexp-in-string
-                              "/\\.git/?\\'" "" coderepo))))
+                             (mapcar
+                              (lambda (r)
+                                (replace-regexp-in-string "/\\.git/?\\'" "" r))
+                              coderepos))))
                (if inbox-item
                    (setcdr inbox-item (nconc prop-pair (cdr inbox-item)))
                  (push (cons inbox-name prop-pair) cfg-inboxes)))))
@@ -516,8 +524,16 @@ returned by `piem-inbox'."
 
 (defun piem-inbox-coderepo (&optional inbox)
   "Return the code repository of current buffer's inbox."
-  (when-let ((repo (piem-inbox-get :coderepo inbox)))
-    (file-name-as-directory (expand-file-name repo))))
+  (when-let ((inbox (or inbox (piem-inbox)))
+             (repos (piem-inbox-get :coderepo inbox)))
+    (when (stringp repos)
+      (setq repos (list repos)))
+    (let ((repo (if (= (length repos) 1)
+                    (car repos)
+                  (completing-read "Code repository: " repos
+                                   nil t nil nil (car repos)))))
+      (unless (string-blank-p repo)
+        (file-name-as-directory (expand-file-name repo))))))
 
 (defun piem-inbox-maildir-directory (&optional inbox)
   "Return the maildir for INBOX.

@@ -163,7 +163,10 @@ buffer can be mapped to an inbox in @code{piem-inboxes}.
 that contains code related to that archive (in the example above, a
 local clone of @url{https://git.kernel.org/pub/scm/git/git.git/}).  This
 information is required to apply patches from an archive to a local code
-repository (@pxref{Applying patches}).
+repository (@pxref{Applying patches}).  To map an inbox to more than one
+repository (e.g., if the inbox receives patches for multiple projects,
+or if you use a few dedicated Git worktrees for different types of
+patches), set @code{:coderepo} to a list of locations.
 
 @findex piem-merged-inboxes
 @vindex piem-get-inboxes-from-config
