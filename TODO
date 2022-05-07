@@ -8,6 +8,9 @@ A (sparse and likely stale) to-do list for piem                   -*-outline-*-
 Should have ability to extract message ID from link (like lei-lcat)
 and give priority to local sources.
 
+** support piem-am as jumping point to existing branch?
+See discussion staring at <8735i0urq7.fsf@localhost>.
+
 * b4
 
 ** add transients for other b4 subcommands?
