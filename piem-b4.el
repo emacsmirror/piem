@@ -236,6 +236,7 @@ this triggers the creation of a new worktree."
    (piem-b4-am:--use-version)
    (piem-b4-am:--cherry-pick)]
   ["Trailer options"
+   ("+c" "Copy To: and Cc: addresses as Cc: trailers" "--cc-trailers")
    ("-s" "Add my signed-off-by" "--add-my-sob")
    ("-S" "Apply trailers without checking email addresses" "--sloppy-trailers")
    ("-t" "Apply cover letter trailers" "--apply-cover-trailers")
