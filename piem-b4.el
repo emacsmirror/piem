@@ -233,12 +233,13 @@ this triggers the creation of a new worktree."
    ;; Hide by default because it hard codes the URL.
    (7 "-l" "Add a lore.kernel.org/r/ to patches" "--add-link")
    ("-L" "Do not reroll partial series" "--no-partial-reroll")
+   (piem-b4-am:--use-version)
+   (piem-b4-am:--cherry-pick)]
+  ["Trailer options"
    ("-s" "Add my signed-off-by" "--add-my-sob")
    ("-S" "Apply trailers without checking email addresses" "--sloppy-trailers")
    ("-t" "Apply cover letter trailers" "--apply-cover-trailers")
-   ("-T" "Do not add trailers" "--no-add-trailers")
-   (piem-b4-am:--use-version)
-   (piem-b4-am:--cherry-pick)]
+   ("-T" "Do not add trailers" "--no-add-trailers")]
   ["Options for creating am-ready mboxes"
    ("-3" "Prepare for 3-way merge" "--prep-3way")
    ("-g" "Try to guess base" "--guess-base")
