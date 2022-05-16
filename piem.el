@@ -772,26 +772,31 @@ is used as the value of `browse-url-browser-function'."
     (cons n-added n-skipped)))
 
 ;;;###autoload
-(defun piem-inject-thread-into-maildir (mid &optional message-only)
+(defun piem-inject-thread-into-maildir (mid &optional inbox message-only)
   "Inject thread containing MID into `piem-inbox-maildir-directory'.
 
-If prefix argument MESSAGE-ONLY is non-nil, inject just the
-message for MID, not the entire thread.
+Download the message from the :url value configured for INBOX in
+`piem-inboxes'.  INBOX is passed to
+`piem-inbox-maildir-directory' to determine where to inject the
+message.  If INBOX is nil, the inbox returned by `piem-inbox' is
+used.
 
-This function depends on :url being configured for entries in
-`piem-inboxes'."
+If prefix argument MESSAGE-ONLY is non-nil, inject just the
+message for MID, not the entire thread."
   (interactive
    (list (or (piem-mid)
              (user-error "No message ID found for the current buffer"))
+         nil
          current-prefix-arg))
-  (let ((maildir-directory (piem-inbox-maildir-directory)))
+  (let* ((inbox (or inbox (piem-inbox)))
+         (maildir-directory (piem-inbox-maildir-directory inbox)))
     (cond
      ((not maildir-directory)
       (user-error "No directory returned by `piem-inbox-maildir-directory'"))
      ((not (piem-maildir-dir-is-maildir-p maildir-directory))
       (user-error
        "Does not look like a Maildir directory: %s" maildir-directory)))
-    (let ((url (concat (piem-mid-url mid)
+    (let ((url (concat (piem-mid-url mid inbox)
                        (if message-only "/raw" "/t.mbox.gz"))))
       (piem-with-url-contents url
         (unless message-only
