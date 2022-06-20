@@ -756,7 +756,7 @@ is used as the value of `browse-url-browser-function'."
                                      (save-excursion
                                        (message-narrow-to-head-1)
                                        (message-fetch-field "message-id" t)))
-                                   (error "Message lacks message-ID")))))))
+                                   (error "Message lacks Message-Id header")))))))
             (cl-incf n-skipped)
           (let ((case-fold-search nil))
             (while (re-search-forward
