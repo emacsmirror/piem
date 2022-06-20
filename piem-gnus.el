@@ -48,7 +48,7 @@
   "Return the message ID of a Gnus article."
   (when (derived-mode-p 'gnus-article-mode 'gnus-summary-mode)
     (with-current-buffer gnus-original-article-buffer
-      (when-let ((mid (message-field-value "Message-ID")))
+      (when-let ((mid (message-field-value "message-id")))
         (if (string-match (rx string-start (zero-or-more space) "<"
                               (group (one-or-more (not (any ">"))))
                               ">" (zero-or-more space) string-end)
