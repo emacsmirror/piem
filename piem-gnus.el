@@ -91,17 +91,24 @@
 
 (defun piem-gnus-am-ready-mbox ()
   "Return a function that inserts an am-ready mbox.
+
 If the buffer has any MIME parts that look like a patch, use
-those parts' contents (in order) as the mbox.  Otherwise, use the
-message itself if it looks like a patch."
+those parts' contents as the mbox, ordering the patches based on
+the number at the start of the file name.  If none of the file
+names start with a number, retain the original order of the
+attachments.
+
+If no MIME parts look like a patch, use the message itself if it
+looks like a patch."
   (when (derived-mode-p 'gnus-article-mode 'gnus-summary-mode)
     (cond
      (gnus-article-mime-handles
       (when-let ((patches (delq nil (mapcar #'piem-am-extract-attached-patch
                                             gnus-article-mime-handles))))
+        (setq patches (sort patches (lambda (x y) (< (car x) (car y)))))
         (cons (lambda ()
                 (dolist (patch patches)
-                  (insert patch)))
+                  (insert (cdr patch))))
               "mbox")))
      (gnus-article-buffer
       (when-let ((patch (with-current-buffer gnus-article-buffer

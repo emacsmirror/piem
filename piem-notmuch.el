@@ -85,9 +85,15 @@ have surrounding brackets."
 
 (defun piem-notmuch-am-ready-mbox ()
   "Return a function that inserts an am-ready mbox.
+
 If the buffer has any MIME parts that look like a patch, use
-those parts' contents (in order) as the mbox.  Otherwise, use the
-message itself if it looks like a patch."
+those parts' contents as the mbox, ordering the patches based on
+the number at the start of the file name.  If none of the file
+names start with a number, retain the original order of the
+attachments.
+
+If no MIME parts look like a patch, use the message itself if it
+looks like a patch."
   (when (derived-mode-p 'notmuch-show-mode)
     (let* ((handle (piem-notmuch--with-current-message
                      (mm-dissect-buffer)))
@@ -106,10 +112,11 @@ message itself if it looks like a patch."
              (push patch patches)))
          handle)
         (when patches
-          (setq patches (nreverse patches))
+          (setq patches (sort (nreverse patches)
+                              (lambda (x y) (< (car x) (car y)))))
           (cons (lambda ()
                   (dolist (patch patches)
-                    (insert patch)))
+                    (insert (cdr patch))))
                 "mbox"))))))
 
 (defun piem-notmuch-extract-patch-am-ready-mbox ()
