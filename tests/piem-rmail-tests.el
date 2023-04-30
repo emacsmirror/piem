@@ -38,7 +38,7 @@ To: A <a@example.com>
 Cc: i@inbox.example.com
 Subject: Re: test
 Date: Sun, 23 May 2021 02:26:51 -0400
-Message-Id: <456@example.com>
+Message-ID: <456@example.com>
 In-Reply-To: <123@example.com>
 References: <123@example.com>
 
