@@ -47,12 +47,16 @@ References: <123@example.com>
 no thanks
 ")
 
+(defun piem-rmail-tests-rmail-mode ()
+  (cl-letf (((symbol-function #'message) (lambda (&rest _))))
+    (rmail-mode)))
+
 (ert-deftest piem-rmail-get-inbox ()
   (should
    (equal "foo"
           (with-temp-buffer
             (insert piem-rmail-tests-mbox-text)
-            (rmail-mode)
+            (piem-rmail-tests-rmail-mode)
             (let ((piem-get-inboxes-from-config nil)
                   (piem-inboxes '(("foo" :address "i@inbox.example.com"))))
               (piem-rmail-get-inbox))))))
@@ -62,7 +66,7 @@ no thanks
    (equal (list "123@example.com" "456@example.com")
           (with-temp-buffer
             (insert piem-rmail-tests-mbox-text)
-            (rmail-mode)
+            (piem-rmail-tests-rmail-mode)
             (rmail-first-message)
             (let ((piem-get-inboxes-from-config nil)
                   (piem-inboxes '(("foo" :address "i@inbox.example.com"))))
