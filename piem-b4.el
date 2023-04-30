@@ -131,7 +131,7 @@ list of arguments specified via ARGS."
 (defun piem-b4-am-from-mid (mid &optional args toggle-worktree)
   "Get the thread for MID, extract an am-ready mbox, and apply it.
 
-Try to generate a thread for the Message-Id MID with
+Try to generate a thread for MID with
 `piem-mid-to-thread-functions'.  If that fails, try to download
 the thread from an inbox URL associated with the current buffer,
 provided that the current buffer's message ID matches MID.  And
