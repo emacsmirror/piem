@@ -601,8 +601,11 @@ public-inbox's configuration), return the value of
                             (rx line-start (zero-or-one space) line-end))))
             (cond
              ((looking-at-p
+               ;; git-format-patch switched to "Message-ID" spelling
+               ;; in v2.41.
                (rx line-start
-                   "Message-Id: <" (one-or-more not-newline) ">"
+                   "Message-" (or "Id" "ID")
+                   ": <" (one-or-more not-newline) ">"
                    line-end))
               (throw 'has-message-id nil))
              ((looking-at-p

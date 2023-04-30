@@ -179,6 +179,24 @@
   (should-not
    (with-temp-buffer
      (piem--insert-message-id-header "msg@id")))
+  (should-not
+   (string-match-p
+    "Message-Id: <msg@id>"
+    (with-temp-buffer
+      (insert "\
+From 0d732713af1f3fb48b37430e2cd0a3033cea14f3 Mon Sep 17 00:00:00 2001
+From: Foo Bar <f@example.com>
+Message-ID: <existing@id>
+Date: Fri, 22 Jan 2021 22:35:58 -0500
+Subject: [PATCH] a
+
+---
+ a | 1 +
+ 1 file changed, 1 insertion(+)
+ create mode 100644 a")
+      (goto-char (point-min))
+      (piem--insert-message-id-header "msg@id")
+      (buffer-string))))
   (should
    (string-match-p
     (concat
