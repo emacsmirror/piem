@@ -181,7 +181,7 @@
      (piem--insert-message-id-header "msg@id")))
   (should-not
    (string-match-p
-    "Message-Id: <msg@id>"
+    "Message-ID: <msg@id>"
     (with-temp-buffer
       (insert "\
 From 0d732713af1f3fb48b37430e2cd0a3033cea14f3 Mon Sep 17 00:00:00 2001
@@ -200,9 +200,9 @@ Subject: [PATCH] a
   (should
    (string-match-p
     (concat
-     (rx "Subject: [PATCH 1/2] a\nMessage-Id: <msg@id>\n"
+     (rx "Subject: [PATCH 1/2] a\nMessage-ID: <msg@id>\n"
          (one-or-more anychar)
-         "Subject: [PATCH 2/2] b\nMessage-Id: <msg@id>\n"))
+         "Subject: [PATCH 2/2] b\nMessage-ID: <msg@id>\n"))
     (with-temp-buffer
       (insert "\
 From 0d732713af1f3fb48b37430e2cd0a3033cea14f3 Mon Sep 17 00:00:00 2001

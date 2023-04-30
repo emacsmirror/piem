@@ -156,10 +156,10 @@ value passed to `git am'.  If unspecified, \"mboxrd\" is used."
   :type 'hook)
 
 (defcustom piem-add-message-id-header nil
-  "Whether to add Message-Id header to non-mail patches.
+  "Whether to add Message-ID header to non-mail patches.
 If this value is non-nil and a patch returned by a function in
 `piem-am-ready-mbox-functions' looks like a patch that was
-attached rather than sent inline, add a Message-Id header with
+attached rather than sent inline, add a Message-ID header with
 the return value of `piem-mid'."
   :type 'boolean)
 
@@ -615,7 +615,7 @@ public-inbox's configuration), return the value of
           (when (= header-count 3)
             ;; Found all the expected headers before hitting a
             ;; blank line.  Assume we're in a header.
-            (insert (format "Message-Id: <%s>\n" mid))))))))
+            (insert (format "Message-ID: <%s>\n" mid))))))))
 
 (defun piem-am-ready-mbox (&optional buffer-name)
   "Generate a buffer containing an am-ready mbox.
