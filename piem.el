@@ -492,7 +492,7 @@ non-nil, make the match specific for that message."
   "Return inbox based on matching message headers.
 This should be called from a buffer containing a message and is
 intended to be used by libraries implementing a function for
-`piem-get-mid-functions'."
+`piem-get-inbox-functions'."
   (pcase-let ((`(,listid ,to ,cc)
                (piem--message-fetch-decoded-fields '("list-id" "to" "cc"))))
     (catch 'hit
