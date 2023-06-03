@@ -80,7 +80,7 @@ list that supports the following properties:
       repository, with the first value in this list offered as
       the default.
   :url
-      A URL hosting HTTPS archives.  This value must end with a slash.
+      A URL hosting HTTPS archives.
   :maildir
       A Maildir directory to inject messages into.
 
@@ -522,6 +522,13 @@ returned by `piem-inbox'."
   (when-let ((p (or inbox (piem-inbox))))
     (plist-get (cdr (assoc p (piem-merged-inboxes))) key)))
 
+(defun piem-inbox-url (&optional inbox)
+  "Return URL associated with INBOX.
+If INBOX is nil, use the inbox returned by `piem-inbox'."
+  (when-let ((inbox (or inbox (piem-inbox)))
+             (url (piem-inbox-get :url inbox)))
+    (piem--ensure-trailing-slash url)))
+
 (defun piem-inbox-coderepo (&optional inbox)
   "Return the code repository of current buffer's inbox."
   (when-let ((inbox (or inbox (piem-inbox)))
@@ -665,10 +672,9 @@ The URL for INBOX may be defined in `piem-inboxes' or
 public-inbox's configuration.  If INBOX is nil, use the inbox
 returned by `piem-inbox'."
   (concat
-   (piem--ensure-trailing-slash
-    (or (piem-inbox-get :url inbox)
-        (user-error "Couldn't find URL for %s"
-                    (or inbox "current buffer"))))
+   (or (piem-inbox-url inbox)
+       (user-error "Couldn't find URL for %s"
+                   (or inbox "current buffer")))
    (piem-escape-mid mid)))
 
 ;;;###autoload

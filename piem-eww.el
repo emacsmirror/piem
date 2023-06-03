@@ -43,7 +43,7 @@
 (defun piem-eww-get-mid ()
   "Return the message ID of an EWW buffer."
   (when-let ((inbox (piem-eww-get-inbox))
-             (inbox-url (piem-inbox-get :url inbox))
+             (inbox-url (piem-inbox-url inbox))
              (url (plist-get eww-data :url)))
     (and (string-match (piem-message-link-re inbox-url) url)
          (url-unhex-string (match-string 1 url)))))

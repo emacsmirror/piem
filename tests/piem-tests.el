@@ -74,7 +74,7 @@
                   (piem-merged-inboxes))))
   (let ((piem-get-inboxes-from-config nil)
         (piem-inboxes '(("inbox" :url "inbox-url"))))
-    (should (equal (piem-inbox-get :url "inbox") "inbox-url"))))
+    (should (equal (piem-inbox-url "inbox") "inbox-url/"))))
 
 (ert-deftest piem-merged-inboxes:from-config ()
   (piem-clear-merged-inboxes)
@@ -83,8 +83,8 @@
     (piem-tests-with-pi-config piem-tests-sample-pi-config
       (should (equal (piem-inbox-get :address "foo")
                      "foo@example.com"))
-      (should (equal (piem-inbox-get :url "foo")
-                     "https://example.com/foo"))
+      (should (equal (piem-inbox-url "foo")
+                     "https://example.com/foo/"))
       (should (equal (piem-inbox-coderepo "foo")
                      "/code/foo/")))
     (piem-tests-with-pi-config ""

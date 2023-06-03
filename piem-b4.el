@@ -73,7 +73,7 @@ This is intended to be used for debugging purposes.")
     ;; b4's configuration.
     (unless local-mbox-p
       (when-let ((url (and (equal mid (piem-mid))
-                           (piem-inbox-get :url))))
+                           (piem-inbox-url))))
         (ignore-errors
           (piem-with-url-contents
               (concat url (piem-escape-mid mid) "/t.mbox.gz")
