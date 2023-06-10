@@ -56,6 +56,21 @@
             (match-string 1 mid)
           mid)))))
 
+(defun piem-gnus--from-line (buffer)
+  "Split a buffer into from-line and the rest of the message.
+
+Returns a cons of the first line of BUFFER, if it is an mboxrd
+from-line (or nil if none), and the remaining lines of BUFFER."
+  (with-current-buffer buffer
+    (let ((start (point-min))
+          (end (point-max)))
+      (goto-char start)
+      (let* ((eol (line-end-position))
+             (line (buffer-substring-no-properties start eol)))
+        (if (string-match-p "^From " line)
+            (cons line (buffer-substring-no-properties (+ eol 1) end))
+          (cons nil (buffer-substring-no-properties start end)))))))
+
 (defun piem-gnus-mid-to-thread (mid)
   (when (and (derived-mode-p 'gnus-summary-mode)
              (string-equal (substring
@@ -75,16 +90,17 @@
             gnus-break-pages)
         (mapc (lambda (article)
                 (gnus-summary-display-article article)
-                (push (format
-                       "From mboxrd@z Thu Jan  1 00:00:00 1970\n%s\n"
-                       (replace-regexp-in-string ; From-munge
-                        "^>*From "
-                        ">\\&"
-                        (with-current-buffer gnus-article-buffer
-                          (buffer-substring-no-properties
-                           (point-min)
-                           (point-max)))))
-                      messages))
+                (let ((from-line-cons
+                       (piem-gnus--from-line gnus-article-buffer)))
+                  (push (format
+                         "%s\n%s\n"
+                         (or (car from-line-cons)
+                             "From mboxrd@z Thu Jan  1 00:00:00 1970")
+                         (replace-regexp-in-string
+                          "^>*From "
+                          ">\\&"
+                          (cdr from-line-cons)))
+                        messages)))
               articles)
         (lambda ()
           (insert (apply #'concat (nreverse messages))))))))
