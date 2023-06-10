@@ -492,6 +492,22 @@ non-nil, make the match specific for that message."
                   (mail-decode-encoded-word-string val)))
               headers))))
 
+(defun piem-inbox-by-gnu-package-match (gnu-package)
+  "Return inbox based on matching :gnu-package properties.
+GNU-PACKAGE should be a string.  This function is intended to be
+used by libraries implementing a function for
+`piem-get-inbox-function'."
+  (when gnu-package
+    (catch 'hit
+      (dolist (inbox (piem-merged-inboxes))
+        (let* ((info (cdr inbox))
+               (p-package (plist-get info :gnu-package)))
+          (when (and gnu-package
+                     p-package
+                     (string-equal (downcase p-package)
+                                   (downcase gnu-package)))
+            (throw 'hit (car inbox))))))))
+
 (defun piem-inbox-by-header-match ()
   "Return inbox based on matching message headers.
 This should be called from a buffer containing a message and is
