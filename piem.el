@@ -513,22 +513,25 @@ used by libraries implementing a function for
 This should be called from a buffer containing a message and is
 intended to be used by libraries implementing a function for
 `piem-get-inbox-functions'."
-  (pcase-let ((`(,listid ,to ,cc)
-               (piem--message-fetch-decoded-fields '("list-id" "to" "cc"))))
-    (catch 'hit
-      (dolist (inbox (piem-merged-inboxes))
-        (let* ((info (cdr inbox))
-               (p-listid (plist-get info :listid)))
-          (when (and listid
-                     p-listid
-                     (string-match-p (concat "<" (regexp-quote p-listid) ">")
-                                     listid))
-            (throw 'hit (car inbox)))
-          (when-let ((addr (plist-get info :address))
-                     (to (mapconcat #'identity (list to cc)
-                                    " ")))
-            (when (string-match-p (regexp-quote addr) to)
-              (throw 'hit (car inbox)))))))))
+  (pcase-let ((`(,listid ,to ,cc ,gnu-package)
+               (piem--message-fetch-decoded-fields
+                '("list-id" "to" "cc" "x-gnu-pr-package"))))
+    (or (catch 'hit
+          (dolist (inbox (piem-merged-inboxes))
+            (let* ((info (cdr inbox))
+                   (p-listid (plist-get info :listid)))
+              (when (and listid
+                         p-listid
+                         (string-match-p
+                          (concat "<" (regexp-quote p-listid) ">")
+                          listid))
+                (throw 'hit (car inbox)))
+              (when-let ((addr (plist-get info :address))
+                         (to (mapconcat #'identity (list to cc)
+                                        " ")))
+                (when (string-match-p (regexp-quote addr) to)
+                  (throw 'hit (car inbox)))))))
+        (piem-inbox-by-gnu-package-match gnu-package))))
 
 (defun piem-inbox ()
   "Return the current buffer's inbox."
