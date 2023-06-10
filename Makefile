@@ -4,9 +4,10 @@ EMACS   = emacs
 # Rely on EMACSLOADPATH for everything but the current directory.
 BATCH   = $(EMACS) --batch -Q -L . -L tests
 
-EL = piem.el piem-b4.el piem-elfeed.el piem-eww.el piem-gnus.el \
-     piem-lei.el piem-maildir.el piem-notmuch.el piem-rmail.el \
-     tests/piem-lei-tests.el tests/piem-rmail-tests.el tests/piem-tests.el
+EL = piem.el piem-b4.el piem-debbugs.el piem-elfeed.el piem-eww.el	\
+     piem-gnus.el piem-lei.el piem-maildir.el piem-notmuch.el		\
+     piem-rmail.el tests/piem-lei-tests.el tests/piem-rmail-tests.el	\
+     tests/piem-tests.el
 ELC = $(EL:.el=.elc)
 
 all: compile Documentation/piem.info piem-autoloads.el
@@ -33,6 +34,7 @@ docs: Documentation/piem.html Documentation/piem.info
 
 piem-b4.elc: piem-b4.el piem.elc
 piem-elfeed.elc: piem-elfeed.el piem.elc
+piem-debbugs.elc: piem-debbugs.el piem.elc
 piem-eww.elc: piem-eww.el piem.elc
 piem-gnus.elc: piem-gnus.el piem.elc
 piem-lei.elc: piem-lei.el piem.elc

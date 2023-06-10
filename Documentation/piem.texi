@@ -222,6 +222,7 @@ command @code{piem-clear-merged-inboxes} to clear the cache.
 
 @node Enabling integration libraries
 @section Enabling integration libraries
+@findex piem-debbugs-mode
 @findex piem-elfeed-mode
 @findex piem-eww-mode
 @findex piem-gnus-mode
@@ -233,6 +234,7 @@ particular Emacs modes to link a buffer with a registered inbox.  piem
 currently has libraries to support
 
 @itemize
+@item Debbugs
 @item EWW
 @item Elfeed
 @item Gnus
