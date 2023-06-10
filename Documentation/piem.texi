@@ -168,6 +168,12 @@ repository (e.g., if the inbox receives patches for multiple projects,
 or if you use a few dedicated Git worktrees for different types of
 patches), set @code{:coderepo} to a list of locations.
 
+@cindex issue tracking
+@cindex Debbugs, issue tracking system
+When using the Debbugs instance at @uref{https://bugs.gnu.org} to
+retrieve messages, an inbox can mapped to each message by setting
+@code{:gnu-package} for an inbox.
+
 @findex piem-merged-inboxes
 @vindex piem-get-inboxes-from-config
 If you mirror some inboxes locally (e.g., for fast local access or for

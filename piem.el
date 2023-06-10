@@ -83,6 +83,8 @@ list that supports the following properties:
       A URL hosting HTTPS archives.
   :maildir
       A Maildir directory to inject messages into.
+  :gnu-package
+      A GNU Bug Tracker label to match with for the inbox.
 
 Here's an example for the public-inbox project itself:
 
@@ -393,7 +395,9 @@ files."
                   (rx string-start "publicinbox."
                       (group (one-or-more not-newline)) "."
                       (group
-                       (or "address" "coderepo" "listid" "maildir" "url"))
+                       (or "address" "coderepo"
+                           "listid" "maildir"
+                           "url" "gnu-package"))
                       string-end)
                   key)
              (let* ((inbox-name (match-string 1 key))
