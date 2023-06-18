@@ -1,0 +1,37 @@
+piem v0.5.0 release notes
+=========================
+
+Changes since v0.4.0
+--------------------
+
+ * New library piem-debbugs.el provides Debbugs mode integration.
+
+ * New :gnu-package property enables mapping a message to an inbox via
+   the X-GNU-PR-Package header (present on <https://bugs.gnu.org>
+   messages).
+
+ * An inbox can now be linked to multiple repositories by setting
+   :coderepo to a list.
+
+ * :url values in piem-inboxes no longer require a trailing slash.
+
+ * piem-inject-thread-into-maildir gained an INBOX argument to enable
+   Lisp callers to specify an inbox.  Thanks to zimoun for the
+   suggestion.
+
+ * The piem-b4-am transient now includes --cc-trailers (added in b4
+   v0.6.0).
+
+ * The logic to insert a Message-ID header when
+   piem-add-message-id-header is non-nil has been updated to account
+   for a recent change in how Git spells the header.
+
+ * piem-am now reorders attachments to be more helpful in cases where
+   the sender attaches the patches out of order.  Thanks for Ihor
+   Radchenko for the suggestion.
+
+Fixes since v0.4.0
+------------------
+
+ * piem-gnus-mid-to-thread didn't consider that
+   gnus-summary-display-article may dump a message in mbox format.
