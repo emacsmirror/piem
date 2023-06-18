@@ -26,53 +26,14 @@
 ;;     guix environment --load=.guix.scm
 
 (use-modules (guix build utils)
-             (guix build-system emacs)
-             (guix build-system python)
              (guix gexp)
              (guix git-download)
-             ((guix licenses) #:prefix license:)
              (guix packages)
              (gnu packages emacs)
              (gnu packages emacs-xyz)
-             (gnu packages python-web)
-             (gnu packages mail)
              (gnu packages texinfo)
-             (gnu packages version-control)
              (ice-9 popen)
              (ice-9 rdelim))
-
-
-;;; Package definitions that should eventually be polished and
-;;; submitted upstream.
-
-(define-public piem
-  (package
-    (name "piem")
-    (version "0.4.0")
-    (source
-     (origin
-       (method git-fetch)
-       (uri (git-reference
-             (url "https://git.kyleam.com/piem.git")
-             (commit (string-append "v" version))))
-       (file-name (string-append name "-" version "-checkout"))
-       (sha256
-        (base32 "07jagfxxnj383k48x8wdps160zggpxqknb65qr9f4k4i7hd8nykf"))
-       (modules '((guix build utils)))
-       ;; TODO: Decide how to deal with these optional libraries.
-       (snippet
-        '(begin (delete-file "piem-notmuch.el")
-                (delete-file "piem-elfeed.el")
-                #t))))
-    (build-system emacs-build-system)
-    (propagated-inputs
-     `(("b4" ,b4)
-       ("emacs" ,emacs)
-       ("emacs-transient" ,emacs-transient)))
-    (license license:gpl3)
-    (home-page "https://git.kyleam.com/piem")
-    (synopsis "")
-    (description "")))
 
 
 ;;; Development definition for piem
@@ -92,7 +53,7 @@ newspace."
 
 (let ((commit (git-output "rev-parse" "--short" "HEAD")))
   (package
-    (inherit piem)
+    (inherit emacs-piem)
     (name "piem-dev")
     (version (string-append "000-" commit))
     (source (local-file %source-dir
@@ -100,9 +61,6 @@ newspace."
                         #:select? (git-predicate %source-dir)))
     (propagated-inputs
      `(("emacs" ,emacs)
-       ("emacs-elfeed" ,emacs-elfeed)
        ("emacs-magit" ,emacs-magit)
-       ("git" ,git)
-       ("notmuch" ,notmuch)
        ("texinfo" ,texinfo)
-       ,@(package-propagated-inputs piem)))))
+       ,@(package-propagated-inputs emacs-piem)))))
