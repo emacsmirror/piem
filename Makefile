@@ -57,3 +57,11 @@ tests/piem-tests.elc: tests/piem-tests.el piem.elc
 .texi.html:
 	makeinfo --html --css-ref=manual.css -c TOP_NODE_UP_URL=/ --no-split \
 		-o $@  $<
+
+sign-tar:
+	tag="$$(git describe --abbrev=0)"; \
+	object=$$(git archive --format tar \
+		    --prefix "piem-$${tag#v}/" "$$tag" | \
+		  gpg --output - --armor --detach-sign | \
+		  git hash-object -w --stdin); \
+	git notes --ref=refs/notes/signatures/tar add -C "$$object" "$$tag"
