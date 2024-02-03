@@ -250,7 +250,7 @@ this triggers the creation of a new worktree."
    (piem-b4-am:--outdir)
    (piem-b4-am:--mbox-name)
    ("-M" "Save as maildir" "--save-as-maildir")
-   (7 "-Q" "Save as quilt-read folder" "--quilt-ready")
+   (7 "-Q" "Save as quilt-ready folder" "--quilt-ready")
    ;; Hide because this is unlikely to be useful outside of
    ;; command-line piping to `git am'.
    (5 "-V" "Do not save cover letter" "--no-cover")]
