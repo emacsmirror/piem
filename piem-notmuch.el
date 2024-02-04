@@ -100,12 +100,10 @@ looks like a patch."
            (n-attachments (notmuch-count-attachments handle))
            patches)
       (if (= n-attachments 0)
-          (when (string-match-p piem-patch-subject-re
-                                (notmuch-show-get-subject))
-            (let ((id (notmuch-show-get-message-id)))
-              (lambda ()
-                (call-process notmuch-command nil t nil
-                              "show" "--format=mbox" id))))
+          (let ((id (notmuch-show-get-message-id)))
+            (lambda ()
+              (call-process notmuch-command nil t nil
+                            "show" "--format=mbox" id)))
         (notmuch-foreach-mime-part
          (lambda (p)
            (when-let ((patch (piem-am-extract-attached-patch p)))
@@ -125,8 +123,6 @@ Use the message itself if it looks like a patch using
 notmuch-extract-patch to get the latest patch series from the
 notmuch thread."
   (when (and (derived-mode-p 'notmuch-show-mode)
-             (string-match-p piem-patch-subject-re
-                             (notmuch-show-get-subject))
              (= (notmuch-count-attachments
                  (piem-notmuch--with-current-message
                    (mm-dissect-buffer)))

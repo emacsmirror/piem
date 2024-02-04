@@ -130,12 +130,8 @@ looks like a patch."
       (when-let ((patch (with-current-buffer gnus-article-buffer
                           (save-restriction
                             (widen)
-                            (and (string-match-p
-                                  piem-patch-subject-re
-                                  (mail-decode-encoded-word-string
-                                   (message-field-value "subject")))
-                                 (buffer-substring-no-properties
-                                  (point-min) (point-max)))))))
+                            (buffer-substring-no-properties
+                             (point-min) (point-max))))))
         (cons (lambda () (insert patch))
               "mbox"))))))
 
