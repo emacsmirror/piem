@@ -115,7 +115,7 @@ ARGS is a list of arguments to pass to `b4 am'."
   (interactive (list (read-file-name "mbox: ")
                      (transient-args 'piem-b4-am)))
   (apply #'piem-process-start nil piem-b4-b4-executable "am"
-         (cons (concat "--use-local-mbox=" mbox) args)))
+         (cons (concat "--use-local-mbox=" (expand-file-name mbox)) args)))
 
 ;;;###autoload
 (defun piem-b4-am-ready-from-mid (mid &optional args)
