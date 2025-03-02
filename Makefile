@@ -33,8 +33,8 @@ docs: Documentation/piem.html Documentation/piem.info
 		-c TOP_NODE_UP_URL=/ Documentation/piem.texi
 
 piem-b4.elc: piem-b4.el piem.elc
-piem-elfeed.elc: piem-elfeed.el piem.elc
 piem-debbugs.elc: piem-debbugs.el piem.elc
+piem-elfeed.elc: piem-elfeed.el piem.elc
 piem-eww.elc: piem-eww.el piem.elc
 piem-gnus.elc: piem-gnus.el piem.elc
 piem-lei.elc: piem-lei.el piem.elc
