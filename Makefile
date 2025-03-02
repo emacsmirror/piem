@@ -1,8 +1,8 @@
 .POSIX:
 
-EMACS   = emacs
+EMACS = emacs
 # Rely on EMACSLOADPATH for everything but the current directory.
-BATCH   = $(EMACS) --batch -Q -L . -L tests
+BATCH = $(EMACS) --batch -Q -L . -L tests
 
 EL = piem.el piem-b4.el piem-debbugs.el piem-elfeed.el piem-eww.el	\
      piem-gnus.el piem-lei.el piem-maildir.el piem-notmuch.el		\
