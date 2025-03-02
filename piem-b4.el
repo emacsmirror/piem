@@ -3,8 +3,6 @@
 ;; Copyright all piem contributors <piem@inbox.kyleam.com>
 
 ;; Author: Kyle Meyer <kyle@kyleam.com>
-;; Keywords: vc, tools
-;; Package-Requires: ((emacs "26.3") (transient "0.3.0"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by

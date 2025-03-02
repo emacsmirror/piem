@@ -4,6 +4,7 @@
 
 ;; Author: Jelle Licht <jlicht@fsfe.org>
 ;; Keywords: vc, tools
+;; Version: 0.5.0
 ;; Package-Requires: ((emacs "26.3")(debbugs "0.29"))
 
 ;; This program is free software; you can redistribute it and/or modify
