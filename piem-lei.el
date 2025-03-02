@@ -153,6 +153,7 @@ When called non-interactively, return the buffer but do not display it
 unless DISPLAY is non-nil."
   (interactive
    (list (read-string "Message ID: " nil nil (piem-mid))
+         nil
          'display))
   (with-current-buffer (get-buffer-create "*lei-show*")
     (let ((inhibit-read-only t)
