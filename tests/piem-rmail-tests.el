@@ -19,6 +19,7 @@
 
 ;;; Code:
 
+(require 'cl-lib)
 (require 'ert)
 (require 'piem-rmail)
 
