@@ -5,7 +5,7 @@
 ;; Author: Kyle Meyer <kyle@kyleam.com>
 ;; Keywords: tools, vc
 ;; Version: 0.5.0
-;; Package-Requires: ((emacs "26.3") (elfeed))
+;; Package-Requires: ((emacs "28.2") (elfeed))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by

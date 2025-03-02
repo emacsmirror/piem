@@ -5,7 +5,7 @@
 ;; Author: Kyle Meyer <kyle@kyleam.com>
 ;; Keywords: mail, news, tools, vc
 ;; Version: 0.5.0
-;; Package-Requires: ((emacs "26.3") (transient "0.3.0"))
+;; Package-Requires: ((emacs "28.2"))
 ;; Homepage: https://git.kyleam.com/piem/about/
 
 ;; This program is free software; you can redistribute it and/or modify
