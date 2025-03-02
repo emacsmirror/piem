@@ -3,7 +3,7 @@
 ;; Copyright all piem contributors <piem@inbox.kyleam.com>
 
 ;; Author: Jelle Licht <jlicht@fsfe.org>
-;; Keywords: tools, vc
+;; Keywords: mail, news, tools, vc
 ;; Version: 0.5.0
 ;; Package-Requires: ((emacs "26.3")(debbugs "0.29"))
 
