@@ -37,14 +37,14 @@
 (defun piem-eww-get-inbox ()
   "Return inbox name from an EWW buffer."
   (when (derived-mode-p 'eww-mode)
-    (when-let ((link (plist-get eww-data :url)))
+    (when-let* ((link (plist-get eww-data :url)))
       (piem-inbox-by-url-match link))))
 
 (defun piem-eww-get-mid ()
   "Return the message ID of an EWW buffer."
-  (when-let ((inbox (piem-eww-get-inbox))
-             (inbox-url (piem-inbox-url inbox))
-             (url (plist-get eww-data :url)))
+  (when-let* ((inbox (piem-eww-get-inbox))
+              (inbox-url (piem-inbox-url inbox))
+              (url (plist-get eww-data :url)))
     (and (string-match (piem-message-link-re inbox-url) url)
          (url-unhex-string (match-string 1 url)))))
 

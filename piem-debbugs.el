@@ -38,7 +38,7 @@
   "Return inbox name from a Debbugs buffer."
   (when (and (derived-mode-p 'debbugs-gnu-mode)
              (boundp 'debbugs-gnu-local-query))
-    (when-let ((gnu-package (alist-get 'package debbugs-gnu-local-query)))
+    (when-let* ((gnu-package (alist-get 'package debbugs-gnu-local-query)))
       (piem-inbox-by-gnu-package-match gnu-package))))
 
 (defun piem-debbugs-get-mid ()

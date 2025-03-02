@@ -106,7 +106,7 @@ looks like a patch."
                             "show" "--format=mbox" id)))
         (notmuch-foreach-mime-part
          (lambda (p)
-           (when-let ((patch (piem-am-extract-attached-patch p)))
+           (when-let* ((patch (piem-am-extract-attached-patch p)))
              (push patch patches)))
          handle)
         (when patches

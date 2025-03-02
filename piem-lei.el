@@ -265,7 +265,7 @@ QUERY is split according to `split-string-and-unquote'."
           (insert
            (format "%s %3s %-20.20s %s"
                    (piem-lei-query--format-date data)
-                   (if-let ((pct (cdr (assq 'pct data))))
+                   (if-let* ((pct (cdr (assq 'pct data))))
                        (propertize
                         (concat (number-to-string (cdr (assq 'pct data)))
                                 "%")
@@ -353,7 +353,7 @@ line's message, scroll its text upward, passing ARG to
 `scroll-up-command'.  Otherwise show the message with
 `piem-lei-query-show'."
   (interactive "^P")
-  (if-let ((mid (piem-lei-query-get-mid)))
+  (if-let* ((mid (piem-lei-query-get-mid)))
       (let ((w (piem-lei-query--get-visible-message-window)))
         (if (and w
                  (equal (with-current-buffer (window-buffer w)
@@ -382,7 +382,7 @@ If there is a visible `piem-lei-show-mode' buffer, first call
 `quit-window' on its window.  The prefix argument KILL is passed
 to both underlying `quit-window' calls."
   (interactive "P")
-  (when-let ((msg-win (piem-lei-query--get-visible-message-window)))
+  (when-let* ((msg-win (piem-lei-query--get-visible-message-window)))
     (quit-window kill msg-win))
   (quit-window kill))
 
@@ -437,10 +437,10 @@ public-inbox's configuration."
                   string-end)
               key)
          (push (cons (car val)
-                     (when-let ((url (car (gethash
-                                           (format "publicinbox.%s.url"
-                                                   (match-string 1 key))
-                                           pi-cfg))))
+                     (when-let* ((url (car (gethash
+                                            (format "publicinbox.%s.url"
+                                                    (match-string 1 key))
+                                            pi-cfg))))
                        (piem--ensure-trailing-slash url)))
                inboxdir-urls)))
      pi-cfg)
@@ -460,7 +460,7 @@ external (via `lei add-external')."
      (cl-set-difference
       (delq nil
             (mapcar (lambda (x)
-                      (when-let ((url (plist-get (cdr x) :url)))
+                      (when-let* ((url (plist-get (cdr x) :url)))
                         ;; lei-add-external normalizes URLs to
                         ;; have a trailing slash.
                         (piem--ensure-trailing-slash url)))
@@ -566,7 +566,7 @@ external (via `lei add-external')."
     (when (equal mid-parent mid-child)
       (error "Parent and child have same message ID: %s"
              mid-parent))
-    (when-let ((parent-old (piem-lei-msg-parent child)))
+    (when-let* ((parent-old (piem-lei-msg-parent child)))
       (setf (piem-lei-msg-children parent-old)
             (delq child (piem-lei-msg-children parent-old))))
     (push child (piem-lei-msg-children parent))
@@ -595,7 +595,7 @@ external (via `lei add-external')."
         (let ((children (piem-lei-msg-children msg)))
           (while children
             (let ((child (pop children)))
-              (if-let ((time (piem-lei-msg-time child)))
+              (if-let* ((time (piem-lei-msg-time child)))
                   (throw 'stop time)
                 (setq children
                       (append children (piem-lei-msg-children child))))))))))
@@ -792,7 +792,7 @@ that line."
   "Show thread containing message MID.
 ARGS is passed to the underlying `lei q' call."
   (interactive
-   (if-let ((mid (piem-lei-get-mid)))
+   (if-let* ((mid (piem-lei-get-mid)))
        (list mid piem-lei-buffer-args)
      (list (read-string "Message ID: " nil nil (piem-mid)) nil)))
   (let ((piem-lei-query-threads--buffer-name "*lei-thread*"))
@@ -810,7 +810,7 @@ ARGS is passed to the underlying `lei q' call."
 
 (defun piem-lei-get-inbox ()
   "Return inbox name from a lei buffer."
-  (when-let ((mid (piem-lei-get-mid)))
+  (when-let* ((mid (piem-lei-get-mid)))
     (with-temp-buffer
       (piem-lei-insert-output
        (list "q" "--format=mboxrd" (concat "mid:" mid)))

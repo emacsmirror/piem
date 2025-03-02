@@ -49,8 +49,8 @@
 
 (defun piem-rmail-get-mid ()
   "Return the message ID of an Rmail buffer."
-  (when-let ((mid (piem-rmail--call-with-message
-                   (lambda () (mail-fetch-field "message-id")))))
+  (when-let* ((mid (piem-rmail--call-with-message
+                    (lambda () (mail-fetch-field "message-id")))))
     (replace-regexp-in-string "\\`<\\(.*\\)>\\'" "\\1" mid)))
 
 ;;;###autoload

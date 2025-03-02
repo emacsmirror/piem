@@ -62,8 +62,8 @@ This is intended to be used for debugging purposes.")
          (local-mbox-p nil)
          (clean-fn (and (not piem-b4-keep-temp-directory)
                         (lambda () (delete-directory outdir t)))))
-    (when-let ((fn (run-hook-with-args-until-success
-                    'piem-mid-to-thread-functions mid)))
+    (when-let* ((fn (run-hook-with-args-until-success
+                     'piem-mid-to-thread-functions mid)))
       (with-temp-file mbox-thread
         (funcall fn)
         (unless (= (point-max) 1)
@@ -72,8 +72,8 @@ This is intended to be used for debugging purposes.")
     ;; try to download it from an inbox's URL.  Finally, fall back to
     ;; b4's configuration.
     (unless local-mbox-p
-      (when-let ((url (and (equal mid (piem-mid))
-                           (piem-inbox-url))))
+      (when-let* ((url (and (equal mid (piem-mid))
+                            (piem-inbox-url))))
         (ignore-errors
           (piem-with-url-contents
               (concat url (piem-escape-mid mid) "/t.mbox.gz")
@@ -148,14 +148,14 @@ this triggers the creation of a new worktree."
                          (read-string "Message ID: "))
                      (transient-args 'piem-b4-am)
                      current-prefix-arg))
-  (when-let ((badopt (cl-some
-                      (lambda (arg)
-                        (and (string-match
-                              (rx string-start
-                                  (group (or "--outdir" "--mbox-name")) "=")
-                              arg)
-                             (match-string 1 arg)))
-                      args)))
+  (when-let* ((badopt (cl-some
+                       (lambda (arg)
+                         (and (string-match
+                               (rx string-start
+                                   (group (or "--outdir" "--mbox-name")) "=")
+                               arg)
+                              (match-string 1 arg)))
+                       args)))
     (user-error "%s is incompatible with this command" badopt))
   (pcase-let* ((coderepo (piem-inbox-coderepo-maybe-read))
                (`(,cover ,mbox-file ,clean-fn)

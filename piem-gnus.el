@@ -48,7 +48,7 @@
   "Return the message ID of a Gnus article."
   (when (derived-mode-p 'gnus-article-mode 'gnus-summary-mode)
     (with-current-buffer gnus-original-article-buffer
-      (when-let ((mid (message-field-value "message-id")))
+      (when-let* ((mid (message-field-value "message-id")))
         (if (string-match (rx string-start (zero-or-more space) "<"
                               (group (one-or-more (not (any ">"))))
                               ">" (zero-or-more space) string-end)
@@ -119,19 +119,19 @@ looks like a patch."
   (when (derived-mode-p 'gnus-article-mode 'gnus-summary-mode)
     (cond
      (gnus-article-mime-handles
-      (when-let ((patches (delq nil (mapcar #'piem-am-extract-attached-patch
-                                            gnus-article-mime-handles))))
+      (when-let* ((patches (delq nil (mapcar #'piem-am-extract-attached-patch
+                                             gnus-article-mime-handles))))
         (setq patches (sort patches (lambda (x y) (< (car x) (car y)))))
         (cons (lambda ()
                 (dolist (patch patches)
                   (insert (cdr patch))))
               "mbox")))
      (gnus-article-buffer
-      (when-let ((patch (with-current-buffer gnus-article-buffer
-                          (save-restriction
-                            (widen)
-                            (buffer-substring-no-properties
-                             (point-min) (point-max))))))
+      (when-let* ((patch (with-current-buffer gnus-article-buffer
+                           (save-restriction
+                             (widen)
+                             (buffer-substring-no-properties
+                              (point-min) (point-max))))))
         (cons (lambda () (insert patch))
               "mbox"))))))
 

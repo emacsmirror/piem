@@ -407,13 +407,13 @@ files."
                                      (if (eq prop-name :coderepo)
                                          val
                                        (car val)))))
-               (when-let ((coderepos
-                           (and (eq prop-name :coderepo)
-                                (mapcar
-                                 (lambda (v)
-                                   (car (gethash (format "coderepo.%s.dir" v)
-                                                 pi-cfg)))
-                                 val))))
+               (when-let* ((coderepos
+                            (and (eq prop-name :coderepo)
+                                 (mapcar
+                                  (lambda (v)
+                                    (car (gethash (format "coderepo.%s.dir" v)
+                                                  pi-cfg)))
+                                  val))))
                  (setq prop-pair
                        (list :coderepo
                              (mapcar
@@ -488,7 +488,7 @@ non-nil, make the match specific for that message."
     (save-restriction
       (message-narrow-to-head)
       (mapcar (lambda (header)
-                (when-let ((val (message-fetch-field header)))
+                (when-let* ((val (message-fetch-field header)))
                   (mail-decode-encoded-word-string val)))
               headers))))
 
@@ -526,9 +526,9 @@ intended to be used by libraries implementing a function for
                           (concat "<" (regexp-quote p-listid) ">")
                           listid))
                 (throw 'hit (car inbox)))
-              (when-let ((addr (plist-get info :address))
-                         (to (mapconcat #'identity (list to cc)
-                                        " ")))
+              (when-let* ((addr (plist-get info :address))
+                          (to (mapconcat #'identity (list to cc)
+                                         " ")))
                 (when (string-match-p (regexp-quote addr) to)
                   (throw 'hit (car inbox)))))))
         (piem-inbox-by-gnu-package-match gnu-package))))
@@ -542,20 +542,20 @@ intended to be used by libraries implementing a function for
 The key-value pair may be defined in `piem-inboxes' or
 public-inbox's configuration.  If INBOX is nil, use the inbox
 returned by `piem-inbox'."
-  (when-let ((p (or inbox (piem-inbox))))
+  (when-let* ((p (or inbox (piem-inbox))))
     (plist-get (cdr (assoc p (piem-merged-inboxes))) key)))
 
 (defun piem-inbox-url (&optional inbox)
   "Return URL associated with INBOX.
 If INBOX is nil, use the inbox returned by `piem-inbox'."
-  (when-let ((inbox (or inbox (piem-inbox)))
-             (url (piem-inbox-get :url inbox)))
+  (when-let* ((inbox (or inbox (piem-inbox)))
+              (url (piem-inbox-get :url inbox)))
     (piem--ensure-trailing-slash url)))
 
 (defun piem-inbox-coderepo (&optional inbox)
   "Return the code repository of current buffer's inbox."
-  (when-let ((inbox (or inbox (piem-inbox)))
-             (repos (piem-inbox-get :coderepo inbox)))
+  (when-let* ((inbox (or inbox (piem-inbox)))
+              (repos (piem-inbox-get :coderepo inbox)))
     (when (stringp repos)
       (setq repos (list repos)))
     (let ((repo (if (= (length repos) 1)
@@ -580,8 +580,8 @@ public-inbox's configuration), return the value of
   (setq url (piem--ensure-trailing-slash url))
   (catch 'hit
     (dolist (inbox (piem-merged-inboxes))
-      (when-let ((info (cdr inbox))
-                 (p-url (plist-get info :url)))
+      (when-let* ((info (cdr inbox))
+                  (p-url (plist-get info :url)))
         (setq p-url (piem--ensure-trailing-slash p-url))
         (when (string-match-p (regexp-quote p-url) url)
           (throw 'hit (car inbox)))))))
@@ -595,8 +595,8 @@ public-inbox's configuration), return the value of
                    (completing-read
                     "Project: "
                     projectile-known-projects nil t nil nil
-                    (when-let ((current (and (fboundp 'projectile-project-root)
-                                             (projectile-project-root))))
+                    (when-let* ((current (and (fboundp 'projectile-project-root)
+                                              (projectile-project-root))))
                       (abbreviate-file-name current)))))
              (and (bound-and-true-p project-list-file)
                   (file-exists-p project-list-file)
@@ -655,8 +655,8 @@ buffer.
 
 By default the buffer name is hidden, but when BUFFER-NAME is
 non-nil, use that name instead."
-  (when-let ((res (run-hook-with-args-until-success
-                   'piem-am-ready-mbox-functions)))
+  (when-let* ((res (run-hook-with-args-until-success
+                    'piem-am-ready-mbox-functions)))
     (pcase-let ((buffer (generate-new-buffer
                          (or buffer-name " *piem am-ready mbox*")))
                 (`(,fn . ,format)
@@ -924,11 +924,11 @@ indicated in the subject.
 
 INFO is a plist with properties documented
 in `piem-default-branch-function'."
-  (when-let ((from (plist-get info :from))
-             (sender (let ((mail-extr-ignore-single-names nil)
-                           (mail-extr-ignore-realname-equals-mailbox-name nil))
-                       (car (mail-extract-address-components from))))
-             (subject (plist-get info :subject)))
+  (when-let* ((from (plist-get info :from))
+              (sender (let ((mail-extr-ignore-single-names nil)
+                            (mail-extr-ignore-realname-equals-mailbox-name nil))
+                        (car (mail-extract-address-components from))))
+              (subject (plist-get info :subject)))
     (let* ((subnames (split-string sender))
            (initials (mapconcat
                       (lambda (subname)
