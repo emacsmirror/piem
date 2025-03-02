@@ -6,18 +6,20 @@ BATCH = $(EMACS) --batch -Q -L . -L tests
 
 EL = piem.el \
      piem-b4.el  \
-     piem-debbugs.el \
-     piem-elfeed.el \
      piem-eww.el \
      piem-gnus.el \
      piem-lei.el \
      piem-maildir.el \
-     piem-notmuch.el \
      piem-rmail.el \
      tests/piem-lei-tests.el \
      tests/piem-rmail-tests.el	\
      tests/piem-tests.el
-ELC = $(EL:.el=.elc)
+
+EL_EXTRA = piem-debbugs.el \
+	   piem-elfeed.el \
+	   piem-notmuch.el
+
+ELC = $(EL:.el=.elc) $(EL_EXTRA:.el=.elc)
 
 all: compile Documentation/piem.info piem-autoloads.el
 
