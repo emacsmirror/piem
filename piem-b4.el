@@ -112,7 +112,7 @@ This is intended to be used for debugging purposes.")
   "Extract an am-ready mbox from a thread of messages.
 MBOX is the file name of an mbox that contains a patch series.
 ARGS is a list of arguments to pass to `b4 am'."
-  (interactive (list (expand-file-name (read-file-name "mbox: "))
+  (interactive (list (expand-file-name (read-file-name "mbox: " nil nil t))
                      (transient-args 'piem-b4-am)))
   (apply #'piem-process-start nil piem-b4-b4-executable "am"
          (cons (concat "--use-local-mbox=" mbox) args)))
