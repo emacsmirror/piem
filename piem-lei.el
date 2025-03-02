@@ -850,5 +850,5 @@ the mode if ARG is omitted or nil."
     (remove-hook 'piem-get-mid-functions #'piem-lei-get-mid)
     (remove-hook 'piem-mid-to-thread-functions #'piem-lei-mid-to-thread)))
 
-;;; piem-lei.el ends here
 (provide 'piem-lei)
+;;; piem-lei.el ends here

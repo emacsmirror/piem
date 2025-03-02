@@ -154,5 +154,5 @@ the mode if ARG is omitted or nil."
     (remove-hook 'piem-get-mid-functions #'piem-gnus-get-mid)
     (remove-hook 'piem-mid-to-thread-functions #'piem-gnus-mid-to-thread)))
 
-;;; piem-gnus.el ends here
 (provide 'piem-gnus)
+;;; piem-gnus.el ends here

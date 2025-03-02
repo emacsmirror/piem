@@ -259,5 +259,5 @@ this triggers the creation of a new worktree."
    [("b" "Local mbox -> am-ready mbox" piem-b4-am-ready-from-mbox)
     ("i" "Message ID -> am-ready mbox" piem-b4-am-ready-from-mid)]])
 
-;;; piem-b4.el ends here
 (provide 'piem-b4)
+;;; piem-b4.el ends here

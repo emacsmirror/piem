@@ -188,5 +188,5 @@ this the default behavior when calling
           (delete '("piem" . piem-notmuch-show-get-public-inbox-link)
                   notmuch-show-stash-mlarchive-link-alist))))
 
-;;; piem-notmuch.el ends here
 (provide 'piem-notmuch)
+;;; piem-notmuch.el ends here

@@ -63,5 +63,5 @@ the mode if ARG is omitted or nil."
     (remove-hook 'piem-get-inbox-functions #'piem-debbugs-get-inbox)
     (remove-hook 'piem-get-mid-functions #'piem-debbugs-get-mid)))
 
-;;; piem-debbugs.el ends here
 (provide 'piem-debbugs)
+;;; piem-debbugs.el ends here

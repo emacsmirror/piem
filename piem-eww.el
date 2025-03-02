@@ -63,5 +63,5 @@ the mode if ARG is omitted or nil."
     (remove-hook 'piem-get-inbox-functions #'piem-eww-get-inbox)
     (remove-hook 'piem-get-mid-functions #'piem-eww-get-mid)))
 
-;;; piem-eww.el ends here
 (provide 'piem-eww)
+;;; piem-eww.el ends here

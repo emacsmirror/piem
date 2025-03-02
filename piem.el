@@ -1097,5 +1097,5 @@ this triggers the creation of a new worktree."
 (defun piem-please ()
   "How I wish I could intersect my emails, feeds, and repos")
 
-;;; piem.el ends here
 (provide 'piem)
+;;; piem.el ends here
