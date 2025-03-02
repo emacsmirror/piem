@@ -28,6 +28,7 @@
 (require 'piem)
 (require 'seq)
 (require 'subr-x)
+(require 'transient)
 
 (defgroup piem-lei nil
   "lei integration for piem."
