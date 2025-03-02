@@ -55,6 +55,8 @@ piem-rmail.elc: piem-rmail.el piem.elc
 piem.elc: piem.el piem-maildir.elc
 tests/piem-lei-tests.elc: tests/piem-lei-tests.el piem-lei.elc
 tests/piem-rmail-tests.elc: tests/piem-rmail-tests.el piem-rmail.elc
+tests/piem-tests.elc: tests/piem-lei-tests.elc
+tests/piem-tests.elc: tests/piem-rmail-tests.elc
 tests/piem-tests.elc: tests/piem-tests.el piem.elc
 
 .SUFFIXES: .el .elc .texi .info .html
