@@ -3,7 +3,7 @@
 ;; Copyright all piem contributors <piem@inbox.kyleam.com>
 
 ;; Author: Kyle Meyer <kyle@kyleam.com>
-;; Keywords: vc, tools
+;; Keywords: tools, vc
 ;; Version: 0.5.0
 ;; Package-Requires: ((emacs "26.3") (transient "0.3.0"))
 ;; Homepage: https://git.kyleam.com/piem/about/

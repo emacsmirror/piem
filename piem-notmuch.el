@@ -4,7 +4,7 @@
 ;; Copyright (C) 2019 Sean Whitton <spwhitton@spwhitton.name>
 
 ;; Author: Kyle Meyer <kyle@kyleam.com>
-;; Keywords: vc, tools
+;; Keywords: tools, vc
 ;; Version: 0.5.0
 ;; Package-Requires: ((emacs "26.3") (notmuch))
 
