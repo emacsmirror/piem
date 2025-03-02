@@ -36,16 +36,23 @@
   "Gnus integration for piem."
   :group 'piem)
 
+(defun piem-gnus--get-original-article-buffer ()
+  (let ((buf (and (derived-mode-p 'gnus-article-mode 'gnus-summary-mode)
+                  gnus-original-article-buffer
+                  (get-buffer gnus-original-article-buffer))))
+    (and (buffer-live-p buf)
+         buf)))
+
 (defun piem-gnus-get-inbox ()
   "Return inbox name from a Gnus article"
-  (when (derived-mode-p 'gnus-article-mode 'gnus-summary-mode)
-    (with-current-buffer gnus-original-article-buffer
+  (when-let* ((buf (piem-gnus--get-original-article-buffer)))
+    (with-current-buffer buf
       (piem-inbox-by-header-match))))
 
 (defun piem-gnus-get-mid ()
   "Return the message ID of a Gnus article."
-  (when (derived-mode-p 'gnus-article-mode 'gnus-summary-mode)
-    (with-current-buffer gnus-original-article-buffer
+  (when-let* ((buf (piem-gnus--get-original-article-buffer)))
+    (with-current-buffer buf
       (when-let* ((mid (message-field-value "message-id")))
         (if (string-match (rx string-start (zero-or-more space) "<"
                               (group (one-or-more (not (any ">"))))
