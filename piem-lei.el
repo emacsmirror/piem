@@ -63,6 +63,38 @@ If BUFFER is nil, the current buffer is used."
 
 ;;;; Message display
 
+(defun piem-lei-view-raw-message (mid &optional format)
+  "View message for MID in an unprocessed mbox format.
+
+MID is taken as the current buffer's message ID when in a
+`piem-lei-show-mode' buffer and as the current line's message ID
+when in a `piem-lei-query-mode' buffer.  Otherwise, the caller is
+prompted for a message ID, with the default set to the return
+value of `piem-mid'.
+
+FORMAT defaults to \"mboxcl2\".  When a prefix argument is given,
+prompt with all available mbox formats."
+  (declare (interactive-only t))
+  (interactive
+   (list (or (piem-lei-get-mid)
+             (read-string "Message ID: " nil nil (piem-mid)))
+         (and current-prefix-arg
+              (pcase (read-char-choice "mboxcl[2] mbox[c]l mboxr[d] mbox[o] "
+                                       (list ?2 ?c ?d ?o))
+                (?2 "mboxcl2")
+                (?c "mboxcl")
+                (?d "mboxrd")
+                (?o "mboxo")))))
+  (setq format (or format "mboxcl2"))
+  (with-current-buffer (get-buffer-create "*lei-view-raw-message*")
+    (let ((inhibit-read-only t))
+      (erase-buffer)
+      (piem-lei-insert-output
+       (list "q" (concat "--format=" format) (concat "mid:" mid)))
+      (goto-char (point-min)))
+    (set-buffer-modified-p nil)
+    (view-buffer (current-buffer) #'kill-buffer-if-not-modified)))
+
 (defface piem-lei-show-header-name
   '((t :inherit message-header-name))
   "Face for header names in `piem-lei-show-mode' buffers.")
@@ -185,6 +217,7 @@ unless DISPLAY is non-nil."
   (let ((map (make-sparse-keymap)))
     (define-key map "s" #'piem-lei-q)
     (define-key map "t" #'piem-lei-mid-thread)
+    (define-key map "V" #'piem-lei-view-raw-message)
     map)
   "Keymap for `piem-lei-show-mode'.")
 
@@ -397,6 +430,7 @@ to both underlying `quit-window' calls."
     (define-key map "q" #'piem-lei-query-quit-window)
     (define-key map "s" #'piem-lei-q)
     (define-key map "t" #'piem-lei-mid-thread)
+    (define-key map "V" #'piem-lei-view-raw-message)
     map)
   "Keymap for `piem-lei-query-mode'.")
 
