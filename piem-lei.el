@@ -392,9 +392,9 @@ to both underlying `quit-window' calls."
     (define-key map (kbd "SPC") #'piem-lei-query-show-or-scroll-up)
     (define-key map "n" #'piem-lei-query-next-line)
     (define-key map "p" #'piem-lei-query-previous-line)
+    (define-key map "q" #'piem-lei-query-quit-window)
     (define-key map "s" #'piem-lei-q)
     (define-key map "t" #'piem-lei-mid-thread)
-    (define-key map "q" #'piem-lei-query-quit-window)
     map)
   "Keymap for `piem-lei-query-mode'.")
 
