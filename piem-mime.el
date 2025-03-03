@@ -53,7 +53,8 @@
 (defun piem-mime--extract-attached-patch (mm-handle)
   "Get the content for MM-HANDLE if it looks like a patch.
 The return value is of the form (N . CONTENT), where N is the
-number at the start of the file name."
+number at the start of the file name.  N is 0 when the file name
+does not start with a number."
   (when (listp mm-handle)
     (let ((type (mm-handle-media-type mm-handle))
           (filename (mm-handle-filename mm-handle)))
