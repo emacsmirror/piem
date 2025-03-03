@@ -50,19 +50,19 @@
      mm-handle)
     count))
 
-(defun piem-mime--extract-attached-patch (handle)
-  "Get the content for HANDLE if it looks like a patch.
+(defun piem-mime--extract-attached-patch (mm-handle)
+  "Get the content for MM-HANDLE if it looks like a patch.
 The return value is of the form (N . CONTENT), where N is the
 number at the start of the file name."
-  (when (listp handle)
-    (let ((type (mm-handle-media-type handle))
-          (filename (mm-handle-filename handle)))
+  (when (listp mm-handle)
+    (let ((type (mm-handle-media-type mm-handle))
+          (filename (mm-handle-filename mm-handle)))
       (and (or (member type '("text/x-diff" "text/x-patch"))
                (and filename
                     (equal type "text/plain")
                     (string-suffix-p ".patch" filename t)))
            (with-temp-buffer
-             (mm-display-inline handle)
+             (mm-display-inline mm-handle)
              (cons
               (string-to-number (or filename ""))
               (buffer-substring-no-properties (point-min) (point-max))))))))
