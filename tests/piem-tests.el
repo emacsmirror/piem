@@ -23,6 +23,7 @@
 (require 'ert)
 (require 'piem)
 (require 'piem-lei-tests)
+(require 'piem-mime-tests)
 (require 'piem-rmail-tests)
 
 (defmacro piem-tests-with-pi-config (content &rest body)
