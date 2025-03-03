@@ -97,27 +97,12 @@ attachments.
 If no MIME parts look like a patch, use the message itself if it
 looks like a patch."
   (when (derived-mode-p 'notmuch-show-mode)
-    (let* ((handle (piem-notmuch--with-current-message
-                     (mm-dissect-buffer)))
-           (n-attachments (notmuch-count-attachments handle))
-           patches)
-      (if (= n-attachments 0)
-          (let ((id (notmuch-show-get-message-id)))
-            (lambda ()
-              (call-process notmuch-command nil t nil
-                            "show" "--format=mbox" id)))
-        (piem-mime-foreach-part
-         (lambda (p)
-           (when-let* ((patch (piem-am-extract-attached-patch p)))
-             (push patch patches)))
-         handle)
-        (when patches
-          (setq patches (sort (nreverse patches)
-                              (lambda (x y) (< (car x) (car y)))))
-          (cons (lambda ()
-                  (dolist (patch patches)
-                    (insert (cdr patch))))
-                "mbox"))))))
+    (or (piem-notmuch--with-current-message
+          (piem-mime-am-ready-mbox))
+        (let ((id (notmuch-show-get-message-id)))
+          (lambda ()
+            (call-process notmuch-command nil t nil
+                          "show" "--format=mbox" id))))))
 
 (defun piem-notmuch-extract-patch-am-ready-mbox ()
   "Return a function that inserts an am-ready mbox.

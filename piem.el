@@ -848,23 +848,6 @@ message for MID, not the entire thread."
 
 ;;;; Patch handling
 
-(defun piem-am-extract-attached-patch (handle)
-  "Get the content for HANDLE if it looks like a patch.
-The return value is of the form (N . CONTENT), where N is the
-number at the start of the file name."
-  (when (listp handle)
-    (let ((type (mm-handle-media-type handle))
-          (filename (mm-handle-filename handle)))
-      (and (or (member type '("text/x-diff" "text/x-patch"))
-               (and filename
-                    (equal type "text/plain")
-                    (string-suffix-p ".patch" filename t)))
-           (with-temp-buffer
-             (mm-display-inline handle)
-             (cons
-              (string-to-number filename)
-              (buffer-substring-no-properties (point-min) (point-max))))))))
-
 (defun piem-extract-mbox-info (&optional buffer)
   "Collect information from message in BUFFER.
 If BUFFER is nil, the current buffer is used.  Any message after
