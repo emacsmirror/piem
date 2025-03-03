@@ -64,7 +64,7 @@ number at the start of the file name."
            (with-temp-buffer
              (mm-display-inline handle)
              (cons
-              (string-to-number filename)
+              (string-to-number (or filename ""))
               (buffer-substring-no-properties (point-min) (point-max))))))))
 
 (defun piem-mime-am-ready-mbox ()

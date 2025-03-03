@@ -472,6 +472,76 @@ base-commit: 8d216326295b197bbb222672b773062e119d1a76
 2.48.1
 ")
 
+(defvar piem-mime-tests-case-attached-no-filename "\
+From a9b78777b8bcbc8c9ac41efe0a31a39f554ce3f8 Mon Sep 17 00:00:00 2001
+From: Barb <example.com>
+Date: Sun, 2 Mar 2025 10:54:36 -0500
+Message-ID: <mid@example.com>
+Mime-Version: 1.0
+Content-Type: multipart/mixed; boundary=\"=-=-=\"
+Subject: [PATCH] attached patch
+
+--=-=-=
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+see attached
+
+--=-=-=
+Content-Type: text/x-patch
+Content-Disposition: attachment
+
+From a9b78777b8bcbc8c9ac41efe0a31a39f554ce3f8 Mon Sep 17 00:00:00 2001
+From: Barb <example.com>
+Date: Sun, 2 Mar 2025 10:54:36 -0500
+Subject: [PATCH] foo
+
+msg
+---
+ foo | 1 +
+ 1 file changed, 1 insertion(+)
+ create mode 100644 foo
+
+diff --git a/foo b/foo
+new file mode 100644
+index 0000000..257cc56
+--- /dev/null
++++ b/foo
+@@ -0,0 +1 @@
++foo
+
+base-commit: 8d216326295b197bbb222672b773062e119d1a76
+--
+2.48.1
+
+--=-=-=--
+")
+
+(defvar piem-mime-tests-case-attached-no-filename-mbox "\
+From a9b78777b8bcbc8c9ac41efe0a31a39f554ce3f8 Mon Sep 17 00:00:00 2001
+From: Barb <example.com>
+Date: Sun, 2 Mar 2025 10:54:36 -0500
+Subject: [PATCH] foo
+
+msg
+---
+ foo | 1 +
+ 1 file changed, 1 insertion(+)
+ create mode 100644 foo
+
+diff --git a/foo b/foo
+new file mode 100644
+index 0000000..257cc56
+--- /dev/null
++++ b/foo
+@@ -0,0 +1 @@
++foo
+
+base-commit: 8d216326295b197bbb222672b773062e119d1a76
+--
+2.48.1
+")
+
 (defvar piem-mime-tests-case-attached-signed "\
 From a9b78777b8bcbc8c9ac41efe0a31a39f554ce3f8 Mon Sep 17 00:00:00 2001
 From: Barb <example.com>
@@ -550,6 +620,10 @@ somesig
       3))
   (should
    (= (piem-mime-count-attachments
+       (piem-mime-tests-dissect piem-mime-tests-case-attached-no-filename))
+      1))
+  (should
+   (= (piem-mime-count-attachments
        (piem-mime-tests-dissect piem-mime-tests-case-attached-signed))
       1)))
 
@@ -584,7 +658,16 @@ somesig
                 (insert piem-mime-tests-case-attached-multi-unordered)
                 (piem-mime-am-ready-mbox))))
             (buffer-string))
-          piem-mime-tests-case-attached-multi-mbox)))
+          piem-mime-tests-case-attached-multi-mbox))
+  (should
+   (equal (with-temp-buffer
+            (funcall
+             (car
+              (with-temp-buffer
+                (insert piem-mime-tests-case-attached-no-filename)
+                (piem-mime-am-ready-mbox))))
+            (buffer-string))
+          piem-mime-tests-case-attached-no-filename-mbox)))
 
 (provide 'piem-mime-tests)
 ;;; piem-mime-tests.el ends here
