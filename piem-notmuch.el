@@ -33,6 +33,7 @@
 (require 'mm-decode)
 (require 'notmuch)
 (require 'piem)
+(require 'piem-mime)
 (require 'subr-x)
 
 (defgroup piem-notmuch nil
@@ -105,7 +106,7 @@ looks like a patch."
             (lambda ()
               (call-process notmuch-command nil t nil
                             "show" "--format=mbox" id)))
-        (notmuch-foreach-mime-part
+        (piem-mime-foreach-part
          (lambda (p)
            (when-let* ((patch (piem-am-extract-attached-patch p)))
              (push patch patches)))
@@ -124,7 +125,7 @@ Use the message itself if it looks like a patch using
 notmuch-extract-patch to get the latest patch series from the
 notmuch thread."
   (when (and (derived-mode-p 'notmuch-show-mode)
-             (= (notmuch-count-attachments
+             (= (piem-mime-count-attachments
                  (piem-notmuch--with-current-message
                    (mm-dissect-buffer)))
                 0))

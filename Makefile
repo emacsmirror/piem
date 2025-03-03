@@ -10,6 +10,7 @@ EL = piem.el \
      piem-gnus.el \
      piem-lei.el \
      piem-maildir.el \
+     piem-mime.el \
      piem-rmail.el \
      tests/piem-lei-tests.el \
      tests/piem-rmail-tests.el	\
@@ -50,7 +51,8 @@ piem-eww.elc: piem-eww.el piem.elc
 piem-gnus.elc: piem-gnus.el piem.elc
 piem-lei.elc: piem-lei.el piem.elc
 piem-maildir.elc: piem-maildir.el
-piem-notmuch.elc: piem-notmuch.el piem.elc
+piem-mime.elc: piem-mime.el
+piem-notmuch.elc: piem-notmuch.el piem.elc piem-mime.elc
 piem-rmail.elc: piem-rmail.el piem.elc
 piem.elc: piem.el piem-maildir.elc
 tests/piem-lei-tests.elc: tests/piem-lei-tests.el piem-lei.elc
