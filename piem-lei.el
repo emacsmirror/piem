@@ -168,7 +168,8 @@ unless DISPLAY is non-nil."
       (setq piem-lei-buffer-args args)
       (setq piem-lei-buffer-mid mid)
       (setq piem-lei-buffer-query query)
-      (piem-lei-show--fontify-headers))
+      (piem-lei-show--fontify-headers)
+      (set-buffer-modified-p nil))
     (if display
         (pop-to-buffer (current-buffer))
       (current-buffer))))
@@ -283,6 +284,7 @@ QUERY is split according to `split-string-and-unquote'."
     (piem-lei-query-mode)
     (setq piem-lei-buffer-args args)
     (setq piem-lei-buffer-query query)
+    (set-buffer-modified-p nil)
     (pop-to-buffer-same-window (current-buffer))))
 
 (defun piem-lei-query-get-mid (&optional pos)
@@ -785,6 +787,7 @@ that line."
       (piem-lei-query-mode)
       (setq piem-lei-buffer-args args)
       (setq piem-lei-buffer-query query)
+      (set-buffer-modified-p nil)
       (pop-to-buffer-same-window (current-buffer)))))
 
 (defun piem-lei-mid-thread (mid &optional args)
