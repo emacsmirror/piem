@@ -91,7 +91,7 @@ This function is intended to be called underneath by top-level
                             (lambda (x y) (< (car x) (car y)))))
         (cons (lambda ()
                 (dolist (patch patches)
-                  (insert (cdr patch))))
+                  (insert (cdr patch) ?\n)))
               "mbox")))))
 
 (provide 'piem-mime)

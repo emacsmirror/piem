@@ -426,6 +426,7 @@ index 0000000..257cc56
 base-commit: 8d216326295b197bbb222672b773062e119d1a76
 --
 2.48.1
+
 From a9b78777b8bcbc8c9ac41efe0a31a39f554ce3f8 Mon Sep 17 00:00:00 2001
 From: Barb <example.com>
 Date: Sun, 2 Mar 2025 10:54:36 -0500
@@ -448,6 +449,7 @@ index 0000000..257cc56
 base-commit: 8d216326295b197bbb222672b773062e119d1a76
 --
 2.48.1
+
 From a9b78777b8bcbc8c9ac41efe0a31a39f554ce3f8 Mon Sep 17 00:00:00 2001
 From: Barb <example.com>
 Date: Sun, 2 Mar 2025 10:54:36 -0500
@@ -470,6 +472,7 @@ index 0000000..257cc56
 base-commit: 8d216326295b197bbb222672b773062e119d1a76
 --
 2.48.1
+
 ")
 
 (defvar piem-mime-tests-case-attached-no-filename "\
@@ -540,6 +543,7 @@ index 0000000..257cc56
 base-commit: 8d216326295b197bbb222672b773062e119d1a76
 --
 2.48.1
+
 ")
 
 (defvar piem-mime-tests-case-attached-signed "\
