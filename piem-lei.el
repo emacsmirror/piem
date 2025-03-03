@@ -167,7 +167,7 @@ unless DISPLAY is non-nil."
       (piem-lei-show-mode)
       (setq piem-lei-buffer-args args)
       (setq piem-lei-buffer-mid mid)
-      (setq  piem-lei-buffer-query query)
+      (setq piem-lei-buffer-query query)
       (piem-lei-show--fontify-headers))
     (if display
         (pop-to-buffer (current-buffer))
@@ -784,7 +784,7 @@ that line."
       (goto-char (or pt-final (point-min)))
       (piem-lei-query-mode)
       (setq piem-lei-buffer-args args)
-      (setq  piem-lei-buffer-query query)
+      (setq piem-lei-buffer-query query)
       (pop-to-buffer-same-window (current-buffer)))))
 
 (defun piem-lei-mid-thread (mid &optional args)
