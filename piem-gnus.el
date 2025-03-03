@@ -44,7 +44,7 @@
          buf)))
 
 (defun piem-gnus-get-inbox ()
-  "Return inbox name from a Gnus article"
+  "Return inbox name from a Gnus article."
   (when-let* ((buf (piem-gnus--get-original-article-buffer)))
     (with-current-buffer buf
       (piem-inbox-by-header-match))))
