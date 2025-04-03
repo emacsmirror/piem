@@ -29,8 +29,8 @@
 (defmacro piem-tests-with-pi-config (content &rest body)
   "Point public-inbox's configuration to CONTENT and evaluate BODY."
   (declare (indent 1) (debug t))
-  (let ((temp-file (cl-gensym "temp-file"))
-        (pi-config-orig (cl-gensym "pi-config-org")))
+  (let ((temp-file (gensym "temp-file"))
+        (pi-config-orig (gensym "pi-config-org")))
     `(let ((,temp-file (make-temp-file "piem-tests-" nil nil ,content))
            (,pi-config-orig (getenv "PI_CONFIG")))
        (unwind-protect

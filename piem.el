@@ -737,7 +737,7 @@ is used as the value of `browse-url-browser-function'."
 (defmacro piem-with-url-contents (url &rest body)
   "Insert URL contents literally into temporary buffer and evaluate BODY."
   (declare (indent 1) (debug t))
-  (let ((u (cl-gensym "url")))
+  (let ((u (gensym "url")))
     `(with-temp-buffer
        (set-buffer-multibyte nil)
        ;; This mostly copies `url-insert-file-contents', but it embeds
